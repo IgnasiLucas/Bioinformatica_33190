@@ -1,0 +1,89 @@
+---
+title: "Bioinformatica"
+subtitle: "Tema 1. Presentación"
+author: "J. Ignacio Lucas Lledó"
+date: "`r format(Sys.Date(), '%d/%m/%Y')`"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Objetivos
+
+- ¿Qué es la bioinformática?
+- ¿En qué consistirá este curso?
+- ¿Cómo será el examen?
+- Algunos recursos y referencias.
+
+## Bioinformática
+
+- **Biología computacional**. Estudio de la biología mediante técnicas computacionales:
+    - Análisis de datos.
+    - Modelos teóricos.
+    - Simulación.
+- **Bioinformática**. Desarrollo de herramientas informáticas para la solución de problemas biológicos.
+    - Algoritmos.
+    - Bases de datos.
+
+## Profesorado
+
+- Primera parte: **José Ignacio Lucas Lledó**
+    - Institut Cavanilles de Biodiversitat i Biologia Evolutiva. 
+    - j.ignacio.lucas@uv.es
+- Segunda parte: **David Martínez**
+    - Institut de Biologia Integrativa de Sistemes.
+    - david.martinez@uv.es
+
+## Volumen de trabajo (4.5 ECTS)
+
+- **Actividades presenciales** (`r 13+26+3+3` horas)
+  - Clases teóricas: 13 sesiones de 1 hora.
+  - Clases prácticas: 13 sesiones de 2 horas.
+  - Tutorías: 3 sesiones de 1 hora.
+  - Realización de exámenes: 3 horas.
+- **Actividades no presenciales** (`r 12+12+12+31.5` horas)
+  - Preparación de clases teóricas: 12 horas.
+  - Preparación de clases prácticas: 12 horas.
+  - Elaboración de 2 trabajos prácticos: 12 horas.
+  - Trabajo autónomo y preparación de exámenes: 31.5 h.
+
+## Programa de contenidos
+
+- **Bloque 1**: Bases de datos moleculares y alineamiento de secuencias.
+- **Bloque 2**: Filogenética molecular.
+- **Bloque 3**: Aplicaciones y herramientas para el análisis de las secuencias.
+
+## Bloque 1. Bases de datos moleculares y alineamiento de secuencias
+- **Tema 1**. Presentación de la asignatura.
+- **Tema 2**. Análisis elemental de secuencias de DNA, RNA y proteínas.
+- **Tema 3**. Bases de datos I. 
+- **Tema 4**. Bases de datos II.
+- **Tema 5**. Alineamiento de secuencias.
+- **Tema 6**. BLAST.
+- **Tema 7**. BLAST avanzado.
+
+## Bloque 2. Filogenética molecular
+- **Tema 8**. Evolución molecular.
+- **Tema 9**. Filogenética molecular I.
+- **Tema 10**. Filogenética molecular II.
+
+## Bloque 3. Aplicaciones y herramientas para el análisis de las secuencias.
+- **Tema 11**. Predicción y anotación de genes.
+- **Tema 12**. Análisis bioinformático del RNA.
+- **Tema 13**. Análisis bioinformático de proteínas.
+
+## Evaluación
+- **Examen teórico-práctico**: 8 puntos.
+- **Ejercicio práctico individual**: 2 puntos.
+- **Nota mínima**: 4 sobre 10 en examen; 5 sobre 10 global.
+- **Segunda convocatoria**: Único examen de 10 puntos, o de 8 en caso de guardar y sumar la nota del trabajo.
+
+## Recursos
+
+- **Bioinformatics and Functional Genomics**, 3a. edición por Jonathan Pevsner (2015). Publicado por Wiley-Blackwell.
+- [The Software Carpentry](https://software-carpentry.org/)
+- etc.
+
+
