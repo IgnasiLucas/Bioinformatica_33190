@@ -1,7 +1,6 @@
 ---
 title: "Tema 3. Bases de datos I"
-author: "J. Ignacio Lucas Lledó"
-date: "1/2/2021"
+date: "Actualizado en: `r format(Sys.Date(), '%d/%m/%Y')`"
 output: ioslides_presentation
 ---
 
@@ -12,6 +11,9 @@ knitr::opts_chunk$set(echo = FALSE)
 ## Objetivos
 - ¿Para qué se comparten los datos?
 - Cómo buscar información en el *European Nucleotide Archive*.
+  - ¿Qué tipos de datos puedo buscar?
+  - ¿Qué información puedo obtener de cada tipo de datos?
+  - ¿Para qué sirven las *búsquedas programáticas*?
 
 ## Contexto filosófico
 - La biología es una ciencia **empírica**.
@@ -22,7 +24,7 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ## Metadata. *Minimum Information about a Microarray Experiment*
 <div class="centered">
-![](miame.png)
+![](imatges/miame.png)
 
 6 tipos de datos en MIAME y enlaces externos.
 </div>
@@ -41,7 +43,7 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ## *International Nucleotide Sequence Database Collaboration*
 <div class="centered">
-![](insdc_shoukai.png){width=500px}
+![](imatges/insdc_shoukai.png){width=500px}
 </div>
 
 ## *European Nucleotide Archive* (ENA)
@@ -54,24 +56,24 @@ knitr::opts_chunk$set(echo = FALSE)
 
 
 ## ENA. Contenidos
-![](data_tiers_diagram.png){width=800px}
+![](imatges/data_tiers_diagram.png){width=800px}
 
 ## ENA. Estadísticas {.columns-2}
 <div class="float: left; width: 50%;">
-![](ena_embl_growth.png){width=400px}
+![](imatges/ena_embl_growth.png){width=400px}
 </div>
 
 <div class="float: right; width: 50%;">
-![](ena_embl_doubling.png){width=400px}
+![](imatges/ena_embl_doubling.png){width=400px}
 </div>
 
 ## ENA. Estadísticas {.columns-2}
 <div class="float: left; width: 50%;">
-![](ena_sra_growth.png){width=400px}
+![](imatges/ena_sra_growth.png){width=400px}
 </div>
 
 <div class="float: right; width: 50%;">
-![](ena_sra_doubling.png){width=400px}
+![](imatges/ena_sra_doubling.png){width=400px}
 </div>
 
 ## ENA. [Búsqueda avanzada](https://www.ebi.ac.uk/ena/browser/advanced-search)

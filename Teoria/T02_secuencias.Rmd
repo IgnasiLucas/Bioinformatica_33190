@@ -1,7 +1,6 @@
 ---
 title: "Tema 2. Análisis de secuencias"
-author: "J. Ignacio Lucas Lledó"
-date: "20/1/2021"
+date: "Actualizado en: `r format(Sys.Date(), '%d/%m/%Y')`"
 output: ioslides_presentation
 ---
 
@@ -43,32 +42,35 @@ knitr::opts_chunk$set(echo = FALSE)
 </div>
 
 ## Códigos IUPAC. Aminoácidos {.smaller}
-Símbolo    3 letras     aminoácido
--------    --------     ----------
-A          Ala          Alanine
-C          Cys          Cysteine
-D          Asp          Aspartic Acid
-E          Glu          Glutamic Acid
-F          Phe          Phenylalanine
-G          Gly          Glycine
-H          His          Histidine
-I          Ile          Isoleucine
-K          Lys          Lysine
-L          Leu          Leucine
+<div class="columns-2">
+ Símbolo    3 letras     aminoácido
+ -------    --------     ----------
+ A          Ala          Alanine
+ C          Cys          Cysteine
+ D          Asp          Aspartic Acid
+ E          Glu          Glutamic Acid
+ F          Phe          Phenylalanine
+ G          Gly          Glycine
+ H          His          Histidine
+ I          Ile          Isoleucine
+ K          Lys          Lysine
+ L          Leu          Leucine
 
-## Códigos IUPAC. Aminácidos (cont.) {.smaller}
-Símbolo    3 letras     aminoácido
--------    --------     ----------
-M          Met          Methionine
-N          Asn          Asparagine
-P          Pro          Proline
-Q          Gln          Glutamine
-R          Arg          Arginine
-S          Ser          Serine
-T          Thr          Threonine
-V          Val          Valine
-W          Trp          Tryptophan
-Y          Tyr          Tyrosine
+
+ Símbolo    3 letras     aminoácido
+ -------    --------     ----------
+ M          Met          Methionine
+ N          Asn          Asparagine
+ P          Pro          Proline
+ Q          Gln          Glutamine
+ R          Arg          Arginine
+ S          Ser          Serine
+ T          Thr          Threonine
+ V          Val          Valine
+ W          Trp          Tryptophan
+ Y          Tyr          Tyrosine
+
+</div>
 
 ## Formatos de texto plano
 **Texto plano** es cualquier archivo o conjunto de datos compuesto únicamente por **caracteres**.
@@ -87,14 +89,14 @@ Ejemplos: archivos comprimidos, PED binarios (.bed, de plink), BAM, BCF, HDF5...
 - Los aminoácidos se representan del extremo N-terminal al C-terminal.
 - Casi todos los formatos numeran las bases empezando por 1 (*1-start, fully-closed*):
 
-![](T2_1-start-fully-closed.png){width=400px}
+![](imatges/T2_1-start-fully-closed.png){width=400px}
 
 ## Representación de secuencias {.flexbox .vcenter}
 
 Las tablas del [navegador genómico de la UCSC](https://genome.ucsc.edu/index.html), en formato
 BED numeran los nucleótidos de manera diferente, *0-start, half-open*:
 
-![](T2_0-start-half-closed.png){width=500px}
+![](imatges/T2_0-start-half-closed.png){width=500px}
 
 
 ## Formato FASTA
@@ -123,7 +125,7 @@ GTTCAGGGATACGACGTTTGTATTTTAAGAATCTGAAGCAGAAGTCGATGATAATACGCGTCGTTTTATCAT
 IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII6IBIIIIIIIIIIIIIIIIIIIIIIIGII>IIIII-I)8I
 ```
 
-4 líneas por secuencia: `@`nombre, secuencia,`+`(nombre, opcional) y calidades. 
+4 líneas por secuencia: `@`nombre, secuencia,`+`(nombre, opcional) y **calidades**. 
 
 ## Formato FASTQ. Calidades {.smaller}
 ```
@@ -165,7 +167,7 @@ plot(P, Q, type='l', xlab='Probabilidad de error (P)', ylab='Nivel de calidad Ph
 abline(v=0.05, lty=2)
 ```
 
-## Formato EMBL. Cabecera {.smaller}
+## [Formato EMBL](https://www.ebi.ac.uk/ena/browser/search). Cabecera {.smaller}
 ```
 ID   X64011; SV 1; linear; genomic DNA; STD; PRO; 756 BP.
 XX   
@@ -279,6 +281,38 @@ Columna   Descripción
 8         Fase (solo para CDS).
 9         Lista de atributos
 
+## Formato GTF/GFF
+
+Ejemplo de código de R para leer un archivo GFF3:
+
+```{r gff1, echo=TRUE, eval=FALSE}
+# Cargar la libreria:
+library('ape')
+# Definir la localización del archivo en dos variables "d" y "f":
+d <- "https://ftp.ensembl.org/pub/release-86/gff3/homo_sapiens/"
+f <- "Homo_sapiens.GRCh38.86.chromosome.MT.gff3.gz"
+# Descargar el archivo:
+download.file(paste0(d, f), "mt_gff3.gz")
+# Leer el archivo a la tabla "gff.mito":
+gff.mito <- read.gff("mt_gff3.gz", GFF3 = TRUE)
+# Operar sobre "gff.mito", por ejemplo, tabular los tipos:
+table(gff.mito$type)
+# O extraer los inicios de todos los exones:
+gff.mito$start[gff.mito$type == "exon"]
+```
+
+##  Formato GTF/GFF
+
+```{r gff2, echo=TRUE, eval=TRUE}
+library('ape')
+d <- "https://ftp.ensembl.org/pub/release-86/gff3/homo_sapiens/"
+f <- "Homo_sapiens.GRCh38.86.chromosome.MT.gff3.gz"
+download.file(paste0(d, f), "mt_gff3.gz")
+gff.mito <- read.gff("mt_gff3.gz", GFF3 = TRUE)
+table(gff.mito$type)
+gff.mito$start[gff.mito$type == "exon"]
+```
+
 ## Formato BED (*Browser Extensible Data*) {.smaller}
 (https://genome.ucsc.edu/FAQ/FAQformat.html#format1)
 
@@ -301,10 +335,20 @@ chr7    127480532  127481699  Neg4  0  -  127480532  127481699  0,0,255
 <div class="centered">
 (https://bedtools.readthedocs.io/en/latest/)
 
-![](intersect-glyph.png){width=500px}
+![](imatges/intersect-glyph.png){width=500px}
 </div>
 
-## Formato SAM
+## Formato BED
+
+```{r bed, echo=TRUE}
+suppressWarnings(suppressMessages(library('genomation')))
+tab.file1 <- system.file("extdata/tab1.bed", package = "genomation")
+readGeneric(tab.file1, header = TRUE, keep.all.metadata = TRUE)
+```
+
+[genomation](https://www.bioconductor.org/packages/release/bioc/vignettes/genomation/inst/doc/GenomationManual.html)
+
+## [Formato SAM](https://en.wikipedia.org/wiki/SAM_(file_format). Introducción
 ```
 Coor      12345678901234  5678901234567890123456789012345
 ref       AGCATGTTAGATAA**GATAGCTGTGCTAGTAGGCAGTCAGCGCCAT
@@ -332,6 +376,16 @@ r004    0 ref 16 30 6M14N5M     *  0   0 ATAGCTTCAGC       *
 r003 2064 ref 29 17 6H5M        *  0   0 TAGGC             * SA:Z:ref,9,+,5S6M,30,1;
 r001  147 ref 37 30 9M          =  7 -39 CAGCGGCAT         * NM:i:1
 ```
+
+La cadena CIGAR **8M2I4M1D3M** describe cómo se alinea la secuencia:
+
+  - 8M: 8 nucleótidos alineados (*matched*).
+  - 2I: 2 nucleótidos insertados.
+  - 4M: 4 nucleótidos alineados.
+  - 1D: 1 nucleótido eliminado (*deleted*).
+  - 3M: 3 nucleótidos alineados.
+
+"S" (*soft clipped*) y "H" (*hard clipped*) indican extremos no alineados.
 
 ## Formato SAM. Campos obligatorios {.smaller}
  Columna  Nombre   Tipo        Descripción

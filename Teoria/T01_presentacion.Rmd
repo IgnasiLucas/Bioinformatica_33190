@@ -1,8 +1,7 @@
 ---
 title: "Bioinformatica"
 subtitle: "Tema 1. Presentación"
-author: "J. Ignacio Lucas Lledó"
-date: "`r format(Sys.Date(), '%d/%m/%Y')`"
+date: "Actualizado en: `r format(Sys.Date(), '%d/%m/%Y')`"
 output: ioslides_presentation
 ---
 

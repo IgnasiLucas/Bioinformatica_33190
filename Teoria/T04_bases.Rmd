@@ -1,7 +1,6 @@
 ---
 title: "Tema 4. Bases de datos secundarias"
-author: "J. Ignacio Lucas Lledó"
-date: "15/2/2022"
+date: "Actualizado en: `r format(Sys.Date(), '%d/%m/%Y')`"
 output: ioslides_presentation
 ---
 
@@ -22,7 +21,7 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ## UniProt
 <div class="centered">
-![](uniprot.png)
+![](imatges/uniprot.png)
 </div>
 
 ## UniProt. Cuestionario.
@@ -40,7 +39,7 @@ knitr::opts_chunk$set(echo = FALSE)
   
 ## Pfam. HMMER3
 <div class="centered">
-![](hmm.png)
+![](imatges/hmm.png)
 </div>
 
 ## Pfam. Para qué sirve
@@ -70,12 +69,12 @@ Registros en Pfam relacionados por semejanza de:
 
 ## [Pfam](http://pfam.xfam.org/)
 <div class="centered">
-![](pfam.png){width=800px}
+![](imatges/pfam.png){width=800px}
 </div>
 
 ## Pfam. Resultados
 <div class="centered">
-![](result1.png){width=800px}
+![](imatges/result1.png){width=800px}
 </div>
 
 ## Pfam. Acceso a los datos
@@ -84,7 +83,7 @@ Registros en Pfam relacionados por semejanza de:
 - Acceso programatico con API **RESTful**.
 
 ## Rfam
-![](Rfam.png){width=800px}
+![](imatges/Rfam.png){width=800px}
 
 ## [ENSEMBL](https://www.ensembl.org)
 <div class="centered">
@@ -117,7 +116,7 @@ $\downarrow$
 - REST API (independiente de lenguaje).
 
 ## [ENSEMBL](https://www.ensembl.org)
-![](ensembl2.png){width=800px}
+![](imatges/ensembl2.png){width=800px}
 
 ## KEGG
 
@@ -126,6 +125,6 @@ $\downarrow$
 ## [KEGG](https://www.kegg.jp/)
 
 <div class="centered">
-![](kegg.png){width=700px}
+![](imatges/kegg.png){width=700px}
 </div>
 

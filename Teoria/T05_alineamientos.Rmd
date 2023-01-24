@@ -1,7 +1,6 @@
 ---
 title: "Tema 5. Alineamiento de secuencias"
-author: "J. Ignacio Lucas Lledó"
-date: "19/2/2021"
+date: "Actualizado en: `r format(Sys.Date(), '%d/%m/%Y')`"
 output: ioslides_presentation
 ---
 
@@ -58,7 +57,7 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ## Alineamientos globales
 <div class="centered">
-![](needleman_wunsch.png){width=300px}
+![](imatges/needleman_wunsch.png){width=300px}
 
 Algoritmo de Needleman-Wunsch (programación dinámica).
 Garantiza el alineamiento *óptimo*.
@@ -67,7 +66,7 @@ La puntución total es la suma de las puntuaciones de cada posición.
 
 ## Alineamientos globales
 <div class="centered">
-![](needleman_wunsch.png){width=300px}
+![](imatges/needleman_wunsch.png){width=300px}
 
 Tres alineamientos de puntuación óptima de 0:
 ```{}
@@ -76,8 +75,6 @@ G-ATTACA      G-ATTACA      G-ATTACA
 ```
 
 </div>
-
-
 
 ## Esquemas de puntuación
 - Simple:
@@ -104,7 +101,7 @@ Este esquema de puntuación valora más las coincidencias de timinas en el aline
 
 ## Matriz PAM
 <div class="centered">
-![](dayhoff.jpg){width=300px}
+![](imatges/dayhoff.jpg){width=300px}
 
 Margaret Dayhoff introdujo las matrices PAM en 1978 para el alineamiento de proteínas.
 
@@ -121,7 +118,7 @@ kable(PAM250[0:20,0:20]) %>% kable_styling(bootstrap_options = c('basic','conden
 
 ## BLOSUM (*block substitution matrix*)
 <div class="centered">
-![](BLOSUM62.png){width=600px}
+![](imatges/BLOSUM62.png){width=600px}
 
 BLOSUM62
 </div>
@@ -136,12 +133,12 @@ kable(M, caption="Correspondencia aproximada entre matrices PAM y BLOSUM") %>%
 
 ## Alineamientos locales
 <div class="centered">
-![](dotplot.png){width=500px}
+![](imatges/dotplot.png){width=500px}
 </div>
 
 ## Algoritmo de Smith-Waterman
 <div class="centered">
-![](smith-waterman.gif)
+![](imatges/smith-waterman.gif)
 </div>
 
 # Alineamientos múltiples
@@ -155,7 +152,7 @@ http://www.clustal.org/
 
 ## MUSCLE {.smaller}
 <div class="centered">
-![](muscle.png){width=600.px}
+![](imatges/muscle.png){width=600.px}
 
 https://www.drive5.com/muscle/manual/index.html
 </div>

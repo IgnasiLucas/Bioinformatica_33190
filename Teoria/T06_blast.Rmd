@@ -1,7 +1,6 @@
 ---
 title: "Basic Local Alignment Search Tool (BLAST)"
-author: "J. Ignacio Lucas Lledó"
-date: "6/3/2022"
+date: "Actualizado en: `r format(Sys.Date(), '%d/%m/%Y')`"
 output: ioslides_presentation
 ---
 
@@ -61,7 +60,7 @@ knitr::opts_chunk$set(echo = FALSE)
 5\. Alarga la *semilla* de los alineamientos encontrados (*High-scoring Segment Pair*, HSP).
 
    <div class="centered">
-   ![](seed.jpg)
+   ![](imatges/seed.jpg)
    </div>
 
 ## Cómo funciona
@@ -149,7 +148,7 @@ Ejemplo de *Position Specific Scoring Matrix*
 
 ## PSI-BLAST {.flexbox .vcenter}
 
-![](psi-blast.png){width=500px}
+![](imatges/psi-blast.png){width=500px}
 
 El PSI-BLAST empieza como un BLASTP (1). A partir del alineamiento de las
 secuencias homólogas que superan el umbral de valor E, genera una PSSM (2).
@@ -159,7 +158,7 @@ al alineamiento y repetir el ciclo.
 ## [PSI-BLAST](https://www.ebi.ac.uk/Tools/sss/psiblast/)
 
 <div style="float: left; width: 40%;">
-![(Humana Press, 2007)](PCNA.png){width=200px}
+![(Humana Press, 2007)](imatges/PCNA.png){width=200px}
 </div>
 
 <div style="float: right; width: 60%;">
