@@ -1,0 +1,184 @@
+---
+title: "Práctica del tema 2. Análisis de secuencias"
+output: html_document
+date: "`r format(Sys.Date(), '%d/%m/%Y')`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introducción
+
+En la carpeta `data` tenemos dos archivos de secuencias cortas en formato *fastq*,
+que contienen lecturas emparejadas (*paired end reads*) de la secuenciación de un
+aislado de coronavirus.
+
+Los objetivos son:
+
+0. Familiarizarnos con el entorno de R y RStudio.
+1. Usar el paquete `ShortReads` para comprobar la calidad y las características de
+   las secuencias.
+2. Mapear (alinear) las lecturas al genoma de referencia del SARS-CoV-2, usando el
+   paquete `Rbowtie2`.
+
+## R y RStudio
+
+1. En la consola de R, practica los comandos siguientes y las variaciones que consideres oportunas. Asegúrate de comprender para qué sirven y los mensajes de error, si aparecen.
+
+```{r basics, eval=FALSE}
+# Variables y operaciones numericas:
+UnNumero <- 7
+MasNumeros <- c(1, 7, 3, 5, 14)
+UnNumero * MasNumeros
+sqrt(MasNumeros)
+log(MasNumeros)
+log(MasNumeros)[4]
+2 ^ c(0, 1, 2, 3, 4)
+1:7+3
+1:(7+3)
+
+# Cadenas de caracteres:
+Palabras <- c('El', 'Nap-i-col', 'Atàvic')
+Palabras
+paste(Palabras, collapse = ' ')
+Palabras[c(2,3)]
+startsWith(Palabras, 'N')
+Palabras[startsWith(Palabras, 'A')]
+
+# Marcos de datos (tabla de datos de diferentes tipos):
+MarcoDeDatos <- data.frame(
+  muestra = c('A', 'B', 'C', 'D'),
+  color = factor(c('pálido', 'pálido', 'oscuro', 'oscuro'), levels = c('blanco', 'pálido','oscuro')),
+  longitud = c(11.15, 10.03, 9.09, 11.48),
+  puntuacion = c(42.3, 41.4, 40.7, 42.6),
+  dummy1 = c(FALSE, TRUE, TRUE, FALSE)
+)
+MarcoDeDatos
+# Podemos seleccionar columnas individuales, o filas, etc.
+MarcoDeDatos$muestra
+MarcoDeDatos[1, ]
+MarcoDeDatos[, c('longitud', 'puntuacion')]
+
+# Gráficas: plot(x, y)
+plot(MarcoDeDatos$longitud, MarcoDeDatos$puntuacion)
+```
+
+El dominio del lenguaje R **no** es un objetivo del curso, y un conocimiento
+básico será más que suficiente. En cualquier caso, existen miles de recursos
+disponibles para aprender R de forma autónoma. Si os interesa, os recomiendo:
+
+- [Los materiales de la Software Carpentry](https://software-carpentry.org/lessons/)
+- [La guía de R para piratas](https://bookdown.org/ndphillips/YaRrr/)
+
+Antes de usar los datos de la práctica, deberías decirle a R en qué carpeta quieres trabajar,
+para que pueda encontrar la subcarpeta `data`, con los datos de la práctica. Por ejemplo,
+si has descargado y descomprimido la carpeta `T02_secuencias` en `/home/user/Downloads`, entonces:
+
+```{r path, eval=FALSE}
+# "Set working directory":
+setwd('/home/user/Downloads/T02_secuencias')
+```
+
+## Control de calidad de lecturas cortas
+
+1. Ejecuta el código siguiente. ¿Tienes claro para qué sirve? Si surge algún error, intenta resolverlo:
+
+```{r library, eval=FALSE}
+library('ShortRead')
+```
+
+2. Ejecuta y edita, si quieres, el código siguiente, e intenta responder las preguntas siguientes. Puedes usar `help(qa)` para consultar la ayuda de la función `qa()`.
+
+```{r quality, eval=FALSE}
+ResumenCalidad <- qa('data', type = 'fastq', pattern = '*.fastq')
+```
+
+- ¿Sabrías decir para qué sirve cada parte del código anterior?
+- ¿Qué ha sucedido?
+- ¿Dónde están los resultados?
+- ¿Crees que es práctico el nombre "ResumenCalidad"? ¿O prefieres usar otro?
+
+3. El comando siguiente muestra el primer elemento del informe de calidad: una tabla con el número de lecturas presentes en cada archivo *fastq*. Siguiendo el ejemplo, consulta cada uno de los elementos del objeto `ResumenCalidad` e intenta responder a las preguntas siguientes.
+
+```{r readCounts, eval=FALSE}
+ResumenCalidad[['readCounts']]
+```
+
+- ¿Cuál de los dos archivos fastq crees que contiene secuencias de mayor calidad?
+- ¿Por qué crees que el marco de datos `alignQuality` está vacío?
+- ¿Cuál es la composición nucleotídica del genoma secuenciado?
+- ¿Encuentras por algún lado cuál es la longitud de las lecturas?
+
+4. El comando siguiente genera un informe en formato `html` a partir de los datos en `ResumenCalidad`. Abre el informe y asegúrate de comprender sus diferentes apartados. Tal vez te ayude a contestar alguna de las preguntas anteriores. ¿Por qué crees que el número de nucleótidos observados disminuye con el número de *ciclos de secuenciación*?
+
+```{r informe, eval=FALSE}
+report(ResumenCalidad, dest = 'InformeCalidad')
+```
+
+5. Como nuestros archivos *fastq* son pequeños, podemos leerlos y cargar todas las secuencias en el espacio de trabajo. Esto nos ayudará a ver las longitudes de las lecturas.
+
+```{r read, eval=FALSE}
+R1 <- readFastq('data/ERR4423464_1.fastq')
+R2 <- readFastq('data/ERR4423464_2.fastq')
+sread(R1)
+sread(R2)
+quality(R1)
+quality(R2)
+# La función "width()" extrae las longitudes de las 65135 secuencias.
+# La función "head()" muestra los 6 primeros valores de su argumento.
+head(width(R1))
+head(width(R2))
+summary(width(R1))
+summary(width(R2))
+hist(width(R1))
+hist(width(R2))
+```
+
+- ¿Cuál crees que es la longitud de la lectura más corta en cada archivo?
+- ¿Por qué crees que hay lecturas de menos de 200 *ciclos* (o nucleótidos)?
+
+## Mapeo de lecturas cortas a un genoma de referencia
+
+1. Mapear las lecturas en un genoma de referencia es encontrar su alineamiento local óptimo. Los algoritmos exigen que el genoma de referencia (generalmente un archivo FASTA) esté **indexado**. Así pues, el primer paso es indexar el genoma de referencia.
+
+```{r rbowtie, eval=FALSE}
+library(Rbowtie2)
+# Si "Rbowtie2" no está instalado, ejecuta:
+#   install.packages('Rbowtie2')
+
+bowtie2_build(references = 'data/referencia.fna',
+              bt2Index = 'SARS-Cov2',
+              '--quiet',
+              overwrite = TRUE)
+```
+
+- Observa los cambios en la carpeta de trabajo.
+- Una vez creado el índice, ¿en qué caso habría que volver a crearlo?
+
+2. Ejecuta el comando siguiente, observa el resultado y los cambios en la carpeta de trabajo, y asegúrate de poder contestar las preguntas siguientes.
+
+```{r mapping, eval=FALSE}
+bowtie2(bt2Index  = 'SARS-CoV2',
+        samOutput = 'ERR4423464.sam',
+        seq1 = 'data/ERR4423464_1.fastq',
+        seq2 = 'data/ERR4423464_2.fastq',
+        overwrite = TRUE)
+```
+
+- ¿Cómo podrías guardar el mensaje de salida en una variable?
+- ¿Cuántos pares de lecturas alinearon de forma discordante?
+- ¿Qué ventajas puede tener ejecutar este análisis desde una sesión de R, en lugar de usar directamente el programa `bowtie2` en un terminal Linux?
+
+3. Veamos los resultados del mapeo.
+
+```{r rsamtools, eval=FALSE}
+library('Rsamtools')
+asBam('ERR4423464.sam', destination='ERR4423464', overwrite = TRUE)
+quickBamFlagSummary('ERR4423464.bam')
+```
+
+- ¿Te parece que el mapeo es satisfactorio?
+- ¿A qué puede deberse que algunas lecturas no encuentran su lugar de origen en el genoma de referencia?
+- ¿Para qué crees que sirve tener las lecturas mapeadas? ¿Qué análisis vendrían después?
+- Los datos y los resultados quedan *ocultos* detrás de una variable o de un archivo enorme. Piensa de qué otras maneras te gustaría visualizar los datos para conocerlos mejor.
