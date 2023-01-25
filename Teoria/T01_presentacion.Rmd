@@ -1,5 +1,5 @@
 ---
-title: "Bioinformatica"
+title: "Bioinformática"
 subtitle: "Tema 1. Presentación"
 date: "Actualizado en: `r format(Sys.Date(), '%d/%m/%Y')`"
 output: ioslides_presentation
@@ -83,6 +83,6 @@ knitr::opts_chunk$set(echo = FALSE)
 
 - **Bioinformatics and Functional Genomics**, 3a. edición por Jonathan Pevsner (2015). Publicado por Wiley-Blackwell.
 - [The Software Carpentry](https://software-carpentry.org/)
-- etc.
+- [El repositorio público de los materiales de este curso](https://github.com/IgnasiLucas/Bioinformatica_33190)
 
 
