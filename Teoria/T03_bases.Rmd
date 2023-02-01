@@ -24,7 +24,7 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ## Metadata. *Minimum Information about a Microarray Experiment*
 <div class="centered">
-![](imatges/miame.png)
+![<sup>Imagen de: Cath Brooksbank & Andrew Cowley</sup>](imatges/miame.png)
 
 6 tipos de datos en MIAME y enlaces externos.
 </div>

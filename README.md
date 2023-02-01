@@ -20,6 +20,8 @@ seria el següent:
 - Crear un *pull request* perquè jo sàpiga que has introduït canvis, per si els vull afegir.
 
 Un bon punt de començament per aprendre tot açò és el llibre [Pro Git](https://git-scm.com/book/en/v2).
+Un altre és [The Turing Way](https://the-turing-way.netlify.app), un llibre obert, creat col·laborativament,
+amb tota la informació per fer qualsevol projecte reproduïble.
 
 A més dels *pull request*, Github ens ofereix els *issues*, que van molt bé per
 mantenir un llistat de tasques a realitzar, i on podem fer comentaris i discutir els

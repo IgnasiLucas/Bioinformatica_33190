@@ -585,7 +585,7 @@ n="Haplotype Quality">
 
 ## *Hierarchical data format*
 <div align='right'>
-![](HDF_logo.svg.png){width=300px}
+![](imatges/HDF_logo.svg.png){width=300px}
 </div>
 
 - Desarrollado por [*The HDF Group*](https://www.hdfgroup.org/).
