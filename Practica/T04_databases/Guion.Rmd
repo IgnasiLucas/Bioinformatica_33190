@@ -1,0 +1,290 @@
+---
+title: "Pràctica del tema 4. IntrePro"
+output: html_document
+date: "`r format(Sys.Date(), 'Última actualización: %d/%m/%Y')`"
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduccion
+Todas las consultas a InterPro [@Paysan-Lafosse2022] deben empezar con la dirección de la API:
+`https://www.ebi.ac.uk/interpro/api/` [@API]. Por tanto, guardo esta URL básica
+como cadena de caracteres en la variable `API`:
+
+```{r url}
+API <- 'https://www.ebi.ac.uk/interpro/api/'
+```
+
+La API devuelve los datos en un formato llamado JSON, basado en texto plano.
+Necesitamos un paquete que nos ayude a leer los archivos JSON. Por ejemplo,
+`jsonlite` [@jsonlite]:
+
+```{r library}
+library('jsonlite')
+```
+
+## Contar registros
+
+En InterPro existen seis tipos principales de datos:
+
+- *Entry*: elementos funcionales predichos sobre las proteínas. Se pueden 
+distinguir los definidos por cada base de datos: InterPro, Pfam, CDD, etc.
+- *Protein*: las secuencias proteicas procedentes de UniProtKB. Pueden ser
+*reviewed* (Swiss-Prot) o *unreviewed* (TrEMBL).
+- *Taxonomy*: Organismo y su linaje del que proviene una proteína. La fuente
+de estos datos es UniProtKB.
+- *Structure*: Estructuras tridimensionales de las proteínas. Proporcionadas
+por la base de datos PDB.
+- *Set*: Conjuntos de registros (*entries*) relacionados, de acuerdo con las
+bases de datos Pfam o CDD.
+- *Proteome*: Conjuntos de proteínas de un mismo organismo. Proporcionados por
+UniProtKB.
+
+Podemos consultar el número de registros de tipo *entry* en la URL
+`https://www.ebi.ac.uk/interpro/api/entry`, cuyo contenido se muestra aquí:
+
+```{r showJSON, echo=FALSE}
+# Abrimos la conexión a URL la https://www.ebi.ac.uk/interpro/api/entry
+con <- url(paste0(API, 'entry'), 'r')
+# Leemos las líneas en JSON, y les añadimos formato.
+prettify(readLines(con, warn = FALSE))
+# Cerramos la conexión
+close(con)
+```
+
+La función `fromJSON` del paquete `jsonlite` nos permite guardar este tipo de
+datos en una lista de listas. En R, podemos acceder a los elementos de una
+lista con la función *doble corchete* `[[`. 
+
+```{r readJSON, eval=FALSE}
+registros <- fromJSON(paste0(API, 'entry'))
+registros[[1]][['member_databases']]
+```
+
+### Ejercicio 1
+Añade un bloque de código a este mismo documento y escribe las órdenes para
+guardar en tres variables los números de proteínas revisadas y no revisadas
+(de UniProtKB), así como el de las incluídas en InterPro.
+
+## Lista de datos de algún tipo
+
+Si además del tipo de datos (*entry*, *protein*, *taxonomy*...), añadimos a la
+URL la base de datos de origen que queremos consultar, obtendremos la lista
+(completa?) de los registros de ese tipo provenientes de esa base de datos. 
+Por ejemplo:
+
+- https://www.ebi.ac.uk/interpro/api/entry/interpro
+- https://www.ebi.ac.uk/interpro/api/entry/pfam
+- https://www.ebi.ac.uk/interpro/api/protein/reviewed
+- https://www.ebi.ac.uk/interpro/api/taxonomy/uniprot
+
+Pero, para no saturar los servidores, InterPro sólo devuelve los 20 primeros
+registros de cada consulta, y ofrece una nueva URL ('next') para poder ver
+o descargar los 20 siguientes.
+
+A continuación, usamos la función `fromJSON()` de `jsonlite` para descargar los
+20 primeros registros de tipo Pfam y exploramos el resultado.
+
+```{r Pfam1, results='hide'}
+pfam01 <- fromJSON(paste0(API, 'entry/pfam'))
+class(pfam01)
+length(pfam01)
+names(pfam01)
+pfam01[['count']]
+pfam01[['next']]
+pfam01[['previous']]
+pfam01[['results']]
+pfam01[['results']][['metadata']]
+```
+
+Los siguientes 20 registros de Pfam se encuentran en `pfam01[['next']]`:
+`r pfam01[['next']]`. Y los podemos descargar igual.
+
+```{r pfam2}
+# El paquete "knitr" me permite utilizar la función "kable()", para presentar
+# un marco de datos como una bonita tabla en el documento html.
+library(knitr)
+pfam02 <- fromJSON(pfam01[['next']])
+kable(pfam02[['results']][['metadata']])
+```
+
+### Ejercicio 2
+Crea una tercera lista con los contenidos de la tercera página de registros
+de Pfam. Hazlo en un bloque de código en este mismo documento para dejar constancia.
+
+## Unión de *páginas* en un mismo *data frame*
+El paquete `jsonlite` nos ofrece la función `rbind_pages()` para juntar una lista
+de *data frames* en uno solo:
+
+```{r rbind_pages}
+pfam <- rbind_pages(list(pfam01[['results']][['metadata']],
+                         pfam02[['results']][['metadata']]))
+```
+
+Pero para leer y descargar todas las páginas, necesitaríamos alguna manera de
+automatizar el proceso. En el Apéndice encontrarás una solución posible.
+
+## Mostrar todos los detalles de un registro concreto
+
+Ya sabemos cómo mostrar el número de registros de un tipo y cómo descargar la
+lista de todos ellos (de 20 en 20). El siguiente paso es descargar toda la
+información relativa a un registro concreto, del cual debemos saber su identificador.
+Por ejemplo, el dominio PF06235 de Pfam. Para ello, añadimos un tercer campo
+a la URL, después del tipo de datos y del nombre de la base de datos de procedencia:
+el identificador del registro que queremos descargar:
+
+https://www.ebi.ac.uk/interpro/api/entry/pfam/PF06235
+
+La función genérica `str()` de R nos describe la estructura de cualquier
+objeto en R, y nos puede ayudar a entender cómo podemos acceder a cada dato
+del registro:
+
+```{r PF06235}
+pf06235 <- fromJSON(paste0(API, 'entry/pfam/PF06235'))
+str(pf06235)
+nombre_largo <- pf06235[['metadata']][['name']][['name']]
+nombre_largo
+```
+
+### Ejercicio 3
+Usa la función `fromJSON()` para guardar la información del registro P01923 
+(proteína de Swiss-Prot) y explora la estructura de los datos con la función
+`str()`. ¿Puedes extraer la secuencia?
+
+## Filtros. Cruzar dos tipos de datos
+Hasta ahora hemos construído una URL con hasta tres elementos: el tipo de datos,
+la base de datos de procedencia, y el identificador concreto. Estos tres
+elementos constituyen el *bloque de punto final* de la URL. También hemos visto
+que InterPro devuelve una estructura de datos diferente en función de cuantos
+de esos tres elementos usamos (sólo el tipo de datos es obligatorio): un
+recuento de registros, una lista de registros, o toda la información de un
+registro concreto.
+
+Si al *bloque de punto final* añadimos un segundo tipo de datos, obtendremos
+un recuento o una lista del primer tipo de datos con información sobre el
+segundo. Por ejemplo, al comparar estas 2 URLs:
+
+- https://www.ebi.ac.uk/interpro/api/protein
+- https://www.ebi.ac.uk/interpro/api/protein/entry
+
+podemos observar que no en todas las proteínas en UniProtKB se encuentra algún
+dominio o elemento funcional en InterPro.
+
+### Ejercicio 4
+Determina cuántos táxones de UniProtKB no tienen ninguna proteína asignada.
+¿Y qué proporción de proteínas cuentan con una estructura terciaria? Intenta
+registrar tu cálculo en un bloque de código en este mismo documento.
+
+## Filtros. Subconjunto de registros
+
+Podemos especificar un registro concreto de un tipo de datos para limitar una
+lista de registros de otro tipo de datos. Por ejemplo, la lista de proteínas
+de la base de datos *reviewed* (Swiss-Prot) anotadas con la familia Pfam
+PF00019 (*Transforming grow factor beta like domain*):
+
+https://www.ebi.ac.uk/interpro/api/protein/reviewed/entry/pfam/PF00019
+
+Para extraer la información desde R, tenemos que familiarizarnos con la estructura
+de los datos.
+
+```{r filtros}
+library(kableExtra)
+pfam00019 <- fromJSON(paste0(API, 'protein/reviewed/entry/pfam/PF00019'))
+names(pfam00019)
+pfam00019[['count']]
+names(pfam00019[['results']])
+# La función "flaten()" corrige el anidamiento de marcos de datos,
+# y la función "kable_styling()" mejora la apariencia de la tabla
+# en el documento html.
+kable(flatten(pfam00019[['results']][['metadata']])) %>%
+   kable_styling()
+```
+
+### Ejercicio 5
+Intenta obtener una lista de los dominios de Pfam presentes en vertebrados
+(taxon 7742). Al menos, los 20 primeros.
+
+### Ejercicio 6
+¿Cuántas proteínas de cocodrilos (taxon 8493) conocemos con el dominio
+*zinc finger, C2HC type* (Pfam PF01530)?
+
+## Apéndice. Cómo juntar todas las páginas
+
+A continuación utilizo un bucle para crear una lista de marcos de datos que
+después podemos unir mediante la función `rbind_pages()`. Mi objetivo es extraer
+todos los dominios de Pfam conocidos en equinodermos (taxon 7586).
+
+Descargar todas las páginas de dominios presentes en proteínas de equinodermos puede
+llevar bastante tiempo. Por eso, guardo el marco de datos resultante en un archivo
+y me ahorro tener que ejecutar la búsqueda cada vez que le doy al botón `Knit`.
+
+```{r equinodermata}
+# Si ya existe la tabla, la cargamos:
+if (file.exists('equinodermata.Rds')) {
+   equinodermata <- readRDS(file = 'equinodermata.Rds')
+# Si no existe, la creamos:
+} else {
+   primera <- fromJSON(paste0(API, 'entry/pfam/taxonomy/uniprot/7586'))
+   todas <- list(primera[['results']][['metadata']])
+   siguienteURL <- primera[['next']]
+   while (! is.null(siguienteURL)) {
+      siguiente <- fromJSON(siguienteURL)
+      cuantas <- length(todas)
+      todas[[cuantas + 1]] <- siguiente[['results']][['metadata']]
+      siguienteURL <- siguiente[['next']]
+   }
+   equinodermata <- rbind_pages(todas)
+   # Aquí es donde guardamos una variable de R en un archivo Rds:
+   saveRDS(equinodermata, file = 'equinodermata.Rds')
+   dim(equinodermata)
+}
+```
+
+A continuación, hago lo mismo para los cordados. Puesto que conocemos más proteínas
+de cordados que de equinodermos, no es sorprendente que haya más dominios proteicos
+conocidos de cordados. Por cierto, los cordados somos el taxon 7711.
+
+```{r cordata}
+if (file.exists('chordata.Rds')) {
+   chordata <- readRDS(file = 'chordata.Rds')
+} else {
+   primera <- fromJSON(paste0(API, 'entry/pfam/taxonomy/uniprot/7711'))
+   todas <- list(primera[['results']][['metadata']])
+   siguienteURL <- primera[['next']]
+   while (! is.null(siguienteURL)) {
+      siguiente <- fromJSON(siguienteURL)
+      cuantas <- length(todas)
+      todas[[cuantas + 1]] <- siguiente[['results']][['metadata']]
+      siguienteURL <- siguiente[['next']]
+   }
+   chordata <- rbind_pages(todas)
+   saveRDS(chordata, file = 'chordata.Rds')
+   dim(chordata)
+}
+```
+
+Por la diferencia en el número de dominios, sabemos que debe haber dominios en
+cordados que no aparecen en equinodermos. Pero podría haber también dominios en
+equinodermos que no aparecen en cordados. Vamos a comprobarlo con la función
+`setdiff()`, que devuelve los elementos del primer vector que no aparecen en el
+segundo:
+
+```{r comparacion}
+SoloEquinodermos <- setdiff(equinodermata$accession, chordata$accession)
+# Del marco de datos "equinodermata" selecciono las filas que corresponden a los
+# dominios exclusivos de equinodermos, y las filas "accession" y "name":
+kable(equinodermata[equinodermata$accession %in% SoloEquinodermos,
+              c('accession', 'name')]) %>% kable_styling()
+```
+
+## Información de la sesión
+
+```{r sessionInfo, echo=FALSE}
+sessionInfo()
+```
+
+
+# Bibliography
