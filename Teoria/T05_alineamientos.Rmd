@@ -109,11 +109,12 @@ Una matriz PAM$_n$ corresponde al tiempo suficiente para que *n* mutaciones haya
 </div>
 
 ## PAM250 {.smaller .flexbox .vcenter}
+
 ```{r}
 suppressMessages(library(Biostrings))
 data(PAM250)
-kable(PAM250[0:20,0:20]) %>% kable_styling(bootstrap_options = c('basic','condensed'),
-                full_width = F)
+kable(PAM250[0:15,0:20]) %>% kable_styling(bootstrap_options = c('basic','condensed'),
+                full_width = TRUE)
 ```
 
 ## BLOSUM (*block substitution matrix*)
@@ -166,3 +167,4 @@ M <- data.frame(Nombre = c('DECIPHER', 'MAFFT', 'T-Coffee'),
                 Licencia = c('GPL', 'BSD', 'GPL2'))
 M %>% kable() %>% kable_styling(bootstrap_options='basic')
 ```
+
