@@ -31,15 +31,23 @@ knitr::opts_chunk$set(echo = FALSE)
 - Comparar dos secuencias y encontrar similitudes locales (como Smith-Waterman).
 - Buscar secuencias parecidas a una *query* en una base de datos (*target*).
 - Múltiples aplicaciones:
-  - Localizar dominios proteicos en una secuencia.
+  - Identificación de bacterias usando 16S rRNA.
+  - Diseño de cebadores para amplificar un gen.
+  - Anotación de regiones codificantes o proteínas.
+  - Identificación de dominios en una proteína.
   - Recopilar secuencias homólogas para crear una filogenia.
-  - Mapear secuencias cortas en un genoma de referencia.
-  - Identificar una especie.
   
+## Para qué sirve
+Partiendo de una secuencia nucleotídica o de proteína:
+
+- ¿Con qué otras está relacionada?¿Cuál es su función? (Homología, dominios conservados).
+- ¿Está ya presente en la base de datos? (Identificación).
+- ¿Dónde se encuentra o cómo está organizada? (Anotación, ensamblaje).
+
 ## Qué meritos tiene
 - Rapidez.
 - Sensibilidad.
-- Estadístico.
+- Estadística.
 
 ## Cómo funciona
 1. Detecta e ignora regiones repetitivas o de *baja complejidad* de la *query*.
@@ -83,97 +91,74 @@ En una búsqueda en una base de datos, *n* es la longitud total de la base de da
 
 $P = 1 -e^{-E}$
 
-Este es el valor *p*.
+Este sería el valor *p*.
 
 ## Test
 - El mismo HSP, en bases de datos de tamaños diferentes, ¿dónde tendrá un valor *E* mayor?
+- ¿Qué es mejor, una base de datos grande o una pequeña?
 - ¿Cómo afectará el tamaño de palabra, *k*, a la sensibilidad?¿Y al tiempo de ejecución?
 - ¿Para qué sirve conocer la distribución teórica de puntuaciones de HSPs?
 
-# BLAST, los programas
+# Ejemplos
 
-## Principales programas
-```{r}
-library('kableExtra')
-M <- data.frame(Programa = c('blastn','blastp','blastx','tblastn','tblastx'),
-                Query = c('DNA','proteína','DNA','proteína','DNA'),
-                'Base de datos' = c('DNA','proteína','proteína','DNA','DNA'))
-kable(M) %>% kable_styling(bootstrap_options = 'basic')
+## [NCBI BLAST](https://blast.ncbi.nlm.nih.gov/Blast.cgi)
+
+![](imatges/T06_ncbi_blast.png){width=700px}
+
+## NCBI BLAST
+
+![](imatges/T06_ncbi_blast_II.png){width=700px}
+
+## Identificación de especies
+
+Secuencias parciales de genes 16S rRNA de bacterias no cultivadas:
+
+```{r rRNA, eval=FALSE, echo=TRUE}
+AM179943.1
+AM179942.1
+AM179941.1
+AM179940.1
+AM179939.1
+AM179938.1
+AM179937.1
+AM179936.1
+AM179935.1
+AM179934.1
+AM179933.1
+AM179932.1
+AM179931.1
 ```
 
-## PSI-BLAST
+## Identificación de especies
 
-<div style="float: left; width=40%;">
+![](imatges/T06_blast_results_I.png){width=700px}
 
-```{r}
-library(knitr)
-library(kableExtra)
-seq <- c('GAGGTAAAC',
-         'TCCGTAAGT',
-         'CAGGTTGGA',
-         'ACAGTCAGT',
-         'TAGGTCATT',
-         'TAGGTACTG',
-         'ATGGTAACT',
-         'CAGGTATAC',
-         'TGTGTGAGT',
-         'AAGGTAAGT')
-kable(seq, col.names = NULL) %>% kable_styling(html_font = 'courier')
-```
+## Diseño de cebadores para el gen [MPO](https://www.ncbi.nlm.nih.gov/nuccore/NM_000250.2)
 
-</div>
+![](imatges/T06_MPO_primers.png){width=700px}
 
-<div style="float: right; width=60%;">
+## Diseño de cebadores para el gen MPO
 
-### PSSM
+![](imatges/T06_primer_BLAST.png){width=700px}
 
-```{r}
-m <- matrix(unlist(lapply(seq, function(x) strsplit(x, ''))),
-            nrow = 10, byrow = TRUE)
-# position frequency matrix
-pfm <- apply(m, 2, function(x) table(factor(x, levels = c('A','C','G','T'), ordered = TRUE)))
+## Diseño de cebadores para el gen MPO
 
-# position probability matrix (with pseudocounts)
-ppm <- (pfm + 0.1) / 10.4
+![](imatges/T06_primer_results.png){width=700px}
 
-background <- matrix(rep(1/4, 36), nrow = 4)
-PSSM <- log(ppm / background, base = 2)
+## Filogenia mitocondrial de hominidos
 
-kable(round(PSSM, digits = 2), col.names = NULL) %>%
-  kable_styling(font_size = 18)
-```
+![Usamos el [mtDNA de *Lemur catta*](https://www.ncbi.nlm.nih.gov/nuccore/AJ421451.1?report=GenBank) como outgroup](imatges/T06_Lemur_catta_mtDNA.png){width=700px}
 
-Ejemplo de *Position Specific Scoring Matrix*
-</div>
+## Filogenia mitocondrial de hominidos
 
-## PSI-BLAST {.flexbox .vcenter}
+![](imatges/T06_primates_tree.png){width=750px}
 
-![](imatges/psi-blast.png){width=500px}
+## Anotación de [un contig de DNA](https://www.ncbi.nlm.nih.gov/nuccore/MIZB01000007.1)
 
-El PSI-BLAST empieza como un BLASTP (1). A partir del alineamiento de las
-secuencias homólogas que superan el umbral de valor E, genera una PSSM (2).
-Y utiliza la PSSM como nueva consulta (query) para añadir secuencias homólogas
-al alineamiento y repetir el ciclo.
+![](imatges/T06_marine_metagenome.png){width=750px}
 
-## [PSI-BLAST](https://www.ebi.ac.uk/Tools/sss/psiblast/)
+## Anotación de un contig de DNA {.vcenter .flexbox}
 
-<div style="float: left; width: 40%;">
-![(Humana Press, 2007)](imatges/PCNA.png){width=200px}
-</div>
+![](imatges/T06_contig_results.png){width=700px}
 
-<div style="float: right; width: 60%;">
-El PSI-BLAST es capaz de detectar la homología entre las secuencias de la
-subunidad $\beta$ de la DNA polimerasa III de *E. coli* (arriba, número de
-acceso NP_002583) y la
-proteína humana PCNA (abajo, NP_002583), de estructura y función similares, pero muy divergente
-en la secuencia aminoacídica.
-</div>
-
-## BLAST en la web
-
-### [NCBI BLAST](https://blast.ncbi.nlm.nih.gov/Blast.cgi)
-
-### [EMBL-EBI BLAST](https://www.ebi.ac.uk/Tools/sss/ncbiblast/)
-
-Existe tamién un paquete de programas `blast` para línea de comandos que
-utilizaremos en prácticas.
+Los resultados del BLASTX sugieren que hay cuatro o cinco genes codificantes de proteínas en el contig.
