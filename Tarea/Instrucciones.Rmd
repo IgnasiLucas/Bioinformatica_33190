@@ -1,0 +1,65 @@
+---
+title: "Instrucciones de la Tarea 1"
+output: html_document
+date: "`r format(Sys.Date(), '%d/%m/%Y')`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Objetivo
+El objetivo de la Tarea 1 es crear un documento ejecutable en formato RMarkdown, que combine texto y bloques de código (en R) y que produzca un informe en formato HTML o PDF con los resultados de un análisis bioinformático sencillo.
+
+El trabajo debe ser individual y original.
+
+## Tipo de análisis
+El análisis puede ser de cualquiera de los tipos que hemos visto durante las seis primeras prácticas de la asignatura, o una combinación de ellos: el análisis de calidad de secuencias cortas (fastq), su mapeo a un genoma de referencia, la consulta de bases de datos mediante una API, el alineamiento de secuencias o las búsquedas BLAST. Podéis usar los guiones de prácticas como modelo, pero con dos condiciones:
+
+1. Aplicar el análisis a datos de partida diferentes a los de las prácticas.
+2. Dar al informe la estructura adecuada (ver el apartado siguiente).
+
+## Estructura del documento
+La estructura del informe debe ser la adecuada para comunicar en un contexto profesional los resultados de un análisis, junto con los procedimientos seguidos, para dar a la persona destinataria la posibilidad de reproducir los resultados. Por tanto, debería haber al menos los apartados siguientes:
+
+1. **Introducción**, indicando el objetivo del análisis y la motivación. Es decir, qué te propones hacer y cuál es el contexto que hace el análisis interesante.
+2. **Métodos**, donde se incluirán los bloques de código que ejecutan el análisis.
+3. **Resultados**, donde puede haber bloques de código también para representar los resultados, bien en forma de tabla o figuras.
+4. **Discusión**, donde se extraigan las conclusiones a partir de los resultados y se contesten la preguntas planteadas en la introducción.
+6. **Información de la sesión**. Este es un apartado que se genera automáticamente con la función `sessionInfo()` en un bloque de código, para dar detalles del entorno en el que se ejecutó el análisis. Lo puedes comprobar en los guiones de prácticas.
+6. **Blibliografía**: al menos para dar crédito a las personas que desarrollaron los paquetes o algoritmos que utilizas.
+
+## Evaluación
+
+### Reproducibilidad
+Representa el 50% de la nota de la tarea. El objetivo es que yo pueda obtener el mismo resultado (el mismo informe en formato HTML) que tú, mediante la *compilación* del documento .Rmd. Cuando digo *compilar* quiero decir darle al botón `Knit` para que produzca el documento en formato HTML. Si lo prefieres, también puedes presentar el informe en PDF. En cualquier caso, para que el informe sea reproducible habrá que:
+
+- Evitar que aparezcan errores en la compilación del archivo .Rmd.
+- Entregar junto con el informe los archivos de datos adicionales que sean necesarios, si los hay.
+- Evitar la inclusión de direcciones (*paths*) específicas de tu ordenador en el *script*, ya que no funcionarían en cualquier otro ordenador.
+- Especificar qué paquetes o programas son necesarios, a ser posible en qué versión.
+- Si se usaran números aleatorios, informar de la *semilla* con los que se han iniciado.
+
+### Utilidad
+Representa el 25% de la nota de la tarea. Lo que evaluaré es si se demuestra la utilidad de al menos una herramienta entre las aprendidas en clase. Es decir, el análisis debe incluir la aplicación de al menos uno de los paquetes utilizados en el aula de informática. La máxima puntuación en este apartado se conseguirá si en el análisis se combinan herramientas aprendidas en dos o más sesiones de prácticas. Por ejemplo, descargar secuencias mediante la API de ENA y alinearlas. 
+
+### Formato
+Representa el 25% restante de la nota de la tarea. Evaluaré:
+
+- que el informe se ajuste a la estructura descrita anteriormente,
+- que la introducción motive adecuadamente el análisis, aunque sea mediante un contexto hipotético ficticio. Por ejemplo: "en un laboratorio de cristalización de proteínas se quiere saber cuántas proteína humanas no tienen todavía una estructura terciaria descrita, y quieren un informe fácil de actualizar que extraiga esta información directamente de la base de datos InterPro". El objetivo es que demuetres que sabes para qué podría servir un análisis, en lugar de limitarte a producirlo.
+- que es usa correctamente la sintaxis de Rmarkdown para generar títulos de secciones, letra negrita o cursiva donde sea conveniente, enlaces URL, etc.
+
+## Ejemplos de posibles objetivos
+Algunos ejemplos, basados en las prácticas:
+
+- Alinear un conjunto de secuencias cortas a un genoma de referencia y comentar las estadísticas del resultado. 
+- Realizar un análisis de calidad de las secuencias cortas en algún archivo FASTQ.
+- Obtener una gráfica de cómo ha aumentado el número de registros de algún tipo en la base de datos ENA con el tiempo. (Este es más difícil).
+- Para un estudio de mercado, determinar qué centros de investigación han enviado datos de *muestras ambientales* a la base de datos ENA desde 100 Km alrededor de Valencia.
+- ¿Qué dominios proteicos en InterPro aparecen en hongos Basidiomicotas, pero no en Ascomicotas?
+- A partir de una proteína cualquiera, realizar un BLAST contra la base de datos Swissprot, descargar las proteínas con una similitud suficiente en formato fasta y alinearlas con DECIPHER. (Este es bastante complejo, pero muy útil).
+- Comparar los resultados de un BLASTP y un PSI-BLAST contra la base de datos Swissprot.
+- Evaluar el efecto que tiene cambiar el tamaño de palabra (u otro parámetro) en BLASTN o BLASTP sobre la sensibilidad de la búsqueda y/o el tiempo de búsqueda.
+- Obtener gráficas que relacionen el valor E de los resultados de un BLASTP con: la longitud del alineamiento, el *bit score* o el número de *mismatches*.
+
