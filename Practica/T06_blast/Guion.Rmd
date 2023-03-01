@@ -22,9 +22,11 @@ Lo primero es asegurarnos de que tenemos `blast+` instalado. En los ordenadores 
 
 ```{r PATH, eval=FALSE}
 # Este bloque no se ejecuta ("eval=FALSE") porque no funcionaría en cualquier
-# ordenador.
+# ordenador. Para que funcione, edita la variable BLAST_PATH a continuación,
+# especificando la dirección de los ejecutables de BLAST en tu ordenador.
+BLAST_PATH <- 'C:/Program Files/NCBI/blast-BLAST_VERSION+/bin'
 Sys.setenv(PATH = paste(Sys.getenv('PATH'),
-                        'C:/Program Files/NCBI/blast-BLAST_VERSION+/bin',
+                        BLAST_PATH,
                         sep=.Platform$path.sep))
 ```
 
@@ -44,7 +46,6 @@ programa `blastn`. Asegúrate de poder contestar las preguntas siguientes:
 - ¿Es posible crear un archivo HTML con los resultados?
 
 ## Descarga de las bases de datos
-
 El bloque de código siguiente descarga y descomprime dos bases de datos: 16S_ribosomal_RNA y Swissprot:
 
 ```{r databases}
@@ -143,27 +144,49 @@ EF604435.1
 EF604230.1
 
 ## BLASTX
-
 El contig MIZB01000007.1 fue ensamblado de una muestra marina, y no está anotado.
 Vamos a usar la base de datos de proteínas *swissprot* para determinar si hay algún
-gen codificante en esta secuencia. Primero, la descargamos de ENA con la API del
-*Browser*:
+gen codificante en esta secuencia.
 
-```{r MIZB01000007, eval=FALSE}
-library('R.utils')
-URL <- 'https://www.ebi.ac.uk/ena/browser/api/fasta/MIZB01000007.1'
-curl_download(URL, destfile = 'MIZB01000007.1.fa.gz')
-gunzip('MIZB01000007.1.fa.gz')
+Primero, descargaremos el contig de ENA con la API del *Browser*.
+
+```{r MIZB01000000}
+if (! file.exists('MIZB01000000.fa')) {
+   # La libreria R.utils proporciona la función gunzip() para descomprimir.
+   library('R.utils')
+   URL <- 'https://www.ebi.ac.uk/ena/browser/api/fasta/MIZB01000007.1'
+   curl_download(URL, destfile = 'MIZB01000000.fa.gz')
+   gunzip('MIZB01000000.fa.gz')
+}
+```
+
+A pesar de que hemos pedido el contig MIZB01000007.1, ENA nos ha producido un
+enorme archivo fasta, que ha hecho falta descomprimir y que incluye muchos otros
+contigs del mismo conjunto. Por eso he nombrado el archivo con el número de acceso
+del conjunto entero. Este es el comportamiento normal de la API del *browser*
+de ENA, cuando le pides datos de tipo *contig set records*, obtienes siempre el
+conjunto de contigs completo, en lugar de contigs individuales. Por tanto, habrá
+que extraer el contig concreto en el que queremos buscar genes codificantes. Fíjate
+en el código siguiente.
+
+```{r contig}
+suppressMessages(library('Biostrings'))
+conjunto <- readDNAStringSet('MIZB01000000.fa')
+# El contig que queremos extraer es el séptimo
+contig <- conjunto[7]
+writeXStringSet(contig, 'MIZB01000007.1.fa')
 ```
 
 A continuación, podemos usar el archivo `MIZB01000007.1.fa` como *query* en una
 búsqueda BLASTX, que traduce la *query* y busca en una base de datos de proteínas,
-como *swissprot*.
+como *swissprot*. Al tratarse de una secuencia bacteriana, debo usar el código
+genético 11. Lo puedes consultar [en este enlace](https://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/index.cgi?chapter=cgencodes)
 
 ```{r swissprotblast, eval=FALSE}
 system2('blastx',
         args = c('-db', 'swissprot',
                  '-query', 'MIZB01000007.1.fa',
+                 '-query_gencode', '11',
                  '-evalue', '1e-3',
                  '-out', 'MIZB01000007.1_blast.txt',
                  '-outfmt', '7',
@@ -198,7 +221,7 @@ if (! file.exists('Agaricus_bisporus_CDN.fa')) {
 }
 ```
 
-```{r makeblastdb, eval=FALSE}
+```{r makeblastdb}
 system2('makeblastdb',
         args = c('-in', 'Agaricus_bisporus_CDN.fa',
                  '-input_type', 'fasta',
