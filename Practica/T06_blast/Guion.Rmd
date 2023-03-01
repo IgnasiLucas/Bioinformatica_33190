@@ -1,0 +1,214 @@
+---
+title: "BLAST"
+output: html_document
+date: "`r format(Sys.Date(), 'Última actualización: %d/%m/%Y')`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introducción
+
+El [NCBI](https://www.ncbi.nlm.nih.gov/) ofrece la familia de programas BLAST en una colección de ejecutables llamada [blast+](https://blast.ncbi.nlm.nih.gov/doc/blast-help/downloadblastdata.html), así como todas sus [bases de datos](https://ftp.ncbi.nlm.nih.gov/blast/db/) de secuencias previamente formateadas, para poder ejecutar búsquedas de BLAST de forma local, en el propio ordenador. Se puede encontrar mucha documentación sobre los diferentes programas, tanto
+[en la red](https://www.ncbi.nlm.nih.gov/books/NBK279690/) como en la ayuda de cada ejecutale, por ejemplo al escribir `blastp -help` en un terminal.
+
+Existen tres tipos de ejecutables: programas de búsqueda (`blastn`, `blastp`, `blastx`, `tblastx`, `tblastn`, `psiblast`, etc.), herramientas de base de datos (`makeblastdb`, `blastdbcmd`, etc.) y herramientas para filtrar secuencias.
+
+## Preparación del entorno
+Para poder incorporar las búsquedas BLAST en un *script* de R, utilizaremos la función `system2()`, la cual nos permite invocar cualquier comando propio de la línea de comandos y guardar su resultado en alguna variable o en un archivo.
+
+Lo primero es asegurarnos de que tenemos `blast+` instalado. En los ordenadores del aula, los ejecutables se encuentran en la carpeta "C:\Program Files\NCBI\blast-BLAST_VERSION+\bin", que no se encuentra en el *PATH* del ordenador. Es decir, esa no es ninguna de las carpetas donde el ordenador busca programas ejecutables. La mejor solución es modificar el *PATH* para que incluya la carpeta de instalación de `blast+`:
+
+```{r PATH, eval=FALSE}
+# Este bloque no se ejecuta ("eval=FALSE") porque no funcionaría en cualquier
+# ordenador.
+Sys.setenv(PATH = paste(Sys.getenv('PATH'),
+                        'C:/Program Files/NCBI/blast-BLAST_VERSION+/bin',
+                        sep=.Platform$path.sep))
+```
+
+En adelante supondré que los ejecutables de `blast+` están en el *PATH*, de manera
+que podemos invocarlos por ejemplo, así: `system2('blastp', '-help')`.
+
+### Ejercicio 1
+Ejecuta en la consola `system2('blastn', '-help')` y verás la documentación del
+programa `blastn`. Asegúrate de poder contestar las preguntas siguientes:
+
+- ¿Qué versión de `blast+` estás usando?
+- ¿Qué argumentos de `blastn` son obligatorios?
+- ¿Qué argumento se usa para fijar el valor E máximo?
+- ¿Cuál es la longitud de palabra usada por defecto?
+- Entre los formatos de salida posibles, ¿cuál se usa por defecto?
+- El argumento `-out` sirve para definir el archivo de salida. ¿Dónde va a parar el resultado de la búsqueda si no se especifica ningún nombre de archivo?
+- ¿Es posible crear un archivo HTML con los resultados?
+
+## Descarga de las bases de datos
+
+El bloque de código siguiente descarga y descomprime dos bases de datos: 16S_ribosomal_RNA y Swissprot:
+
+```{r databases}
+# Utilizo "if" para evitar descargar lo mismo cada vez que compilo el documento.
+if (! file.exists('16S_ribosomal_RNA.ndb')) {
+   system2('update_blastdb.pl',
+           args = c('--decompress', '16S_ribosomal_RNA'))
+}
+if (! file.exists('swissprot.pdb')){
+   system2('update_blastdb.pl',
+           args = c('--decompress', 'swissprot'))
+}
+```
+
+## BLASTN
+La secuencia con número de acceso KU524801.1 es una parte del gen 16S rRNA amplificada
+de una muestra ambiental. Se desconoce la identidad de la bacteria a la que pertenece
+y por ese motivo tiene asignado el taxon 77133, *Uncultured bacterium*. Mediante
+un BLASTN podemos buscar esta secuencia en la base de datos de secuencias 16S rRNA
+y determinar qué especie de la base de datos tiene un 16S rRNA más parecido a este.
+
+Primero, descargaremos la secuencia en formato FASTA y la guardaremos en un archivo,
+aprovechando la API del servicio *Browser* de ENA (ligeamente diferente de la API del
+*Portal* de ENA).
+
+```{r KU52801}
+library('curl')
+# Para no perder tiempo descargando el archivo más de una vez, uso la condición:
+if (! file.exists('KU524801.fa')) {
+   URL <- 'https://www.ebi.ac.uk/ena/browser/api/fasta/KU524801.1'
+   curl_download(URL, destfile = 'KU524801.fa')
+}
+```
+
+Y a continuación, invoco BLASTN con la secuencia descargada como query. Como sólo
+busco secuencias con una similitud muy elevada (para que puedan informar de la
+identidad de la *query*), uso un umbral de valor E muy bajo: $10^{-60}$. Además,
+solicito a `blastn` que produzca los resultados en formato de tabla, para poder
+importarlos después fácilmente a la sesión de R como un marco de datos. Concretamente,
+la cadena de caracteres '"7 qaccver saccver pident length mismatch gapopen qstart qend sstart send evalue bitscore ssciname sblastnames staxids"' especifica qué información quiero
+obtener de cada alineamiento, incluyendo el nombre científico de la especie a la
+que pertenece la secuencia encontrada en la base de datos, etc.
+
+```{r blastn}
+system2('blastn',
+        args = c('-db', '16S_ribosomal_RNA',
+                 '-query', 'KU524801.fa',
+                 '-out', 'KU524801_blast.txt',
+                 '-evalue', '1e-65',
+                 '-num_alignments', '20',
+                 '-outfmt', '"7 qaccver saccver pident length mismatch gapopen qstart qend sstart send evalue bitscore ssciname sblastnames staxids"'))
+```
+
+Si la búsqueda ha funcionado, puedo importar el resultado a un marco de lectura:
+
+```{r resultados}
+library(kableExtra)
+KU524801 <- read.table('KU524801_blast.txt',
+                       col.names = c('query', 'subject', 'identity',
+                                     'length', 'mismatches', 'gaps',
+                                     'qstart', 'qend', 'sstart', 'send',
+                                     'evalue', 'bitscore', 'ssciname',
+                                     'sblastname', 'staxid'),
+                       sep = '\t')
+kable(KU524801) %>% kable_styling()
+```
+
+### Ejercicio 2
+Intenta producir el output en formato HTML.
+
+### Ejercicio 3
+¿A qué especie o género pertenece la secuencia AB759680.1?
+
+### Ejercicio 4
+¿Qué estrategia seguirías para determinar la especie de origen de todas las
+secuencias siguientes de una forma rápida y cómoda?
+
+AB759680.1
+GQ158974.1
+DQ904997.1
+EU488411.1
+KX431275.1
+EU556993.1
+FM873915.1
+FM874039.1
+HM124388.1
+FJ624883.1
+FJ625334.1
+EU236261.1
+EF508875.1
+DQ814438.1
+HM779760.1
+HM780090.1
+EF604165.1
+EF604435.1
+EF604230.1
+
+## BLASTX
+
+El contig MIZB01000007.1 fue ensamblado de una muestra marina, y no está anotado.
+Vamos a usar la base de datos de proteínas *swissprot* para determinar si hay algún
+gen codificante en esta secuencia. Primero, la descargamos de ENA con la API del
+*Browser*:
+
+```{r MIZB01000007, eval=FALSE}
+library('R.utils')
+URL <- 'https://www.ebi.ac.uk/ena/browser/api/fasta/MIZB01000007.1'
+curl_download(URL, destfile = 'MIZB01000007.1.fa.gz')
+gunzip('MIZB01000007.1.fa.gz')
+```
+
+A continuación, podemos usar el archivo `MIZB01000007.1.fa` como *query* en una
+búsqueda BLASTX, que traduce la *query* y busca en una base de datos de proteínas,
+como *swissprot*.
+
+```{r swissprotblast, eval=FALSE}
+system2('blastx',
+        args = c('-db', 'swissprot',
+                 '-query', 'MIZB01000007.1.fa',
+                 '-evalue', '1e-3',
+                 '-out', 'MIZB01000007.1_blast.txt',
+                 '-outfmt', '7',
+                 '-num_alignments', '1000'))
+```
+
+### Ejercicio 5
+Importa los resultados a un marco de datos en R y haz que aparezcan en el documento
+HTML que resulta de compilar la versión .Rmd de este documento.
+
+### Ejercicio 6
+Explora los resultados y determina cuántas proteínas puede haber codificadas en
+ese contig.
+
+### Ejercicio 7
+Modifica los parámetros de la búsqueda para aumentar la sensibilidad, a ver si
+detectas alguna otra proteína.
+
+## Apéndice. Creación de una base de datos
+Las bases de datos de BLAST son un conjunto de archivos binarios, construídos
+a partir de secuencias en formato FASTA. El programa que convierte un archivo
+FASTA en una base de datos de BLAST es `makeblastdb`, y también está incluido
+en el paquete `blast+`. A modo de demostración, podemos descargar un pequeño
+conjunto de secuencias y convertirlo en una base de datos de BLAST. Por ejemplo,
+las secuencias codificantes conocidas del champiñón, *Agaricus bisporus*: 
+
+```{r champiñón}
+library('curl')
+if (! file.exists('Agaricus_bisporus_CDN.fa')) {
+   url <- 'https://www.ebi.ac.uk/ena/browser/api/fasta/search?result=coding&query=tax_eq(5341)&limit=0'
+   curl_download(url, destfile = 'Agaricus_bisporus_CDN.fa')
+}
+```
+
+```{r makeblastdb, eval=FALSE}
+system2('makeblastdb',
+        args = c('-in', 'Agaricus_bisporus_CDN.fa',
+                 '-input_type', 'fasta',
+                 '-dbtype', 'nucl',
+                 '-title', '"Agaricus bisporus coding sequences"',
+                 '-out', 'A_bisporus_cdn'))
+```
+
+## Información de la sesión
+
+```{r sessionInfo}
+sessionInfo()
+```
