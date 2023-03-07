@@ -10,31 +10,35 @@ output:
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-## Propósito y estrategia
+## Programas BLAST {.vcenter .flexbox}
 
-```{r}
-library(kableExtra)
-options("kableExtra.html.bsTable" = T)
-M <- data.frame(Finalidad = c('Identificar la especie de origen de una secuencia',
-                              'Saber si una secuencia nucleotídica codifica algo',
-                              'Inferir la función de una proteína',
-                              'Construir la filogenia de una familia proteica',
-                              'Buscar proteínas homólogas codificadas en un nuevo genoma'),
-                Estrategia = c('Blastn o Megablast (k grande)',
-                               'Blastx. Raramente, tblastx',
-                               'Pfam, Blastp',
-                               'PSI-Blast. Raramente tblastn.',
-                               'tblastn'))
-kable(M) %>% kable_styling(bootstrap_options='striped')
-```
+![<sup>[Shawn T. O'Neil, 2021](https://open.oregonstate.education/computationalbiology/)](imatges/T07_blast_programs.png){width=700px}
+
+## Estrategias de BLAST
+
+Entre los diferentes programas BLAST (BLASTP, BLASTN, BLASTX, TBLASTN...), cuál usarías en cada uno de los casos siguientes?
+
+1. Identificar la especie de origen de una secuencia.
+2. Saber si una secuencia nucleotídica codifica algo.
+3. Inferir la función de una secuencia proteica.
+4. Construir la filogenia de una familia proteica.
+5. Buscar genes codificantes de bacteriorodopsinas en una nuevo genoma recién secuenciado.
+
+## Estrategias de BLAST
+
+1. Identificar la especie de origen de una secuencia: BLASTN/MEGABLAST.
+2. Saber si una secuencia nucleotídica codifica algo: BLASTX.
+3. Inferir la función de una secuencia proteica: BLASTP/PSI-BLAST.
+4. Construir la filogenia de una familia proteica: PSI-BLAST, TBLASTN.
+5. Buscar genes codificantes de bacteriorodopsinas en un nuevo genoma recién secuenciado: TBLASTN.
 
 # Búsquedas sensibles de proteínas
 
-## La analogía del *clustering*
+## Similitud y *distancia*
 - El alineamiento local permite medir similitudes entre porciones de proteínes.
-- Similitudes/diferencias se pueden entender como **distancias** en un espacio.
-- ¿Hasta qué distancia podemos extrapolar funciones?
-- ¿Cómo definir dominios entre un conjunto de secuencias de función desconocida?
+- Similitudes/diferencias se pueden entender como **distancias** en un espacio (como en un [análisis de correspondencias](https://en.wikipedia.org/wiki/Correspondence_analysis)).
+- El BLASTP reconoce similitudes *cercanas*.
+- El uso de una única *query* hace que la búsqueda no sea muy sensible: Una AI ¿reconocería cualquier queso a partir de un único ejemplo?
 
 ## La analogía del *clustering*
 ```{r}
@@ -60,7 +64,15 @@ while ((M[seed,'X'] < 38) || (M[seed,'X'] > 60)) {
 }
 M$query <- NA
 M[seed, 'query'] <- TRUE
-ggplot(data=M, mapping=aes(x=X, y=Y, color=query)) + geom_point()
+seed.X <- M[seed, 'X']
+seed.Y <- M[seed, 'Y']
+ggplot(data=M, mapping=aes(x=X, y=Y, color=query)) +
+   geom_point()  +
+   geom_segment(aes(x = seed.X - 7, y = seed.Y - 7, xend = seed.X - 1, yend = seed.Y - 1),
+                arrow = arrow(), color='black') +
+   geom_text(aes(x = seed.X - 8, y = seed.Y - 7, label = 'Query', hjust = 1),
+             color = 'black') +
+   theme(legend.position = 'none')
 ```
 
 ## La limitación del BLAST
@@ -73,9 +85,8 @@ ggplot(data=M, mapping=aes(x=X, y=Y, color=Distancia)) + geom_point()
 ## La limitación del BLAST
 - Una única *query* sesga los resultados: falta visión de conjunto.
 - Falta sensibilidad para detectar homologías distantes.
-- La similitud de secuencia no es suficiente para definir dominios.
 - ¿Qué tienen en común las proteínas de una familia o con una función?
-  - Hace falta un **modelo** de lo que comparten unas u otras proteínas. 
+- Hace falta un **modelo** de lo que comparten unas u otras proteínas.
 
 ## Ejemplo: alineamiento y estructura
 <div class="centered">
@@ -90,9 +101,9 @@ ggplot(data=M, mapping=aes(x=X, y=Y, color=Distancia)) + geom_point()
 ## Modelos de regiones conservadas
 - Patrones y expresiones regulares.
 - *Position Specific Scoring Matrices* (PSSM).
-- *Hiden Markov Models* (HMM): Pfam.
-- PSI-BLAST
-- Delta-BLAST
+- *Hiden Markov Models* (HMM).
+- PSI-BLAST.
+- Delta BLAST.
 
 # Patrones y expresiones regulares
 
@@ -137,11 +148,11 @@ ggplot(data=M, mapping=aes(x=X, y=Y, color=Distancia)) + geom_point()
 - Seguidas (o no) por otro residuo cualquiera.
 - Seguido por cualquier aminoácido excepto valina.
 
-## Expresiones regulares
+## [Expresiones regulares](https://www.genome.jp/tools/motif/MOTIF2.html)
 - Señales post-traduccionales
   - *Protein splicing signature*: [DNEG]-x-[LIVFA]-[LIVMY]-[LVAST]-H-N-[STC]
   - Sitio de fosforilación por tirosina kinasa: [RK]-x(2)-[DE]-x(3)-Y or [RK]-x(3)-[DE]-x(2)-Y
-- Señales de ineracción entre DNA y RNA
+- Señales de ineracción con DNA
   - Marca de histona H4: G-A-K-R-H
   - Marca de p53: M-C-N-S-S-C-[MV]-G-G-M-N-R-R
 - Enzimas
@@ -184,19 +195,22 @@ for (i in 1:nchar(A[1])) {
   z <- table(A.broken[i,])
   M[names(z), i] <- z
 }
-as.data.frame(M) %>% kable()
+as.data.frame(M) %>% kable() %>% kable_styling()
 ```
 
 ## Cambiamos 0 por un valor pequeño {.smaller}
 ```{r}
-kable(as.data.frame((M + 1)/25)) %>% kable_styling(bootstrap_options='basic')
+MM <- as.data.frame((M + 1) / 25)
+as.data.frame((M + 1)/25) %>% kable() %>%
+   kable_styling(full_width = TRUE,
+                 bootstrap_options = 'striped')
 ```
 
 ## La puntuación
 <div class="centered">
-$S = \log \frac{f'_{ij}}{q_i}$
+$S_{ij} = \log \frac{f'_{ij}}{q_i}$
 
-La puntuación de un aminoácido *i* en cada posición *j* depende de cuanto más frecuente es ese aminoácido en esa posición del alineamiento ($f'_{ij}$) de lo que lo seria en una secuencia al azar ($q_i$).
+La puntuación de un aminoácido *i* en cada posición *j* depende de cuanto más frecuente es ese aminoácido en esa posición del alineamiento ($f'_{ij}$) de lo que lo seria en una secuencia al azar $(q_i)$.
 </div>
 
 ## PSSM {.smaller}
@@ -228,19 +242,19 @@ kable(as.data.frame(round(log2(((M+1)/25)/(1/20)), 2))) %>% kable_styling(bootst
 # PSI-BLAST
 
 ## Principios del PSI-BLAST
-1. BLAST estándard inicial, con BLOSUM62, e.g.
+1. BLASTP estándard inicial, con BLOSUM62, e.g.
 2. Construcción automática de una PSSM que permite indels.
-3. La PSSM reemplaza la BLOSUM62 en un segundo BLAST.
+3. La PSSM reemplaza la BLOSUM62 en un segundo BLASTP.
 4. Se repiten los pasos 2 y 3 incorporando nuevas secuencias al PSSM cada vez.
-5. Cuando ya no se encuentran nuevas secuencias, el PSI-BLAST ha convergido.
+5. Cuando ya no se encuentran nuevas secuencias, el PSI-BLAST ha *convergido*.
 
 ## Dos valores *E*
-1. El umbral de valor *E* para el BLAST inicial (opción *-e*, por defecto, 10).
+1. El umbral de valor *E* para el BLASTP inicial (opción *-e*, por defecto, 10).
 2. El valor *E* de inclusión, para aceptar nuevas secuencias en PSSM (opción *-h*, por defecto 0.001).
 
 ## Ventajas del PSI-BLAST
 - Rápido y eficiente.
-- Mucho más sensible que el BLAST.
+- Mucho más sensible que el BLASTP.
 - Uso sencillo.
 
 ## Peligros del PSI-BLAST
@@ -269,12 +283,12 @@ version of the Ostreococcus genome using the Orcae
 service (Ghent University)."
 </blockquote>
 
-Feeney et al. 2016. Daily magnesium fluxes regulate cellular timekeeping and energy balance. *Nature* 532: 375-379.
+[Feeney et al. 2016.](https://doi.org/10.1038/nature17407) Daily magnesium fluxes regulate cellular timekeeping and energy balance. *Nature* 532: 375-379.
 
 <blockquote>
 "ORFs were predicted [...]. To identify more distant homologues, ORFs were queried by DeltaBLAST against the Caudivirales subset of Genbank (NCBI taxonomy identifiers 28883 and 102294) with an e-value cutoff of 0.01."
 </blockquote>
 
-Dutilh et al. 2014. A highly abundant bacteriophage discovered in the unknown sequences of human faecal metagenomes. *Nature Communications* 5: 4498.
+[Dutilh et al. 2014.](https://doi.org/10.1038/ncomms5498) A highly abundant bacteriophage discovered in the unknown sequences of human faecal metagenomes. *Nature Communications* 5: 4498.
 
 
