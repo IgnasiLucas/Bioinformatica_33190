@@ -1,0 +1,251 @@
+---
+title: "Preparació de les dades"
+date: "`r format(Sys.Date(), 'Actualitzat en: %d/%m/%Y')`"
+output: html_document
+---
+
+## Descàrrega de 1000 assemblatges de transcriptomes del protal d'ENA
+
+El bloc següent descarrega una llista dels 1000 primers transcriptomes (*tsa_set*)
+de ENA i en selecciona un no massa gran. El resultat pot dependre de les actualitzacions
+d'ENA, però en els últims anys, cada vegada que s'executa es descarrega el transcriptoma
+de l'escarabat *Ips typographus*.
+
+```{r descarrega}
+library('curl')
+portal   <- 'https://www.ebi.ac.uk/ena/portal/api/'
+endpoint <- 'search?'
+result   <- 'result=tsa_set'
+fields   <- '&fields=scientific_name,fasta_file,fasta_file_bytes'
+limit    <- '&limit=1000'
+
+URL <- paste0(portal, endpoint, result, fields, limit, sep='', collapse='')
+
+if (! file.exists('tsa.fa')) {
+   if (! file.exists('tsa.tsv')) {
+      curl_download(URL, destfile = 'tsa.tsv')
+   }
+
+   tsa <- read.table('tsa.tsv', header = TRUE, sep = "\t")
+   # Ordene els registres per mida de l'arxiu fasta:
+   tsa <- tsa[order(tsa$fasta_file_bytes),]
+   # Seleccione el registre 250, arbitràriament, però sabent que no és dels grans.
+   fasta_url <- tsa[250, 'fasta_file']
+   # El descarregue...
+   curl_download(fasta_url, destfile = 'tsa.fa.gz')
+   # ...i descomprimisc:
+   system2('gunzip', args = 'tsa.fa.gz')
+}
+```
+
+## Traducció a proteïnes
+En R no he trobat un paquet senzill per identificar els marcs oberts de lectura
+i extraure les seqüències d'aminoàcids possiblement codificades. El bloc següent
+és una mica llarg, però sembla funcionar. Aprofite un parell de funcions d'Avril
+Cohlan que faciliten la tasca.
+
+```{r traduir}
+library('seqinr')
+library("Biostrings")
+
+# Esta funció és d'Avril Coghlan i està presa de https://a-little-book-of-r-for-bioinformatics.readthedocs.io/en/latest/src/chapter7.html
+findPotentialStartsAndStops <- function(sequence){
+     # Define a vector with the sequences of potential start and stop codons
+     codons            <- c("atg", "taa", "tag", "tga")
+     # Find the number of occurrences of each type of potential start or stop codon
+     for (i in 1:4)
+     {
+        codon <- codons[i]
+        # Find all occurrences of codon "codon" in sequence "sequence"
+        occurrences <- matchPattern(codon, sequence)
+        # Find the start positions of all occurrences of "codon" in sequence "sequence"
+        codonpositions <- start(occurrences)
+        # Find the total number of potential start and stop codons in sequence "sequence"
+        numoccurrences <- length(codonpositions)
+        if (i == 1)
+        {
+           # Make a copy of vector "codonpositions" called "positions"
+           positions <- codonpositions
+           # Make a vector "types" containing "numoccurrences" copies of "codon"
+           types <- rep(codon, numoccurrences)
+        }
+        else
+        {
+           # Add the vector "codonpositions" to the end of vector "positions":
+           positions   <- append(positions, codonpositions, after=length(positions))
+           # Add the vector "rep(codon, numoccurrences)" to the end of vector "types":
+           types       <- append(types, rep(codon, numoccurrences), after=length(types))
+        }
+     }
+     # Sort the vectors "positions" and "types" in order of position along the input sequence:
+     indices <- order(positions)
+     positions <- positions[indices]
+     types <- types[indices]
+     # Return a list variable including vectors "positions" and "types":
+     mylist <- list(positions,types)
+     return(mylist)
+}
+
+# Esta funció també és d'Avril Coghlan i està presa de https://a-little-book-of-r-for-bioinformatics.readthedocs.io/en/latest/src/chapter7.html
+findORFsinSeq <- function(sequence){
+     require(Biostrings)
+     # Make vectors "positions" and "types" containing information on the positions of ATGs in the sequence:
+     mylist <- findPotentialStartsAndStops(sequence)
+     positions <- mylist[[1]]
+     types <- mylist[[2]]
+     # Make vectors "orfstarts" and "orfstops" to store the predicted start and stop codons of ORFs
+     orfstarts <- numeric()
+     orfstops <- numeric()
+     # Make a vector "orflengths" to store the lengths of the ORFs
+     orflengths <- numeric()
+     # Print out the positions of ORFs in the sequence:
+     # Find the length of vector "positions"
+     numpositions <- length(positions)
+     # There must be at least one start codon and one stop codon to have an ORF.
+     if (numpositions >= 2)
+     {
+        for (i in 1:(numpositions-1))
+        {
+           posi <- positions[i]
+           typei <- types[i]
+           found <- 0
+           while (found == 0)
+           {
+              for (j in (i+1):numpositions)
+              {
+                 posj  <- positions[j]
+                 typej <- types[j]
+                 posdiff <- posj - posi
+                 posdiffmod3 <- posdiff %% 3
+                 # Add in the length of the stop codon
+                 orflength <- posj - posi + 3
+                 if (typei == "atg" && (typej == "taa" || typej == "tag" || typej == "tga") && posdiffmod3 == 0)
+                 {
+                    # Check if we have already used the stop codon at posj+2 in an ORF
+                    numorfs <- length(orfstops)
+                    usedstop <- -1
+                    if (numorfs > 0)
+                    {
+                      for (k in 1:numorfs)
+                      {
+                          orfstopk <- orfstops[k]
+                          if (orfstopk == (posj + 2)) { usedstop <- 1 }
+                      }
+                    }
+                    if (usedstop == -1)
+                    {
+                       orfstarts <- append(orfstarts, posi, after=length(orfstarts))
+                       orfstops <- append(orfstops, posj+2, after=length(orfstops)) # Including the stop codon.
+                       orflengths <- append(orflengths, orflength, after=length(orflengths))
+                    }
+                    found <- 1
+                    break
+                 }
+                 if (j == numpositions) { found <- 1 }
+              }
+           }
+        }
+     }
+     # Sort the final ORFs by start position:
+     indices <- order(orfstarts)
+     orfstarts <- orfstarts[indices]
+     orfstops <- orfstops[indices]
+     # Find the lengths of the ORFs that we have
+     orflengths <- numeric()
+     numorfs <- length(orfstarts)
+     for (i in 1:numorfs)
+     {
+        orfstart <- orfstarts[i]
+        orfstop <- orfstops[i]
+        orflength <- orfstop - orfstart + 1
+        orflengths <- append(orflengths,orflength,after=length(orflengths))
+     }
+     mylist <- list(orfstarts, orfstops, orflengths)
+     return(mylist)
+}
+
+TranslateLargestORF <- function(sequence, orfsList){
+   i <- which.max(orfsList[[3]])
+   start <- orfsList[[1]][i]
+   end   <- orfsList[[2]][i]
+   myorf <- substring(sequence, start, end)
+   myorfvector <- seqinr::s2c(myorf)
+   myprotein <- seqinr::translate(myorfvector)
+   return(myprotein)
+}
+
+dna <- read.fasta(file = 'tsa.fa')
+MinLength <- 150
+proteines <- lapply(dna,
+                    function(x) {
+                       orfs <- findORFsinSeq(c2s(x))
+                       if (! is.na(orfs[[3]][1])) {
+                          prot <- TranslateLargestORF(c2s(x), orfs)
+                          return(c2s(prot))
+                       } else {
+                          return(NA)
+                       }
+                    })
+
+proteines <- unlist(proteines)
+proteines <- proteines[! is.na(proteines)]
+proteines <- proteines[width(proteines) >= MinLength]
+noms <- sapply(names(proteines), strsplit, "|", fixed = TRUE)
+noms <- sapply(noms, "[", 3)
+names(noms) <- NULL
+names(proteines) <- noms
+write.fasta(as.list(proteines), as.string = TRUE, names = noms, nbchar = 50000, file.out = 'prot.fa')
+```
+
+## BLASTP inicial
+
+La idea és identificar les proteïnes hipotètiques que només tenen algun resultat de baixa
+qualitat en un BLASTP. Aquestes són les proteïnes en què val la pena provar si el PSI-BLAST 
+reconeix alguna homologia addicional que puga informar de la funció.
+
+```{r blastp}
+library('plyr')
+if (! file.exists('swissprot.pdb')) {
+   if (! file.exists('swissprot.tar.gz')) {
+      system2('update_blastdb.pl', 'swissprot')
+   }
+   untar('swissprot.tar.gz')
+}
+if (! file.exists('blastp.out')) {
+   system2('blastp',
+           args = c('-query', 'prot.fa',
+                    '-db', 'swissprot',
+                    '-out', 'blastp.out',
+                    '-evalue', '1.0',
+                    '-outfmt', '6'))
+}
+
+blast1 <- read.table('blastp.out', col.names = c('qaccver', 'saccver', 'pident', 'length', 'mismatch',
+                                                 'gapopen', 'qstart', 'qend', 'sstart', 'send', 'evalue', 'bitscore'),
+                     as.is = TRUE)
+
+lowestE <- ddply(blast1, 'qaccver', .fun = function(x) min(x$evalue))
+badHits <- lowestE[lowestE$V1 >= 0.1, 'qaccver']
+badHitsProt <- proteines[badHits]
+
+write.fasta(as.list(badHitsProt), as.string = TRUE, names = badHits,
+            nbchar = 50000, file.out = 'badHits.fa')
+```
+
+De les `r length(proteines)` proteïnes suposadament codificades al transcriptoma
+d'*Ips typographus* amb 150 aminoàcids o més, n'hi ha `r length(badHits)` que en
+una cerca BLASTP contra Swissprot no obtenen cap resultat amb un valor E menor
+de 0.1. Hi ha diferents explicacions possibles al fet que una proteïna no trobe
+homòlegs pròxims en Swissprot:
+
+1. La proteïna no existeix realment: prové d'un marc obert de lectura que no es
+tradueix mai en la cèl·lula.
+2. La base de dades és incompleta i no inclou cap homòleg pròxim.
+3. Es tracta d'una proteïna nova, evolutivament apareguda en algun ancestre pròxim
+de l'espècie estudiada, i per tant no poden haver-ne homòlegs en la base de dades.
+
+## Información de la sesión
+
+```{r sessioninfo}
+sessionInfo()
+```

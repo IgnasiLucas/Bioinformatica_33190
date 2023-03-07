@@ -1,0 +1,175 @@
+---
+title: "PSI-BLAST"
+output: html_document
+date: "`r format(Sys.Date(), 'Última actualización: %d/%m/%Y')`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introducción
+
+Cuando se secuencian los mRNA de un organismo y se ensamblan las lecturas, se genera un **transcriptoma**: la colección de secuencias de los genes expresados en los tejidos que formaban parte de la muestra. En la *European Nucleotide Archive* (ENA) pueden encontrarse muchos transcriptomas ensamblados (*tsa_set*). Típicamente, después de ensamblar un transcriptoma se identifican los genes y sus funciones. Para ello, los tránscritos codificantes de proteína son traducidos y las secuencias proteicas se comparan con las de las bases de datos. Las bases de datos más útiles para identificar la función de los tránscritos son las que tienen mayor información funcional: InterPro, Swissprot, KEGG, etc.
+
+En esta práctica hemos tomado un transcriptoma del escarabajo *Ips typographus*, con número de acceso GACR01000000 en ENA. De los 14689 tránscritos, se han seleccionado 1361 que parecen codificar algún péptido de al menos 150 aminoácidos. Se ha realizado ya un primer BLASTP con las 1361 proteínas hipotéticas, y la mayor parte de ellas han encontrado alguna homología en la base de datos Swissprot. Puedes replicar el proceso, descrito en el documento `PreScript.Rmd`, pero puede tomar más de media hora.
+
+En esta práctica nos vamos a fijar en las 59 de aquellas 1361 proteínas cuyo mejor resultado en el BLASTP contra Swissprot ha obtenido un valor E mayor o igual a 0.1 (pero no mayor que 1). Puede haber varios motivos por los que una proteína no encuentre homólogas próximas en una base de datos:
+
+1. La proteína no existe realmente.
+2. La base de datos es incompleta.
+3. La proteína es evolutivamente nueva.
+
+El objetivo es determinar si mediante búsquedas de PSI-BLAST, más sensibles, logramos assignar estas proteïnas a algún grupo de proteínas remotamente parecidas que nos puedan dar alguna pista de su función.
+
+El archivo `badHits.fa` es el archivo fasta con las 59 proteínas (hipotéticas) de *Ips typographus* seleccionadas. 
+
+## Preparación del entorno
+Para poder realizar la práctica, debes asegurarte de que los archivos necesarios están en su sitio y de que el programa `psiblast` está en tu *PATH*. También hay que descomprimir la base de datos Swissprot. Los comandos a continuación pueden ayudarte. Pero cuidado: dale a la variable
+`DondeEstaPsiblast` el valor adecuado para tu ordenador. Además, ten en cuenta que los
+espacios en blanco en las direcciones del PATH podrían causar problemas.
+
+```{r preparacion}
+stopifnot(file.exists(c('badHits.fa', 'swissprot.tar.gz')))
+if (nchar(Sys.which('psiblast')) == 0) {
+   # Cambia la dirección siguiente por la de la carpeta "bin" donde esté tu "psiblast":
+   DondeEstaPsiblast <- "C:/Program Files/NCBI/blast-BLAST_VERSION+/bin"
+   Sys.setenv(PATH = paste(Sys.getenv(), DondeEstaPsiblast, sep = ':'))
+}
+if (! file.exists('swissprot.pdb')) {
+   untar('swissprot.tar.gz')
+}
+```
+
+## PSI-BLAST
+
+```{r help}
+system2('psiblast', '-help', stdout = TRUE)
+```
+
+### Ejercicio 1
+Revisa la ayuda del `psiblast` y corrige los errores del bloque de código siguiente
+antes de ejecutarlo:
+
+```{r ej1, eval=FALSE}
+system2('psiblast',
+        args = c('-query', 'goodHits.fa',
+                 '-db', 'swissprot',
+                 '-out', 'psiblast.out',
+                 '-matrix', 'BLOSUM62',
+                 '-outfmt', '7',
+                 '-evalue', '1',
+                 '-inclusion_ethresh', '0.01',
+                 '-num_iterations', '5',
+                 '-comp_based_stats', '0'))
+```
+
+### Ejercicio 2
+Asegúrate de poder contestar las preguntas siguientes:
+1. ¿Para qué sirve el parámetro `-num_iterations`?
+2. ¿Cuál de los dos umbrales debería ser mayor, `-evalue` o `-inclusion_ethresh`?
+3. Revisa los resultados: ¿Puedes diferenciar los de cada una de las *queries*?
+¿Cuántas tablas de resultados se producen por cada *query*?
+¿Identificas los casos en los que se alcanza convergencia?
+
+## *Queries* individuales
+Un problema con los resultados anteriores es que el mismo archivo reúne los resultados de todas las queries, lo que dificulta importar los datos a R. Además, de cada *query* se producen más de una tabla: tantas como iteraciones. Nos puede interesar solamente la última tabla de cada query. Una opción es ejecutar `psiblast` individualmente para cada secuencia original, y guardar la PSSM de la última iteración. Entonces, realizar una última ronda, usando la PSSM como query. Vamos por pasos.
+
+Primero, sacamos una única proteína de "badHits.fa" (por ejemplo, la GACR01014070.1),
+y la guardamos en el archivo "GACR01014070.fa", usando las funciones del paquete
+"Biostrings".
+
+```{r unaSecuencia}
+suppressMessages(library('Biostrings'))
+badHits <- readAAStringSet('badHits.fa')
+writeXStringSet(badHits['GACR01014070.1'], 'GACR01014070.fa')
+```
+
+A continuación, ejecutamos cuatro rondas de PSI-BLAST, usando `GACR01014070.fa` como *query* y pidiendo que se guarde la PSSM de la última ronda:
+
+```{r pssm}
+system2('psiblast',
+        args = c('-query', 'GACR01014070.fa',
+                 '-db', 'swissprot',
+                 '-out', 'prot1.out',
+                 '-outfmt', '7',
+                 '-evalue', '1',
+                 '-inclusion_ethresh', '0.7',
+                 '-num_iterations', '4',
+                 '-save_pssm_after_last_round',
+                 '-out_pssm', 'GACR01014070.pssm',
+                 '-comp_based_stats', '0'))
+```
+
+Y por último, usamos la PSSM guardada en `GACR01014070.pssm` como *query* en una última ronda de PSI-BLAST:
+
+```{r psiPSSM}
+system2('psiblast',
+        args = c('-in_pssm', 'GACR01014070.pssm',
+                 '-db', 'swissprot',
+                 '-out', 'GACR01014070_final.out',
+                 '-outfmt', '7',
+                 '-evalue', '1.e-60',
+                 '-comp_based_stats', '0'))
+```
+
+### Ejercicio 3
+Revisa los resultados y nota que en cada ronda se añaden nuevas secuencias, mientras que las encontradas previamente aparecen con valores E cada vez menores.
+
+### Ejercicio 4
+Repite el proceso para la proteína GACR01013541.1.
+
+## Importar los resultados a R
+
+Una vez tenemos una única tabla, es sencillo leerla en R:
+
+```{r leerTabla}
+library(kableExtra)
+GACR01014070 <- read.table(
+   'GACR01014070_final.out',
+   col.names = c('query', 'subject', 'identity', 'length', 'mismatches',
+                 'gaps', 'qstart', 'qend', 'sstart', 'send', 'evalue', 'bitscore')
+)
+kable(GACR01014070) %>% kable_styling()
+```
+
+Y ahora podemos operar con los datos. Por ejemplo, para visualizar la distribución
+de alineamientos (o *hits*) a lo largo de la secuencia de la *query* y su valor E:
+
+```{r plots}
+# Primero creamos un gráfico vacío, con los límites adecuados y con
+# una escala logarítmica en el eje vertical.
+plot(x = c(1, width(badHits['GACR01014070.1'])),
+     y = c(min(GACR01014070$evalue), max(GACR01014070$evalue)),
+     type = 'n',
+     xlab = 'Posición en la query',
+     ylab = 'Valor E',
+     log = 'y')
+# La función segments() añade segmentos a un gráfico preexistente.
+segments(x0 = GACR01014070$qstart,
+         y0 = GACR01014070$evalue,
+         x1 = GACR01014070$qend,
+         y1 = GACR01014070$evalue)
+```
+
+
+### Ejercicio 5
+¿Sabrías obtener un gráfico que nos muestre la relación entre el valor E y el *bitscore*?
+
+### Ejercicio 6
+Interpreta el bloque siguiente y piensa para qué podría servir.
+
+```{r}
+library('rjson')
+API <- 'https://www.ebi.ac.uk/interpro/api/'
+subject <- unlist(strsplit(GACR01014070$subject[1], '.', fixed = TRUE))[1]
+informacion <- fromJSON(
+   file = paste0(API, 'protein/reviewed/', subject)
+)
+```
+
+## Información de la sesión
+
+```{r sessioninfo}
+sessionInfo()
+```
