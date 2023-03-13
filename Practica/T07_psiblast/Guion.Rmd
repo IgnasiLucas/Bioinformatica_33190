@@ -34,7 +34,7 @@ stopifnot(file.exists(c('badHits.fa', 'swissprot.tar.gz')))
 if (nchar(Sys.which('psiblast')) == 0) {
    # Cambia la dirección siguiente por la de la carpeta "bin" donde esté tu "psiblast":
    DondeEstaPsiblast <- "C:/Program Files/NCBI/blast-BLAST_VERSION+/bin"
-   Sys.setenv(PATH = paste(Sys.getenv(), DondeEstaPsiblast, sep = ':'))
+   Sys.setenv(PATH = paste(Sys.getenv('PATH'), DondeEstaPsiblast, sep = ':'))
 }
 if (! file.exists('swissprot.pdb')) {
    untar('swissprot.tar.gz')

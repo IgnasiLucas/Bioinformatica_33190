@@ -579,7 +579,7 @@ display: none;
 
 
 <h1 class="title toc-ignore">PSI-BLAST</h1>
-<h4 class="date">Última actualización: 07/03/2023</h4>
+<h4 class="date">Última actualización: 13/03/2023</h4>
 
 </div>
 
@@ -634,7 +634,7 @@ direcciones del PATH podrían causar problemas.</p>
 if (nchar(Sys.which(&#39;psiblast&#39;)) == 0) {
    # Cambia la dirección siguiente por la de la carpeta &quot;bin&quot; donde esté tu &quot;psiblast&quot;:
    DondeEstaPsiblast &lt;- &quot;C:/Program Files/NCBI/blast-BLAST_VERSION+/bin&quot;
-   Sys.setenv(PATH = paste(Sys.getenv(), DondeEstaPsiblast, sep = &#39;:&#39;))
+   Sys.setenv(PATH = paste(Sys.getenv(&#39;PATH&#39;), DondeEstaPsiblast, sep = &#39;:&#39;))
 }
 if (! file.exists(&#39;swissprot.pdb&#39;)) {
    untar(&#39;swissprot.tar.gz&#39;)
