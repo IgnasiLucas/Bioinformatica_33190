@@ -1,0 +1,114 @@
+---
+title: "Cómo comparar la calidad de dos archivos"
+author: "J. Ignacio Lucas Lledó"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+En el guión se pregunta cuál de dos archivos FASTQ contiene lecturas de mayor calidad.
+El objetivo es simplemente comprobar que las lecturas producidas en los dos sentidos
+tienen calidades comparables, o si por el contrario las lecturas primeras (*forward*)
+són en promedio de mayor o menor calidad que las lecturas segundas (*reverse*).
+
+Primero leemos los archivos y generamos el informe de calidad:
+
+```{r data, message=FALSE, warning=FALSE}
+library('ShortRead')
+ResumenCalidad <- qa('data', type = 'fastq', pattern = '*.fastq')
+```
+
+La calidad está definida para cada base de cada lectura, lo que supone una cantidad de
+datos muy grande. El informe nos presenta diferentes formas de resumirlos. El componente
+`readQualityScore` del objeto `ResumenCalidad` es un marco de datos que contiene la distribución
+de calidades *medias* por lectura. Es decir, en cada archivo (o *lane* en el marco de datos)
+a cada una de las 65135 lecturas se le asigna la calidad media de todas sus bases, y la tabla
+recoge la *densidad* de estos valores medios, en cada archivo. Es como un histograma con incrementos
+muy finos. Nos sirve para representar la distribución de calidades medias.
+
+Podemos utilizar la función `plot()` de R. Para facilitar las cosas, separaré los datos de uno
+y otro archivo en dos objetos diferentes.
+
+```{r conPlot}
+# Para facilitar la manipulación, extraigo la tabla que me interesa en un objeto indpendiente:
+z <- ResumenCalidad[['readQualityScore']] 
+head(z)
+# Extraigo las filas de "z" donde "lane" tiene un valor u otro:
+Archivo1 <- z[z$lane == 'ERR4423464_1.fastq', ]
+Archivo2 <- z[z$lane == 'ERR4423464_2.fastq', ]
+plot(Archivo1$quality, Archivo1$density, type = 'l', col = 'blue', xlab = 'Calidad', ylab = 'Densidad')
+lines(Archivo2$quality, Archivo2$density, col = 'red')
+```
+
+La misma gráfica se puede obtener más fácilmente a partir del objeto `z` directamente si usamos
+el paquete `ggplot2`, pero su uso es más avanzado:
+
+```{r conGgplot2}
+library(ggplot2)
+ggplot(data = z, mapping = aes(x = quality, y = density, color = lane)) + geom_line()
+```
+
+De cualquier manera, nos convencemos de que la distribución de calidades medias es tan similar
+entre los dos archivos que resulta difícil distinguir las dos líneas de sus distribuciones. Esto
+bastaría para contestar la pregunta del guión.
+
+## Usando la tabla `baseQuality`
+Podemos llegar a la misma conclusión
+usando la tabla `baseQuality`. El problema aquí es que la calidad no está descodificada
+(muestra los signos ASCII, en lugar de su valor numérico), lo que dificulta ligeramente
+la operación. Una rápida búsqueda por internet nos sugiere que podemos encontrar la posición
+del símbolo ASCII con la función `charToRaw()`. Aunque hace falta combinarla con `as.numeric()`
+para expresar el resultado en sistema decimal. Además necesitamos recordar que los archivos
+FASTQ codifican la calidad de las bases con los símbolos ASCII a partir del símbolo "!", que
+está en la posición 33. Es decir, tenemos que restar 33 para obtener la calidad en escala Phred:
+
+```{r baseQuality}
+# Extraemos la tabla a un objeto diferente, que podamos manipular mejor.
+baseQuality <- ResumenCalidad[['baseQuality']]
+# Añadimos una columna, con el valor numérico en escala Phred:
+baseQuality$qual <- sapply(baseQuality$score, function(x) as.numeric(charToRaw(x))) - 33
+head(baseQuality)
+```
+
+
+
+
+En cualquier caso, el objeto `ResumenCalidad` oculta muchos detalles que podrían ser de interés en
+la comparación de los dos archivos. ¿Cuál es la calidad media en cada archivo? ¿Cómo se
+comparan una a una las lecturas emparejadas entre los dos archivos? El informe generado por la
+función `qa()` es un objeto incompleto e incómodo (poco intuitivo, nos obliga a conocer el
+contenido de cada tabla).
+
+## Trabajando directamente con las lecturas
+Vamos a aprovechar el hecho de que los archivos FASTQ con los que estamos trabajando son muy
+pequeños. Los podemos leer con la función `readFastq()` y tener toda su información en la memoria
+de trabajo, para trabajar directamente con ella.
+
+```{r readFastq2}
+
+
+quality(R1)[[1]]
+encoding(quality(R1))
+as.vector(quality(R1)[[1]])
+encoding(quality(R1))[as.vector(quality(R1)[[1]])]
+mean(encoding(quality(R1))[as.vector(quality(R1)[[1]])])
+```
+
+Podemos acceder a las calidades de cada base de cada lectura, de cada archivo, y traducir los símbolos
+a su valor numérico usando la codificación propia de estos datos. Mediante la función `sapply()` podemos
+crear un vector con las calidades medias de todas las lecturas de cada archivo.
+
+```{r sapply}
+# Esto tarda un poquito en ejecutarse...
+Qmedia1 <- sapply(1:length(R1), function(x) mean(as.numeric(quality(R1)[[x]]) - 33))
+Qmedia2 <- sapply(1:length(R2), function(x) mean(as.numeric(quality(R2)[[x]]) - 33))
+```
+
+
+
+
+
+
