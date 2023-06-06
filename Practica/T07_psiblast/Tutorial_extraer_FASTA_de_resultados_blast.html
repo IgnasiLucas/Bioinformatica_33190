@@ -606,7 +606,9 @@ hits &lt;- read.table(&#39;Q5TIW8_hits.txt&#39;,
                    col.names = c(&#39;query&#39;, &#39;subject&#39;, &#39;identity&#39;, &#39;al.length&#39;,
                                  &#39;mismatches&#39;, &#39;gaps&#39;, &#39;qstart&#39;, &#39;qend&#39;,
                                  &#39;sstart&#39;, &#39;send&#39;, &#39;evalue&#39;, &#39;bitscore&#39;))
-kable(head(hits)) %&gt;% kable_styling()</code></pre>
+hits$query &lt;- substr(hits$query, 4, 9)
+hits$evalue &lt;- as.character(signif(hits$evalue, digits = 3))
+kable(head(hits), align = &#39;llrrrrrrrrrr&#39;) %&gt;% kable_styling()</code></pre>
 <table class="table" style="margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
@@ -651,7 +653,7 @@ bitscore
 <tbody>
 <tr>
 <td style="text-align:left;">
-tr|Q5TIW8|Q5TIW8_SECCE
+Q5TIW8
 </td>
 <td style="text-align:left;">
 Q5QJ60.1
@@ -689,7 +691,7 @@ Q5QJ60.1
 </tr>
 <tr>
 <td style="text-align:left;">
-tr|Q5TIW8|Q5TIW8_SECCE
+Q5TIW8
 </td>
 <td style="text-align:left;">
 F1BVB6.1
@@ -719,7 +721,7 @@ F1BVB6.1
 528
 </td>
 <td style="text-align:right;">
-0
+2.88e-156
 </td>
 <td style="text-align:right;">
 458
@@ -727,7 +729,7 @@ F1BVB6.1
 </tr>
 <tr>
 <td style="text-align:left;">
-tr|Q5TIW8|Q5TIW8_SECCE
+Q5TIW8
 </td>
 <td style="text-align:left;">
 Q9FI25.1
@@ -757,7 +759,7 @@ Q9FI25.1
 527
 </td>
 <td style="text-align:right;">
-0
+1.4e-142
 </td>
 <td style="text-align:right;">
 424
@@ -765,7 +767,7 @@ Q9FI25.1
 </tr>
 <tr>
 <td style="text-align:left;">
-tr|Q5TIW8|Q5TIW8_SECCE
+Q5TIW8
 </td>
 <td style="text-align:left;">
 Q9FKU8.1
@@ -795,7 +797,7 @@ Q9FKU8.1
 537
 </td>
 <td style="text-align:right;">
-0
+2.43e-142
 </td>
 <td style="text-align:right;">
 423
@@ -803,7 +805,7 @@ Q9FKU8.1
 </tr>
 <tr>
 <td style="text-align:left;">
-tr|Q5TIW8|Q5TIW8_SECCE
+Q5TIW8
 </td>
 <td style="text-align:left;">
 Q9SVG5.1
@@ -833,7 +835,7 @@ Q9SVG5.1
 526
 </td>
 <td style="text-align:right;">
-0
+3.77e-142
 </td>
 <td style="text-align:right;">
 422
@@ -841,7 +843,7 @@ Q9SVG5.1
 </tr>
 <tr>
 <td style="text-align:left;">
-tr|Q5TIW8|Q5TIW8_SECCE
+Q5TIW8
 </td>
 <td style="text-align:left;">
 Q9FI21.1
@@ -871,7 +873,7 @@ Q9FI21.1
 531
 </td>
 <td style="text-align:right;">
-0
+9.36e-142
 </td>
 <td style="text-align:right;">
 421

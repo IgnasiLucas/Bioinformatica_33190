@@ -33,7 +33,9 @@ hits <- read.table('Q5TIW8_hits.txt',
                    col.names = c('query', 'subject', 'identity', 'al.length',
                                  'mismatches', 'gaps', 'qstart', 'qend',
                                  'sstart', 'send', 'evalue', 'bitscore'))
-kable(head(hits)) %>% kable_styling()
+hits$query <- substr(hits$query, 4, 9)
+hits$evalue <- as.character(signif(hits$evalue, digits = 3))
+kable(head(hits), align = 'llrrrrrrrrrr') %>% kable_styling()
 ```
 
 ## FASTA
