@@ -1,0 +1,97 @@
+---
+title: "Tutorial para extraer secuencias de la base de datos de BLAST"
+output: html_document
+date: "2023-06-05"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+Sys.setenv(PATH = paste(Sys.getenv('PATH'), '/home/joiglu/bin', sep = ':'))
+```
+
+## Introducción
+Con frecuencia queremos realizar un alineamiento múltiple con los resultados
+de una búsqueda con BLAST. Pero los ejecutables de BLAST no ofrecen los "hits"
+en formato FASTA. Una posible solución es extraer las secuencias encontradas
+directamente de la base de datos. Para ello, podemos usar el ejecutable
+`blastdbcmd`, que acompaña a los demás ejecutables de BLAST.
+
+## BLAST
+Como *query* usaré la proteína Q5TIW8 de *Secale cereale*:
+
+```{r query, message=FALSE, warning=FALSE}
+library('Biostrings')
+library('kableExtra')
+download.file('https://rest.uniprot.org/uniprotkb/Q5TIW8.fasta', 'Q5TIW8.fasta')
+system2('blastp',
+        args = c('-db', 'swissprot',
+                 '-query', 'Q5TIW8.fasta',
+                 '-out', 'Q5TIW8_hits.txt',
+                 '-evalue', '1.0e-100',
+                 '-outfmt', '7'))
+hits <- read.table('Q5TIW8_hits.txt',
+                   col.names = c('query', 'subject', 'identity', 'al.length',
+                                 'mismatches', 'gaps', 'qstart', 'qend',
+                                 'sstart', 'send', 'evalue', 'bitscore'))
+kable(head(hits)) %>% kable_styling()
+```
+
+## FASTA
+Podemos crear un archivo FASTA con las proteínas encontradas en el BLAST:
+
+```{r fasta}
+system2('blastdbcmd',
+        args = c('-db', 'swissprot',
+                 '-entry', paste(hits$subject, collapse = ','),
+                 '-out', 'Q5TIW8_hits.fa'))
+```
+
+Y leer el archivo:
+
+```{r biostring}
+FullNotAligned <- readAAStringSet('Q5TIW8_hits.fa')
+names(FullNotAligned[1])
+# Sustituyo los nombres por sólo la primera palabra de cada nombre:
+names(FullNotAligned) <- sapply(strsplit(names(FullNotAligned), ' '), '[', 1)
+names(FullNotAligned[1])
+```
+
+Podemos intentar alinear las secuencias completas. Pero en la tabla `hits`
+tenemos información de dónde empieza y dónde termina la homología con la *query*
+en cada secuencia encontrada: en los campos `sstart` y `send`. El reto está en
+recortar cada secuencia en `FullNotAligned` en los puntos indicados en
+`hits$sstart` y `hits$send`. Para hacerlo todo de una vez y evitar tener que
+usar un *loop*, deberíamos emplear la función `mapply()`, pero me daba un error
+que no he podido resolver. Así que opto por un *loop*.
+
+```{r mapply}
+# Comprobamos que el orden de las secuencias en FullNotAligned coincide con el
+# orden de los hits en el resultado del BLAST:
+stopifnot(all.equal(names(FullNotAligned), hits$subject))
+
+NotAligned <- AAStringSet()
+for (i in 1:length(FullNotAligned)) {
+   NotAligned <- append(NotAligned, subseq(FullNotAligned[i], hits[i, 'sstart'], hits[i, 'send']))
+}
+```
+
+Podemos comprobar que el conjunto de secuencias `NotAligned` son en general más
+cortas que las de `FullNotAligned`. Y además sus longitudes coinciden con las
+zonas alineadas por el BLAST:
+
+```{r check}
+stopifnot(all.equal(width(NotAligned), hits$send - hits$sstart + 1))
+plot(density(width(FullNotAligned)), col = 'blue', xlim = c(400,600))
+lines(density(width(NotAligned)), col = 'red')
+```
+
+## Alineamiento
+
+Bueno, a partir de aquí es fácil realizar el alineamiento con la función
+`AlignSeqs()` de `DECIPHER`. 
+
+## SessionInfo
+
+```{r sessioninfo}
+sessionInfo()
+```

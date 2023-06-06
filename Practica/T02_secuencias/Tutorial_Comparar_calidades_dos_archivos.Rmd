@@ -39,8 +39,8 @@ head(z)
 # Extraigo las filas de "z" donde "lane" tiene un valor u otro:
 Archivo1 <- z[z$lane == 'ERR4423464_1.fastq', ]
 Archivo2 <- z[z$lane == 'ERR4423464_2.fastq', ]
-plot(Archivo1$quality, Archivo1$density, type = 'l', col = 'blue', xlab = 'Calidad', ylab = 'Densidad')
-lines(Archivo2$quality, Archivo2$density, col = 'red')
+plot(Archivo1$quality, Archivo1$density, type = 'l', col = 'red', xlab = 'Calidad', ylab = 'Densidad')
+lines(Archivo2$quality, Archivo2$density, col = 'blue')
 ```
 
 La misma gráfica se puede obtener más fácilmente a partir del objeto `z` directamente si usamos
@@ -73,27 +73,66 @@ baseQuality$qual <- sapply(baseQuality$score, function(x) as.numeric(charToRaw(x
 head(baseQuality)
 ```
 
+La tabla `baseQuality` contiene la frecuencia absoluta (`count`) de cada valor de calidad (`qual`)
+en cada archivo (`lane`). Tal vez es más fácil separar los dos datos de los dos archivos en dos
+tablas diferentes:
 
+```{r separarTablas}
+calidades1 <- baseQuality[baseQuality$lane == 'ERR4423464_1.fastq', ]
+calidades2 <- baseQuality[baseQuality$lane == 'ERR4423464_2.fastq', ]
+```
 
+Ahora, la calidad media de cada archivo se obtiene usando las frecuencias
+absolutas de los valores de calidad, de acuerdo con la definición de la media.
 
-En cualquier caso, el objeto `ResumenCalidad` oculta muchos detalles que podrían ser de interés en
-la comparación de los dos archivos. ¿Cuál es la calidad media en cada archivo? ¿Cómo se
-comparan una a una las lecturas emparejadas entre los dos archivos? El informe generado por la
-función `qa()` es un objeto incompleto e incómodo (poco intuitivo, nos obliga a conocer el
-contenido de cada tabla).
+```{r calidadesMedias}
+QMedia1 <- sum(calidades1$count * calidades1$qual) / sum(calidades1$count)
+QMedia1
+QMedia2 <- sum(calidades2$count * calidades2$qual) / sum(calidades2$count)
+QMedia2
+```
+
+La calidad media de las bases del archivo `ERR4423464_2.fastq es`, por lo tanto,
+muy ligeramente inferior a la calidad media de las bases en el archivo `ERR4423464_1.fastq`.
+
+```{r comparacion}
+plot(calidades1$qual, calidades1$count, type = 'l', col = 'red', xlim = c(30, 40),
+     xlab = 'Calidad de bases (Phred)', ylab = 'Frecuencia absoluta')
+lines(calidades2$qual, calidades2$count, type = 'l', col = 'blue')
+abline(v = QMedia1, lty = 2, col = 'red')
+abline(v = QMedia2, lty = 2, col = 'blue')
+```
+
+En cualquier caso, nos ha resultado incómodo trabajar con los datos del informe
+generado por la función `qa()`. Además, algunos detalles quedan completamente
+inaccesibles: el emparejamiento de las lecturas de uno y otro archivo. Cuando
+comparamos dos conjuntos de datos, no es lo mismo comparar las medias globalmente
+que comparar datos emparejados. Si realizamos una comparación lectura a lectura,
+tenemos un poder estadístico mucho mayor para rechazar la hipótesis nula de que
+las lecturas tienen la misma calidad media en los dos archivos. 
 
 ## Trabajando directamente con las lecturas
 Vamos a aprovechar el hecho de que los archivos FASTQ con los que estamos trabajando son muy
 pequeños. Los podemos leer con la función `readFastq()` y tener toda su información en la memoria
-de trabajo, para trabajar directamente con ella.
+de trabajo.
 
-```{r readFastq2}
+```{r readFastq}
+R1 <- readFastq('data/ERR4423464_1.fastq')
+R2 <- readFastq('data/ERR4423464_2.fastq')
 
-
+# Calidades de la primera lectura en R1:
 quality(R1)[[1]]
+
+# Codificación de calidades en R1:
 encoding(quality(R1))
+
+# Transformación de las calidades de la primera lectura a vector:
 as.vector(quality(R1)[[1]])
+
+# Uso de la codificación a modo de "descodificador":
 encoding(quality(R1))[as.vector(quality(R1)[[1]])]
+
+# Calidad media de las bases de la primera lectura:
 mean(encoding(quality(R1))[as.vector(quality(R1)[[1]])])
 ```
 
@@ -102,13 +141,42 @@ a su valor numérico usando la codificación propia de estos datos. Mediante la 
 crear un vector con las calidades medias de todas las lecturas de cada archivo.
 
 ```{r sapply}
-# Esto tarda un poquito en ejecutarse...
-Qmedia1 <- sapply(1:length(R1), function(x) mean(as.numeric(quality(R1)[[x]]) - 33))
-Qmedia2 <- sapply(1:length(R2), function(x) mean(as.numeric(quality(R2)[[x]]) - 33))
+# Esto tarda un poquito en ejecutarse. La función sapply() ejecuta una
+# función (definida ahí mismo) para cada valor de x en un vector o lista:
+QMediaPorLectura1 <- sapply(1:length(R1),
+    function(x) mean(encoding(quality(R1))[as.vector(quality(R1)[[x]])]))
+mean(QMediaPorLectura1)
+weighted.mean(QMediaPorLectura1, width(R1))
+QMediaPorLectura2 <- sapply(1:length(R2),
+    function(x) mean(encoding(quality(R2))[as.vector(quality(R2)[[x]])]))
+mean(QMediaPorLectura2)
+weighted.mean(QMediaPorLectura2, width(R2))
 ```
 
+Observa que las calidades medias por archivo coinciden con las que habíamos
+calculado antes (a partir de las frecuencias de cada calidad) sólo si ponderamos
+cada lectura por su longitud, como cabía esperar.
 
+Ahora que tenemos los datos brutos de calidad por secuencia, podemos realizar un
+test estadístico. Observa la diferencia entre estos dos:
 
+```{r ttest}
+t.test(QMediaPorLectura1, QMediaPorLectura2)
+t.test(QMediaPorLectura1, QMediaPorLectura2, paired = TRUE)
+```
 
+Es decir, cada lectura en sentido directo (*forward*, en `R1`) tiene una
+calidad en término medio 0.106897 unidades Phred superior a la lectura
+correspondiente en sentido inverso. Podríamos haber caracterizado cada
+lectura por una medida diferente de calidad, como el número esperado de
+errores, o la suma de las calidades de sus bases (en lugar de su media).
+No está de más recordar que la calidad en escala Phred és $-10$ veces
+el logaritmo en base 10 de la probabiliad de que la base sea errónea. Esto
+implica que la media de las calidades ya no tiene una interpretación
+fácil en términos de probabilidad de error, porque la media aritmética de los logaritmos
+de unos cuantos números no es igual al logaritmo de la media aritmética de esos números.
+Pero esa es otra historia, y en algún punto hay que cortar.
 
-
+```{r sessionInfo}
+sessionInfo()
+```
