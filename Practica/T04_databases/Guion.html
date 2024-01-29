@@ -543,23 +543,17 @@ overflow-y: auto;
 border: 1px solid #ddd;
 border-radius: 4px;
 }
-.tabset-dropdown > .nav-tabs > li.active:before {
-content: "";
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+content: "\e259";
 font-family: 'Glyphicons Halflings';
 display: inline-block;
 padding: 10px;
 border-right: 1px solid #ddd;
 }
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-content: "";
-border: none;
-}
-.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-content: "";
+content: "\e258";
 font-family: 'Glyphicons Halflings';
-display: inline-block;
-padding: 10px;
-border-right: 1px solid #ddd;
+border: none;
 }
 .tabset-dropdown > .nav-tabs > li.active {
 display: block;
@@ -601,7 +595,7 @@ display: none;
 
 
 <h1 class="title toc-ignore">Pràctica del tema 4. IntrePro</h1>
-<h4 class="date">Última actualización: 14/02/2023</h4>
+<h4 class="date">Última actualización: 28/06/2023</h4>
 
 </div>
 
@@ -650,19 +644,19 @@ contenido se muestra aquí:</p>
 ##             &quot;ssf&quot;: 2019,
 ##             &quot;panther&quot;: 15840,
 ##             &quot;cdd&quot;: 18874,
-##             &quot;profile&quot;: 1336,
-##             &quot;smart&quot;: 1312,
-##             &quot;tigrfams&quot;: 4444,
+##             &quot;profile&quot;: 1354,
+##             &quot;smart&quot;: 1322,
+##             &quot;ncbifam&quot;: 6317,
 ##             &quot;prosite&quot;: 1311,
 ##             &quot;prints&quot;: 2106,
-##             &quot;hamap&quot;: 2383,
+##             &quot;hamap&quot;: 2388,
 ##             &quot;pirsf&quot;: 3292,
 ##             &quot;sfld&quot;: 303
 ##         },
-##         &quot;integrated&quot;: 51013,
-##         &quot;unintegrated&quot;: 28432,
-##         &quot;interpro&quot;: 38518,
-##         &quot;all&quot;: 119259
+##         &quot;integrated&quot;: 51464,
+##         &quot;unintegrated&quot;: 29694,
+##         &quot;interpro&quot;: 39039,
+##         &quot;all&quot;: 121899
 ##     }
 ## }
 ## </code></pre>
@@ -974,16 +968,16 @@ str(pf06235)</code></pre>
 ##   .. ..$ subfamilies         : int 0
 ##   .. ..$ domain_architectures: int 4
 ##   .. ..$ interactions        : int 0
-##   .. ..$ matches             : int 405
+##   .. ..$ matches             : int 407
 ##   .. ..$ pathways            : int 0
-##   .. ..$ proteins            : int 405
+##   .. ..$ proteins            : int 407
 ##   .. ..$ proteomes           : int 5
 ##   .. ..$ sets                : int 0
 ##   .. ..$ structural_models   :List of 2
 ##   .. .. ..$ alphafold  : int 314
 ##   .. .. ..$ rosettafold: int 1
 ##   .. ..$ structures          : int 0
-##   .. ..$ taxa                : int 714
+##   .. ..$ taxa                : int 713
 ##   ..$ entry_annotations:List of 5
 ##   .. ..$ hmm              : int 0
 ##   .. ..$ logo             : int 0
@@ -2092,13 +2086,13 @@ Tetratricopeptide Repeats-Sensor
 </div>
 <div id="información-de-la-sesión" class="section level2">
 <h2>Información de la sesión</h2>
-<pre><code>## R version 4.2.2 (2022-10-31)
+<pre><code>## R version 4.3.0 (2023-04-21)
 ## Platform: x86_64-pc-linux-gnu (64-bit)
 ## Running under: Debian GNU/Linux 11 (bullseye)
 ## 
 ## Matrix products: default
-## BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.9.0
-## LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.9.0
+## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
+## LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.13.so;  LAPACK version 3.9.0
 ## 
 ## locale:
 ##  [1] LC_CTYPE=ca_ES.UTF-8       LC_NUMERIC=C              
@@ -2108,22 +2102,25 @@ Tetratricopeptide Repeats-Sensor
 ##  [9] LC_ADDRESS=C               LC_TELEPHONE=C            
 ## [11] LC_MEASUREMENT=ca_ES.UTF-8 LC_IDENTIFICATION=C       
 ## 
+## time zone: Europe/Madrid
+## tzcode source: system (glibc)
+## 
 ## attached base packages:
 ## [1] stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-## [1] kableExtra_1.3.4 knitr_1.38       jsonlite_1.8.4  
+## [1] kableExtra_1.3.4 knitr_1.43       jsonlite_1.8.5  
 ## 
 ## loaded via a namespace (and not attached):
-##  [1] rstudioapi_0.14   xml2_1.3.3        magrittr_2.0.3    munsell_0.5.0    
-##  [5] rvest_1.0.3       viridisLite_0.4.1 colorspace_2.1-0  R6_2.5.1         
-##  [9] rlang_1.0.6       fastmap_1.1.0     stringr_1.4.0     highr_0.9        
-## [13] httr_1.4.4        tools_4.2.2       webshot_0.5.4     xfun_0.30        
-## [17] cli_3.6.0         jquerylib_0.1.4   systemfonts_1.0.4 htmltools_0.5.4  
-## [21] yaml_2.3.5        digest_0.6.31     lifecycle_1.0.3   sass_0.4.1       
-## [25] vctrs_0.5.2       glue_1.6.2        evaluate_0.20     rmarkdown_2.14   
-## [29] stringi_1.7.6     compiler_4.2.2    bslib_0.3.1       scales_1.2.1     
-## [33] svglite_2.1.1</code></pre>
+##  [1] vctrs_0.6.3       svglite_2.1.1     httr_1.4.6        cli_3.6.1        
+##  [5] rlang_1.1.1       xfun_0.39         highr_0.10        stringi_1.7.12   
+##  [9] glue_1.6.2        colorspace_2.1-0  htmltools_0.5.5   sass_0.4.6       
+## [13] scales_1.2.1      rmarkdown_2.22    evaluate_0.21     munsell_0.5.0    
+## [17] jquerylib_0.1.4   fastmap_1.1.1     yaml_2.3.7        lifecycle_1.0.3  
+## [21] stringr_1.5.0     compiler_4.3.0    rvest_1.0.3       rstudioapi_0.14  
+## [25] systemfonts_1.0.4 digest_0.6.31     viridisLite_0.4.2 R6_2.5.1         
+## [29] magrittr_2.0.3    webshot_0.5.4     bslib_0.5.0       tools_4.3.0      
+## [33] xml2_1.3.4        cachem_1.0.8</code></pre>
 </div>
 <div id="bibliography" class="section level1 unnumbered">
 <h1 class="unnumbered">Bibliography</h1>

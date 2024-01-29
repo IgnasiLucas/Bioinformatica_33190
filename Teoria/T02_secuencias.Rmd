@@ -348,7 +348,7 @@ readGeneric(tab.file1, header = TRUE, keep.all.metadata = TRUE)
 
 [genomation](https://www.bioconductor.org/packages/release/bioc/vignettes/genomation/inst/doc/GenomationManual.html)
 
-## [Formato SAM](https://en.wikipedia.org/wiki/SAM_(file_format). Introducción
+## [Formato SAM](https://en.wikipedia.org/wiki/SAM_(file_format)). Introducción
 ```
 Coor      12345678901234  5678901234567890123456789012345
 ref       AGCATGTTAGATAA**GATAGCTGTGCTAGTAGGCAGTCAGCGCCAT
