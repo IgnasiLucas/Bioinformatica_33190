@@ -85,7 +85,7 @@ setwd('/home/user/Downloads/T02_secuencias')
 1. Ejecuta el código siguiente. ¿Tienes claro para qué sirve? Si surge algún error, intenta resolverlo:
 
 ```{r library, eval=FALSE}
-library('ShortRead')
+suppressMessages(library('ShortRead'))
 ```
 
 2. Ejecuta y edita, si quieres, el código siguiente, e intenta responder las preguntas siguientes. Puedes usar `help(qa)` para consultar la ayuda de la función `qa()`.
@@ -159,7 +159,7 @@ bowtie2_build(references = 'data/referencia.fna',
 2. Ejecuta el comando siguiente, observa el resultado y los cambios en la carpeta de trabajo, y asegúrate de poder contestar las preguntas siguientes.
 
 ```{r mapping, eval=FALSE}
-bowtie2(bt2Index  = 'SARS-CoV2',
+bowtie2(bt2Index  = 'SARS-Cov2',
         samOutput = 'ERR4423464.sam',
         seq1 = 'data/ERR4423464_1.fastq',
         seq2 = 'data/ERR4423464_2.fastq',
