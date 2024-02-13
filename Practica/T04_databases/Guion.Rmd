@@ -65,16 +65,17 @@ registros[[1]][['member_databases']]
 ```
 
 ### Ejercicio 1
-Añade un bloque de código a este mismo documento y escribe las órdenes para
-guardar en tres variables los números de proteínas revisadas y no revisadas
-(de UniProtKB), así como el de las incluídas en InterPro.
+Construye las URLs necesarias para determinar el número de registros del resto
+de tipos: *protein*, *structure*, *set*, y *proteome*. Fíjate en las posibles
+fuentes de cada tipo de datos, e intenta guardar la información en variables de
+tu sesión de R.
 
 ## Lista de datos de algún tipo
 
 Si además del tipo de datos (*entry*, *protein*, *taxonomy*...), añadimos a la
-URL la base de datos de origen que queremos consultar, obtendremos la lista
+URL la *fuente* o base de datos de origen que queremos consultar, obtendremos la lista
 (completa?) de los registros de ese tipo provenientes de esa base de datos. 
-Por ejemplo:
+Consulta los ejemplos siguientes:
 
 - https://www.ebi.ac.uk/interpro/api/entry/interpro
 - https://www.ebi.ac.uk/interpro/api/entry/pfam
