@@ -301,7 +301,7 @@ table(gff.mito$type)
 gff.mito$start[gff.mito$type == "exon"]
 ```
 
-##  Formato GTF/GFF
+##  Formato GTF/GFF {.smaller}
 
 ```{r gff2, echo=TRUE, eval=TRUE}
 library('ape')
@@ -310,7 +310,7 @@ f <- "Homo_sapiens.GRCh38.86.chromosome.MT.gff3.gz"
 download.file(paste0(d, f), "mt_gff3.gz")
 gff.mito <- read.gff("mt_gff3.gz", GFF3 = TRUE)
 table(gff.mito$type)
-gff.mito$start[gff.mito$type == "exon"]
+gff.mito[gff.mito$type == "exon", 'start']
 ```
 
 ## Formato BED (*Browser Extensible Data*) {.smaller}
@@ -602,4 +602,4 @@ n="Haplotype Quality">
 - Gestión de ambientes: conda, pip
 - La nube: AWS, etc.
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/IgnasiLucas/T2_testR/HEAD)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/IgnasiLucas/Bioinformatica_33190/HEAD)

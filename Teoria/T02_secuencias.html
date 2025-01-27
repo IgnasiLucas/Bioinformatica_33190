@@ -3060,18 +3060,21 @@ var loadDeck = function(event) {
   });
 };
 
-if (document.readyState !== "loading" &&
-    document.querySelector('slides') === null) { 
-  // if the document is done loading but our element hasn't yet appeared, defer
-  // loading of the deck
-  window.setTimeout(function() {
-    loadDeck(null);
-  }, 0);
-} else {
-  // still loading the DOM, so wait until it's finished
-  document.addEventListener("DOMContentLoaded", loadDeck);
-}
+if (!window.Shiny) {
+  // If Shiny is loaded, the slide deck is initialized in ioslides template
 
+  if (document.readyState !== "loading" &&
+      document.querySelector('slides') === null) {
+    // if the document is done loading but our element hasn't yet appeared, defer
+    // loading of the deck
+    window.setTimeout(function() {
+      loadDeck(null);
+    }, 0);
+  } else {
+    // still loading the DOM, so wait until it's finished
+    document.addEventListener("DOMContentLoaded", loadDeck);
+  }
+}
 
 
 </script>
@@ -3114,7 +3117,7 @@ div.column{display: inline-block; vertical-align: top; width: 50%;}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -3125,7 +3128,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
 { counter-reset: source-line 0; }
@@ -3191,7 +3194,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; }
       <h1 data-config-title><!-- populated from slide_config.json --></h1>
       
       <p data-config-presenter><!-- populated from slide_config.json --></p>
-            <p style="margin-top: 6px; margin-left: -2px;">Actualizado en: 29/01/2024</p>
+            <p style="margin-top: 6px; margin-left: -2px;">Actualizado en: 27/01/2025</p>
           </hgroup>
   </slide>
 
@@ -3648,7 +3651,7 @@ table(gff.mito$type)
 # O extraer los inicios de todos los exones:
 gff.mito$start[gff.mito$type == &quot;exon&quot;]</pre>
 
-</article></slide><slide class=""><hgroup><h2>Formato GTF/GFF</h2></hgroup><article  id="formato-gtfgff-1">
+</article></slide><slide class=""><hgroup><h2>Formato GTF/GFF</h2></hgroup><article  id="formato-gtfgff-1" class="smaller">
 
 <pre class = 'prettyprint lang-r'>library(&#39;ape&#39;)
 d &lt;- &quot;https://ftp.ensembl.org/pub/release-86/gff3/homo_sapiens/&quot;
@@ -3663,7 +3666,7 @@ table(gff.mito$type)</pre>
 ##              gene              mRNA           mt_gene        transcript 
 ##                15                13                22                24</pre>
 
-<pre class = 'prettyprint lang-r'>gff.mito$start[gff.mito$type == &quot;exon&quot;]</pre>
+<pre class = 'prettyprint lang-r'>gff.mito[gff.mito$type == &quot;exon&quot;, &#39;start&#39;]</pre>
 
 <pre >##  [1]   577   648  1602  1671  3230  3307  4263  4329  4402  4470  5512  5587
 ## [13]  5657  5761  5826  5904  7446  7518  7586  8295  8366  8527  9207  9991
@@ -4071,7 +4074,7 @@ n=&quot;Haplotype Quality&quot;&gt;
 <li>La nube: AWS, etc.</li>
 </ul>
 
-<p><a href='https://mybinder.org/v2/gh/IgnasiLucas/T2_testR/HEAD' title=''><img src='https://mybinder.org/badge_logo.svg' title=''/></a></p></article></slide>
+<p><a href='https://mybinder.org/v2/gh/IgnasiLucas/Bioinformatica_33190/HEAD' title=''><img src='https://mybinder.org/badge_logo.svg' title=''/></a></p></article></slide>
 
 
   <slide class="backdrop"></slide>
@@ -4098,6 +4101,11 @@ n=&quot;Haplotype Quality&quot;&gt;
        window.jQuery(document).on('slideenter', function(e) {
          window.jQuery(e.target).trigger('shown');
       });
+    }
+    if (window.Shiny) {
+      // Initialize slides when this script appears on the page, since it
+      // indicates that the <slides> markup has been fully loaded.
+      window.loadDeck();
     }
   })();
 </script>
