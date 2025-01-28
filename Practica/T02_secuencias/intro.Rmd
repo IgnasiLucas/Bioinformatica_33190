@@ -1,0 +1,62 @@
+---
+title: "Introducción a R y a Rmarkdown"
+author: "J. Ignacio Lucas Lledó"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R y RStudio
+
+1. En la consola de R, practica los comandos siguientes y las variaciones que 
+consideres oportunas. Asegúrate de comprender para qué sirven y los mensajes de
+error, si aparecen.
+
+```{r basics, eval=FALSE}
+# Variables y operaciones numericas:
+UnNumero <- 7
+MasNumeros <- c(1, 7, 3, 5, 14)
+UnNumero * MasNumeros
+sqrt(MasNumeros)
+log(MasNumeros)
+log(MasNumeros)[4]
+2 ^ c(0, 1, 2, 3, 4)
+1:7+3
+1:(7+3)
+
+# Cadenas de caracteres:
+Palabras <- c('El', 'Nap-i-col', 'Atàvic')
+Palabras
+paste(Palabras, collapse = ' ')
+Palabras[c(2,3)]
+startsWith(Palabras, 'N')
+Palabras[startsWith(Palabras, 'A')]
+
+# Marcos de datos (tabla de datos de diferentes tipos):
+MarcoDeDatos <- data.frame(
+  muestra = c('A', 'B', 'C', 'D'),
+  color = factor(c('pálido', 'pálido', 'oscuro', 'oscuro'), levels = c('blanco', 'pálido','oscuro')),
+  longitud = c(11.15, 10.03, 9.09, 11.48),
+  puntuacion = c(42.3, 41.4, 40.7, 42.6),
+  dummy1 = c(FALSE, TRUE, TRUE, FALSE)
+)
+MarcoDeDatos
+# Podemos seleccionar columnas individuales, o filas, etc.
+MarcoDeDatos$muestra
+MarcoDeDatos[1, ]
+MarcoDeDatos[, c('longitud', 'puntuacion')]
+
+# Gráficas: plot(x, y)
+plot(MarcoDeDatos$longitud, MarcoDeDatos$puntuacion)
+```
+
+El dominio del lenguaje R **no** es un objetivo del curso, y un conocimiento
+básico será más que suficiente. En cualquier caso, existen miles de recursos
+disponibles para aprender R de forma autónoma. Si os interesa, os recomiendo:
+
+- [Los materiales de la Software Carpentry](https://software-carpentry.org/lessons/)
+- [La guía de R para piratas](https://bookdown.org/ndphillips/YaRrr/)
+

@@ -297,23 +297,17 @@ overflow-y: auto;
 border: 1px solid #ddd;
 border-radius: 4px;
 }
-.tabset-dropdown > .nav-tabs > li.active:before {
-content: "";
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+content: "\e259";
 font-family: 'Glyphicons Halflings';
 display: inline-block;
 padding: 10px;
 border-right: 1px solid #ddd;
 }
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-content: "";
-border: none;
-}
-.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-content: "";
+content: "\e258";
 font-family: 'Glyphicons Halflings';
-display: inline-block;
-padding: 10px;
-border-right: 1px solid #ddd;
+border: none;
 }
 .tabset-dropdown > .nav-tabs > li.active {
 display: block;
@@ -356,212 +350,146 @@ display: none;
 
 <h1 class="title toc-ignore">Práctica del tema 2. Análisis de
 secuencias</h1>
-<h4 class="date">25/01/2023</h4>
+<h4 class="date">28/01/2025</h4>
 
 </div>
 
 
 <div id="introducción" class="section level2">
 <h2>Introducción</h2>
-<p>En la carpeta <code>data</code> tenemos dos archivos de secuencias
-cortas en formato <em>fastq</em>, que contienen lecturas emparejadas
-(<em>paired end reads</em>) de la secuenciación de un aislado de
-coronavirus.</p>
-<p>Los objetivos son:</p>
-<ol start="0" style="list-style-type: decimal">
-<li>Familiarizarnos con el entorno de R y RStudio.</li>
-<li>Usar el paquete <code>ShortReads</code> para comprobar la calidad y
-las características de las secuencias.</li>
-<li>Mapear (alinear) las lecturas al genoma de referencia del
-SARS-CoV-2, usando el paquete <code>Rbowtie2</code>.</li>
-</ol>
-</div>
-<div id="r-y-rstudio" class="section level2">
-<h2>R y RStudio</h2>
-<ol style="list-style-type: decimal">
-<li>En la consola de R, practica los comandos siguientes y las
-variaciones que consideres oportunas. Asegúrate de comprender para qué
-sirven y los mensajes de error, si aparecen.</li>
-</ol>
-<pre class="r"><code># Variables y operaciones numericas:
-UnNumero &lt;- 7
-MasNumeros &lt;- c(1, 7, 3, 5, 14)
-UnNumero * MasNumeros
-sqrt(MasNumeros)
-log(MasNumeros)
-log(MasNumeros)[4]
-2 ^ c(0, 1, 2, 3, 4)
-1:7+3
-1:(7+3)
-
-# Cadenas de caracteres:
-Palabras &lt;- c(&#39;El&#39;, &#39;Nap-i-col&#39;, &#39;Atàvic&#39;)
-Palabras
-paste(Palabras, collapse = &#39; &#39;)
-Palabras[c(2,3)]
-startsWith(Palabras, &#39;N&#39;)
-Palabras[startsWith(Palabras, &#39;A&#39;)]
-
-# Marcos de datos (tabla de datos de diferentes tipos):
-MarcoDeDatos &lt;- data.frame(
-  muestra = c(&#39;A&#39;, &#39;B&#39;, &#39;C&#39;, &#39;D&#39;),
-  color = factor(c(&#39;pálido&#39;, &#39;pálido&#39;, &#39;oscuro&#39;, &#39;oscuro&#39;), levels = c(&#39;blanco&#39;, &#39;pálido&#39;,&#39;oscuro&#39;)),
-  longitud = c(11.15, 10.03, 9.09, 11.48),
-  puntuacion = c(42.3, 41.4, 40.7, 42.6),
-  dummy1 = c(FALSE, TRUE, TRUE, FALSE)
-)
-MarcoDeDatos
-# Podemos seleccionar columnas individuales, o filas, etc.
-MarcoDeDatos$muestra
-MarcoDeDatos[1, ]
-MarcoDeDatos[, c(&#39;longitud&#39;, &#39;puntuacion&#39;)]
-
-# Gráficas: plot(x, y)
-plot(MarcoDeDatos$longitud, MarcoDeDatos$puntuacion)</code></pre>
-<p>El dominio del lenguaje R <strong>no</strong> es un objetivo del
-curso, y un conocimiento básico será más que suficiente. En cualquier
-caso, existen miles de recursos disponibles para aprender R de forma
-autónoma. Si os interesa, os recomiendo:</p>
-<ul>
-<li><a href="https://software-carpentry.org/lessons/">Los materiales de
-la Software Carpentry</a></li>
-<li><a href="https://bookdown.org/ndphillips/YaRrr/">La guía de R para
-piratas</a></li>
-</ul>
 <p>Antes de usar los datos de la práctica, deberías decirle a R en qué
 carpeta quieres trabajar, para que pueda encontrar la subcarpeta
 <code>data</code>, con los datos de la práctica. Por ejemplo, si has
 descargado y descomprimido la carpeta <code>T02_secuencias</code> en
-<code>/home/user/Downloads</code>, entonces:</p>
+<code>/home/user/Downloads</code>, entonces ejecuta el comando siguiente
+<strong>en la consola</strong>:</p>
 <pre class="r"><code># &quot;Set working directory&quot;:
 setwd(&#39;/home/user/Downloads/T02_secuencias&#39;)</code></pre>
+<p>Imagina que en un laboratorio de biotecnología se aisla una cepa de
+levadura con capacidades metabólicas diferentes, y se decide
+secuenciarla para identificar en qué se diferencia genéticamente de la
+cepa de referencia.</p>
+</div>
+<div id="genoma-de-referencia" class="section level2">
+<h2>Genoma de referencia</h2>
+<p>El archivo <code>data/yeast.fasta</code> contiene las secuencias de
+sólo los tres primeros cromosomas del genoma de referencia de la
+levadura (para reducir el tamaño). Con los comandos siguientes, lo
+cargamos en la memoria de trabajo, mediante una función del paquete
+<code>Biostrings</code>.</p>
+<pre class="r"><code>suppressMessages(library(&#39;Biostrings&#39;))
+genoma &lt;- readDNAStringSet(&#39;data/yeast.fasta&#39;)
+genoma</code></pre>
+<pre><code>## DNAStringSet object of length 3:
+##      width seq                                              names               
+## [1] 230218 CCACACCACACCCACACACCCAC...GTGTGGGTGTGGTGTGTGTGGG NC_001133.9 Sacch...
+## [2] 813184 AAATAGCCCTCATGTACGTCTCC...TGGGTGTGGTGTGTGGGTGTGT NC_001134.8 Sacch...
+## [3] 316620 CCCACACACCACACCCACACCAC...TGTGGTGGGTGTGGTGTGTGTG NC_001135.5 Sacch...</code></pre>
+<ul>
+<li>¿Qué clase de objeto es <code>genoma</code>?</li>
+<li>¿De qué clase de objetos está compuesto?</li>
+<li>¿Cómo extraerías la secuencia de uno de los cromosomas?</li>
+<li>¿Cómo inspeccionarías la secuencia de un segmento concreto de un
+cromosoma?</li>
+</ul>
+</div>
+<div id="anotaciones-del-genoma" class="section level2">
+<h2>Anotaciones del genoma</h2>
+<p>El archivo <code>data/yeast.gtf.gz</code> contiene la anotación
+funcional de los tres primeros cromosomas de la levadura. Con los
+comandos siguientes, cargamos toda la información en un <em>marco de
+datos</em>.</p>
+<pre class="r"><code>library(ape)</code></pre>
+<pre><code>## 
+## S&#39;està adjuntant el paquet: &#39;ape&#39;</code></pre>
+<pre><code>## L&#39;objecte següent està emmascarat per &#39;package:Biostrings&#39;:
+## 
+##     complement</code></pre>
+<pre class="r"><code>gtf &lt;- read.gff(&#39;data/yeast.gtf.gz&#39;)</code></pre>
+<ul>
+<li>¿Cuántas columnas hay en el objeto <code>gtf</code>?</li>
+<li>¿Cuáles son sus nombres?</li>
+<li>¿Cuántos tipos diferentes de elementos funcionales hay?</li>
+</ul>
+<p>Con el código siguiente representamos las posiciones de los genes de
+un cromosoma entre dos posiciones concretas.</p>
+<pre class="r"><code>Chrom = &#39;NC_001133.9&#39;
+From = 100000
+To   = 150000
+plot(c(From, To), c(0, 1), type = &#39;n&#39;, xlab = &#39;chr 1&#39;, ylab = &#39;&#39;)
+PosGenes &lt;- gtf$seqid == Chrom &amp; gtf$type == &#39;gene&#39; &amp; gtf$strand == &#39;+&#39;
+NegGenes &lt;- gtf$seqid == Chrom &amp; gtf$type == &#39;gene&#39; &amp; gtf$strand == &#39;-&#39;
+segments(gtf[PosGenes, &#39;start&#39;], 0.45, gtf[PosGenes, &#39;end&#39;], 0.45, col = &#39;darkred&#39;)
+segments(gtf[NegGenes, &#39;start&#39;], 0.55, gtf[NegGenes, &#39;end&#39;], 0.55, col = &#39;darkgreen&#39;)</code></pre>
+<p><img role="img" src="data:image/png;base64,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Xpg/f/5RLVy5cuXjjz8eQhg4cGCjTAYAAAACfq+bb7659qffR44cOXXq1Pfee++wS7Zv3z59+vSLLrqosrIyPT19woQJjT8mAAAAKcp74OsUFBQ89NBD48aNq6mpuffeex944IHevXv36dOnoKCgS5cuWVlZGRkZ1dXVlZWV27Zt27x584oVK4qKinbt2lW7/J577unRo0dyvwUAAABOYAJ+nzFjxrRu3XrSpEllZWU1NTVFRUVFRUWHXZWdnT1jxoxRo0Y1wYQAAACkLI/Qf8511123cePGu+66q3v37oc9uFu3btOmTSspKVHvAAAANDZ34PeXk5Mzbdq0adOmbdmyZd26da+//npZWdmOHTsqKytbtWrVpk2bTp06devWrbCw8NRTT032sAAAAKQKAX9I+fn5+fn5tZ9ODwAAAMnlEXoAAACIgIAHAACACHiE/ljt2rWrrKysdrtr167JHQYAAIATlYA/VkuXLh0+fHjtdiKRaMAzJxKJ7du312Ph3rfTAwAAcMIQ8Mev73//+48++mi9ly9btuz2229vwHkAAABIIgF//CooKOjYseOePXuOduEnn3xSU1NTWVnZGFMBAACQFAL+WPXv33/58uWNceYpU6ZMmTKlHgvPP//81atXt2/fvsFHAgAAIFkE/LHKycnp06dPsqcAAADgBOc1cgAAABABAQ8AAAAREPAAAAAQAQEPAAAAERDwAAAAEAEBDwAAABEQ8AAAABAB74EPIYQ9e/Z8+OGHx36eU0455dhPAgAAAAcS8CGE8Pbbb3/5y18+9vMkEoljPwkAAAAcyCP0IYTQsmXL9u3bJ3sKAAAAOCR34EMIITc394MPPliyZMkdd9xRXFxcu/O0004788wzkzsYAAAA1BLwddLT04cOHTpgwIDLLrvspZdeCiFcc801P/vZz5I9FwAAAITgEfr9tG7d+ic/+UmypwAAAID9Cfj9DRgwoHPnzsmeAgAAAD5HwB/Eeeedl+wRAAAA4HP8DPxBXHrppZWVlQUFBckeBAAAAOoI+IOYNGnSpEmTkj0FAAAA7OMRegAAAIiAgAcAAIAICHgAAACIgIAHAACACAh4AAAAiICABwAAgAgIeAAAAIiAgAcAAIAICHgAAACIgIAHAACACAh4AAAAiICABwAAgAgIeAAAAIiAgAcAAIAICHgAAACIgIAHAACACAh4AAAAiICABwAAgAgIeAAAAIiAgAcAAIAICHgAAACIgIAHAACACAh4AAAAiICABwAAgAgIeAAAAIiAgAcAAIAICHgAAACIgIAHAACACAh4AAAAiICABwAAgAgIeAAAAIiAgAcAAIAICHgAAACIgIAHAACACAh4AAAAiICABwAAgAgIeAAAAIiAgAcAAIAICHgAAACIgIAHAACACAh4AAAAiICABwAAgAgIeAAAAIiAgAcAAIAICHgAAACIgIAHAACACAh4AAAAiICABwAAgAgIeAAAAIiAgAcAAIAICHgAAACIgIAHAACACAh4AAAAiICABwAAgAgIeAAAAIiAgAcAAIAICHgAAACIgIAHAACACAh4AAAAiICABwAAgAgIeAAAAIiAgAcAAIAICHgAAACIgIAHAACACAh4AAAAiICABwAAgAgIeAAAAIiAgAcAAIAICHgAAACIgIAHAACACAh4AAAAiECLZA8Qn82bN69du/ajjz7Kz8/v27dvy5Ytkz0RAAAAJz4Bv7/t27cvX7585cqVZWVlZ5xxxnXXXdeuXbvaL5WWlk6cOPHpp59OJBK1e9q1azd9+vSxY8cmb14AAABSgoD/nIULF954440ffvjh3j3Tpk1btGhR7969S0tLBwwY8Nprr332+I8++mjcuHFLly6dO3duZmZmk88LAABAqvAz8Ps89thjQ4YM+Wy9hxDKysouv/zyd99999Zbb62t94KCghtvvPGOO+647LLL0tPTQwi//e1v//mf/zk5QwMAAJAa3IGvU15ePnXq1NrtK6+8cvDgwa1bt37xxRdnzpxZXl5+ySWXvP766yGEW2+9dfr06Xt/7n3VqlXf+c53SkpK7r333tGjR59++ulJ+wYAAAA4obkDX+fnP/95eXl5COHBBx/8j//4j+9973vXXHPNww8//Oyzz4YQauv9wgsvfPDBBz/7qXXnn3/+E088EUL49NNPH3zwwSTNDgAAwIlPwNdZuXJlCOHss8+eNGnSZ/cPHjx4yJAhtds/+tGPDlz4zW9+8xvf+EYI4b/+678af0wAAABSlICvU1xcHELo27dvWlrafl+64IILajcKCwsPurZ2/9tvv92YAwIAAJDSBHyd7du3hxDatm174Jf2vkZu78Z+cnJyQgg7d+5stOkAAABIdQK+Trdu3UIIf/3rXw/80htvvFG7sXHjxoOurT2gU6dOjTYdAAAAqU7A1+nevXsI4fnnn9+b67XKy8vnzp1bu/273/3uwIVlZWX//d//HUL42te+1vhjAgAAkKIEfJ2bbrophFBdXT1kyJAXX3xxz549IYR169ZdfvnltZ9OH0K477771q1b99lVu3fvvv322//3f/83hHD11Vc3+dQAAACkCgFf58ILL7zmmmtCCG+++eY3v/nNtm3b5uTkFBYW/uUvfwkhzJkzJz8/f+fOnb17977nnntWrFjx1ltvPfvssxdddNGTTz4ZQrjggguuvfbaJH8PAAAAnLhaJHuA48gjjzxSUVHx3HPPhRAqKir27r/99ttvuummLl26DBkyZOfOnQe+TC4rK+uXv/zlgR9fDwAAAA3FHfh9OnTo8Pvf//6RRx7p1atXy5Yt09PTzz777FmzZt1///0hhMsvv3zu3LktW7bcb1WvXr1Wr1597rnnJmNkAAAAUoU78PubMGHChAkTQgiJRGK/m+rf/e53L7jgghkzZrzyyisfffTRl770pcsuu2zUqFEHVj0AAAA0LAF/SAd9JD4/P//ee+9t+mEAAABIcR6hBwAAgAgIeAAAAIiAR+iP1a5du8rKymq3u3btmtxhAAAAOFEJ+GO1dOnS4cOH124nEokGPPPTTz89a9aseizcuHFj+Pyb8AAAAIidgD9+Pf3003/4wx/qvXz79u0NOAwAAADJJeCPX3PmzBk7dmw9Fn7/+9/fuHGj5/kBAABOJAL+WPXv33/58uWNcea2bdsOGjSoHguzs7MbfBgAAACSS8Afq5ycnD59+iR7CgAAAE5wXiMHAAAAERDwAAAAEAGP0B9GRUVFeXl5RUXFjh07MjIysrOzO3bs6IfMAQAAaGIC/iDef//9BQsWLFq0aP369W+99daBb3fv2rVrYWHh4MGDR4wYkZeXl5QhAQAASCkeof+c7du333bbbXl5eRMnTly4cOHmzZsPrPcQwtatW5csWTJp0qSCgoLx48eXlpY2/agAAACkFHfg9ykpKRk0aNCmTZv27snMzMzPz8/Nzc3KysrIyKiqqqqsrNy2bduWLVsqKipCCNXV1TNnzly2bNmiRYvOPPPM5M0OAADACU7A16mqqho6dGhtvefm5o4dO3bYsGE9evRo3rz5gQcnEoni4uLFixfPmjVrw4YNmzZtGjFixKpVqzIzM5t8cAAAAFKCR+jrzJkzZ/369SGEIUOGFBcX33nnnb169TpovYcQ0tLSunfvPnny5Ndee23ixIkhhOLi4tmzZzfpxAAAAKQSAV/nqaeeCiHk5ubOnz+/Xbt2R7iqZcuWM2bM6Nu3bwhh3rx5jTgfAAAAqU3A1ykuLg4hDBs27Ggfg09LS7v22mtDCBs3bmyUyQAAAEDA71VZWRlCqN8L3tu3bx9CqP1YOwAAAGgMAr5Ofn5+CGHFihX1WFu7ygvhAQAAaDwCvs7gwYNDCC+88ML8+fOPauHKlSsff/zxEMLAgQMbZTIAAAAQ8HvdfPPNtT/9PnLkyKlTp7733nuHXbJ9+/bp06dfdNFFlZWV6enpEyZMaPwxAQAASFHeA1+noKDgoYceGjduXE1Nzb333vvAAw/07t27T58+BQUFXbp0ycrKysjIqK6urqys3LZt2+bNm1esWFFUVLRr167a5ffcc0+PHj2S+y0AAABwAhPw+4wZM6Z169aTJk0qKyurqakpKioqKio67Krs7OwZM2aMGjWqCSYEAAAgZXmE/nOuu+66jRs33nXXXd27dz/swd26dZs2bVpJSYl6BwAAoLG5A7+/nJycadOmTZs2bcuWLevWrXv99dfLysp27NhRWVnZqlWrNm3adOrUqVu3boWFhaeeemqyhwUAACBVCPhDys/Pz8/Pr/10egAAAEguj9ADAABABAQ8AAAAREDAAwAAQAQEPAAAAERAwAMAAEAEBDwAAABEQMADAABABAQ8AAAAREDAAwAAQAQEPAAAAERAwAMAAEAEBDwAAABEQMADAABABAQ8AAAAREDAAwAAQAQEPAAAAERAwAMAAEAEBDwAAABEQMADAABABAQ8AAAAREDAAwAAQAQEPAAAAERAwAMAAEAEBDwAAABEQMADAABABAQ8AAAAREDAAwAAQAQEPAAAAERAwAMAAEAEBDwAAABEQMADAABABAQ8AAAAREDAAwAAQAQEPAAAAERAwAMAAEAEBDwAAABEQMADAABABAQ8AAAAREDAAwAAQAQEPAAAAERAwAMAAEAEBDwAAABEQMADAABABAQ8AAAAREDAAwAAQAQEPAAAAERAwAMAAEAEBDwAAABEQMADAABABAQ8AAAAREDAAwAAQAQEPAAAAERAwAMAAEAEBDwAAABEQMADAABABAQ8AAAAREDAAwAAQAQEPAAAAERAwAMAAEAEBDwAAABEQMADAABABAQ8AAAAREDAAwAAQAQEPAAAAERAwAMAAEAEBDwAAABEQMADAABABAQ8AAAARKBFsgeIzDvvvLNq1ary8vIOHTqcc845p59+erInAgAAICUI+P2tXbv26aef3rhx47x58z67f9OmTePHj1+2bNlnd/bq1evRRx/t3bt3084IAABAyvEI/T579uz5yU9+0qtXr7vvvnv9+vWf/dKvf/3rwsLC/eo9hLBmzZp+/fpNmTIlkUg04aQAAACkHHfg95kwYcKsWbNqt1u02PdPpri4eNy4cZ9++mkIoXPnzv379//qV7/6wQcfrFix4pVXXtm9e/d99913+umnjx8/PjlzAwAAkAIEfJ2XX3559uzZIYQ2bdrcd999I0eO3Pul0aNH19b7bbfddvfdd7du3Xrvl+bPnz9hwoTy8vIpU6Zcfvnlp556atNPDgAAQCrwCH2dhx56KJFIpKWlLV26dNy4cW3atKnd/+qrr/7lL38JIVxxxRUPPPDAZ+s9hHD11VfPmTMnhLBjx47777+/6ccGAAAgRQj4OuvWrQshXHrppf369fvs/hUrVtRuTJky5aALR4wY8fWvfz2E8Ic//KGRZwQAACB1Cfg6mzZtCiGcc845++0vLy+v3SgsLDzU2tqAf/vttxttOgAAAFKdgK/TqVOnEMLHH3+83/4OHTrUbuzatetQa30EPQAAAI1NwNfp2bNnCGHhwoXV1dWf3X/uuefWbrzyyiuHWvvnP/85hJCXl9eYAwIAAJDSBHyd0aNHhxC2bt166623fvaO+te+9rXu3buHEO6+++49e/YcuHD+/PmrV68OIVxyySVNNCsAAACpR8DXGT58eP/+/UMI//qv/3rppZfWNnmtmTNnpqenv/zyyxMmTKioqPjsqvnz548bNy6EkJ6ePnbs2CaeGQAAgNThPfB1mjVrNnfu3IsvvvjNN99ctmzZsmXLzjrrrP79++fl5XXu3HnMmDGPPPLIrFmzFi9e/K1vfatbt25bt259+eWXax+eDyHcfffdZ599dnK/BQAAAE5gAn6fL33pS8uXLx89evTChQtDCMXFxcXFxfsd8/bbbz/22GOf3ZOZmXn//fePHz++6QYFAAAg9XiE/nNOOumk55577k9/+tOIESOysrK++OD27dvfdNNNb7zxhnoHAACgsbkDfxAXX3zx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QRpUWtqwBQu+OmJEk13wnRdf/M3FFyf27GmyKx5XTjnvvBtWrTrUV/dUVz/21a/uePfdphypVqcePUa9+mrTX/cLfLp9++yCgl3/+78NdcLC733v0sce2/vLZ6++euNvf9sgZ05r1uw7y5blDxiwq7x89umnH1XfNojmGRmj167NOeOMxr5Q6bp1T55//u7D5fd+/u6nP/3Gj39cu73qgQf+8wc/OJJVF/385187siPr5/lx416bMyeE0Cw9/YaVKzv16NF412pYzwwdWrJkSb2Xf/H3u2HBgme/850G+YutKHz17/9+2BH8sZwTmIDn8DqefXa7NWsOe1gT/DYMHJW0Zs1OPvfcZi1bJnuQhtS8Zcv9bo41tsxOnTqedVb1zp1NedHjR6eePb/gq2nNm3fq2fMIb6M1rJPPPbfpL/rFmrdq1alHj4/ffruhTtjhrLM++8uTzj77g1deaZAzt2jVKuvkk0MILTIzO/Xo0fR/zdeqffumuYfcKienY/funx7NEzRpaWntTz997y/bnXZa+6985bB/hZfWrFm7006r55RHpmO3bu0KCkIILbOzW+XkNOq1GtZJ55xTvmFD7fbO0tKanTtDCM1atGjduXNISzvs8i/+ftt06dLhjDN2V1c31LTHuZPOPjvZI5BkaYmU+fuq1HH++eevXr162LBhv/vd75I9CwAAQMO74YYb5s6d++STT15//fXJnqXp+BA7AAAAiICABwAAgAgIeAAAAIiAgAcAAIAI+BT6+rjxxhtDCFdcccVVV12V7FkAAABICQK+Pn71q1+FEDp37izgAQAAaBoeoQcAAIAIuANf549//OPRLtm8efN+qwYOHNhwEwEAAMA+Ar7OoEGDjnbJvHnz5s2b99k9iUSi4SYCAACAfTxCX6dly5bJHgEAAAAOyR34OsuXLx85cmRxcXEIoXnz5qNGjerQocOhDr7vvvtCCL179+7fv3/TjQgAAEAKE/B1evXqtWrVqh/+8IePPPLI7t27ly5d+sQTT1xyySUHPbg24AcMGPCzn/2saccEAAAgRXmEfp/MzMyHH374ueeeO+WUU7Zu3XrppZfeeuutO3fuTPZcAAAAIOAPcMUVV6xdu3bIkCGJROIXv/jFeeedt2rVqmQPBQAAQKoT8Adx8skn//73v3/kkUeysrLeeOONvn37/tM//dPu3buTPRcAAACpS8Af0oQJE1atWnXeeedVV1f/+Mc/vvDCC998881kDwUAAECKEvBfpFu3bsuXL7/jjjuaNWv28ssv9+zZc/bs2ckeCgAAgFQk4A8jPT39nnvu+dOf/pSfn19RUTF27NihQ4cmeygAAABSjoA/It/85jdfffXVa6+9NoTw3HPPJXscAAAAUo6AP1Lt27d/6qmnnnzyybZt2yZ7FgAAAFJOi2QPEJnrr7/+29/+9ieffBJCyM7OTvY4AAAApAoBf9Tatm3rJjwAAABNzCP0AAAAEAF34I/Vrl27ysrKare7du2a3GEAAAA4UQn4Y7V06dLhw4fXbicSieQOAwAAwInKI/THrylTpqTVy+rVq0MIpaWlyf4OAAAAaDAC/viVmZnZrFn9/wUdy1oAAACONxrvWPXv33/5/69hz3zXXXft3r07cfTOO++8EEKHDh0adh4AAACSyM/AH6ucnJw+ffokewoAAABOcO7AAwAAQAQEPAAAAETAI/SHUVFRUV5eXlFRsWPHjoyMjOzs7I4dO2ZnZyd7LgAAAFKLgD+I999/f8GCBYsWLVq/fv1bb7114Nvdu3btWlhYOHjw4BEjRuTl5SVlSAAAAFKKR+g/Z/v27bfddlteXt7EiRMXLly4efPmA+s9hLB169YlS5ZMmjSpoKBg/Pjx3rgOAABAY3MHfp+SkpJBgwZt2rRp757MzMz8/Pzc3NysrKyMjIyqqqrKyspt27Zt2bKloqIihFBdXT1z5sxly5YtWrTozDPPTN7sAAAAnOAEfJ2qqqqhQ4fW1ntubu7YsWOHDRvWo0eP5s2bH3hwIpEoLi5evHjxrFmzNmzYsGnTphEjRqxatSozM7PJBwcAACAleIS+zpw5c9avXx9CGDJkSHFx8Z133tmrV6+D1nsIIS0trXv37pMnT37ttdcmTpwYQiguLp49e3aTTgwAAEAqEfB1nnrqqRBCbm7u/Pnz27Vrd4SrWrZsOWPGjL59+4YQ5s2b14jzAQAAkNoEfJ3i4uIQwrBhw472Mfi0tLRrr702hLBx48ZGmQwAAAAE/F6VlZUhhPq94L19+/YhhNqPtQMAAIDGIODr5OfnhxBWrFhRj7W1q7wQHgAAgMYj4OsMHjw4hPDCCy/Mnz//qBauXLny8ccfDyEMHDiwUSYDAAAAAb/XzTffXPvT7yNHjpw6dep777132CXbt2+fPn36RRddVFlZmZ6ePmHChMYfEwAAgBTlPfB1CgoKHnrooXHjxtXU1Nx7770PPPBA7969+/TpU1BQ0KVLl6ysrIyMjOrq6srKym3btm3evHnFihVFRUW7du2qXX7PPff06NEjud8CAAAAJzABv8+YMWNat249adKksrKympqaoqKioqKiw67Kzs6eMWPGqFGjmmBCAAAAUpZH6D/nuuuu27hx41133dW9e/fDHtytW7dp06aVlJSodwAAABqbO/D7y8nJmTZt2rRp07Zs2bJu3brXX3+9rKxsx44dlZWVrVq1atOmTadOnbp161ZYWHjqqacme1gAAABShYA/pPz8/Pz8/NpPpwcAAIDk8gg9AAAAREDAAwAAQAQEPAAAAERAwAMAAEAEBDwAAABEQMADAABABAQ8AAAAREDAAwAAQAQEPAAAAERAwAMAAEAEBDwAAABEQMADAABABAQ8AAAAREDAAwAAQAQEPAAAAERAwAMAAEAEBDwAAABEQMADAABABAQ8AAAAREDAAwAAQAQEPAAAAERAwAMAAEAEBDwAAABEQMADAABABAQ8AAAAREDAAwAAQAQEPAAAAERAwAMAAEAEBDwAAABEQMADAABABAQ8AAAAREDAAwAAQAQEPAAAAERAwAMAAEAEBDwAAABEQMADAABABAQ8AAAAREDAAwAAQAQEPAAAAERAwAMAAEAEBDwAAABEQMADAABABAQ8AAAAREDAAwAAQAQEPAAAAERAwAMAAEAEBDwAAABEQMADAABABAQ8AAAAREDAAwAAQAQEPAAAAERAwAMAAEAEBDwAAABEQMADAABABAQ8AAAAREDAAwAAQAQEPAAAAERAwAMAAEAEBDwAAABEQMADAABABAQ8AAAAREDAAwAAQAQEPAAAAERAwAMAAEAEBDwAAABEQMADAABABAQ8AAAAREDAAwAAQAQEPAAAAESgRbIHOB7V1NSsWbPm3XffPfnkk88444yOHTt+8fFvvvnmjh07Qgg9e/ZskgEBAABIOe7Af04ikfjlL395yimn9O7de/jw4f369evUqdNVV121du3aL1j1D//wD+eee+65557bZHMCAACQagT8PqWlpZdddtktt9xSXl6+d2cikViwYEHv3r0XLFiQxNkAAABIcQJ+n9tvv/35558PIaSlpX39618fO3bs9ddfn5eXF0L49NNPr7766meeeSbZMwIAAJCi/Ax8nZdeemnu3LkhhNzc3F//+teXXHJJ7f6qqqqf//zn//iP/7hnz54xY8b07du3c+fOSZ0UAACAVOQOfJ05c+bUbjz55JN76z2E0LJlyx/96EcPPfRQCKGsrOz73/9+cuYDAAAgtQn4Om+88UYIoX///gMHDjzwq7fccsvgwYNDCM8888wLL7zQxLMBAACAgK/z17/+NYRw3nnnHeqAGTNmZGRkhBAmT56cSCSabjIAAAAQ8Hvt3r07hNCqVatDHVBQUPDDH/4whLB69ep/+7d/a7rJAAAAQMDvlZubG0JYsWLFFxzzox/9qPZD6SdPnvz+++830WQAAAAg4Pfq27dvCOFPf/rT4sWLD3VM69atH3zwwRBCWVnZ6NGja2pqmm4+AAAAUpuAr3PdddeFEBKJxPDhwxcsWHCow6688sqrrroqhLBkyZLRo0fv2rWr6UYEAAAghQn4Ot/61rdGjBgRQqiqqrrqqqt69ux5880333///QceOWfOnHPOOSeE8O///u+FhYX33XdfWVlZU48LAABAimmR7AGOI48//vjHH3/8xz/+MYSwdu3atWvXtmrV6gc/+MF+h7Vr1+7FF1/89re//dJLL/3tb3+bMmVKMoYFAAAgtbgDv0/79u2XLFkya9as2hvsXyAnJ+f555+fMmVKTk5O08wGAABAinMH/nNatGgxZsyYMWPGbNiw4Y033vjoo48OdWRmZub06dPvvPPO3/zmNytWrNi0adObb77ZlKMCAACQUgT8wZ1xxhlnnHHGYQ/Lysq68cYbb7zxxiYYCQAAgFTmEXoAAACIgIAHAACACHiE/ljt2rVr72vkunbtmtxhAAAAOFEJ+GO1dOnS4cOH124nEokGPPPixYufeOKJeiwsKSkJIezcubMBhwEAACC5BPzxa/bs2c8880y9l5eWljbgMAAAACSXgD9+Pfroo9/97nfrsfCOO+4oKSnJy8tr8JEAAABIFgF/rPr3///au/fwqMoDf+DvGCEkEBEjYgAjxgsxFqprFZFK6YqPLpcirqss3nXBC4qu8nhpG2V1+6yPtEspq/uAltqVVsrWqm1B6q1Qt6wKeENMATdcBEEkGpQMlITk98fwm1ISJKSd5JzM5/PX4Zz3nXnz5JtMvsyZcwa/+uqrmXjko4466h/+4R9aMPHBBx9cs2ZNIpH4qy8JAACAtqLA/6W6des2YMCAtl4FAAAA7ZzbyAEAAEAMKPAAAAAQA06hP4CamppPPvmkpqZm+/btubm5BQUFhYWFBQUFbb0uAAAAsosC34SPPvroqaeemj9//ooVK9atW9f47u69evXq16/fsGHDRo8e7WLvAAAAtAKn0P+Z6urq2267rXfv3hMmTJg3b97atWsbt/cQwsaNGxcsWDBx4sSSkpIbbrjBHdcBAADINO/A/8maNWuGDh1aWVmZ3pOXl1dcXFxUVJSfn5+bm7tr165kMrl58+b169fX1NSEEGpra2fMmPHCCy/Mnz+/b9++bbd2AAAA2jkFfo9du3aNHDky1d6LiorGjx8/atSo/v375+TkNB7c0NBQUVHx3HPPzZw5c9WqVZWVlaNHj162bFleXl6rLxwAAICs4BT6PR577LEVK1aEEEaMGFFRUTF58uTTTjutyfYeQkgkEmVlZXfcccfy5csnTJgQQqioqHj00UdbdcUAAABkEwV+jyeffDKEUFRUNHfu3K5duzZzVseOHadPnz5w4MAQwpw5czK4PgAAALKbAr9HRUVFCGHUqFEHexp8IpEYM2ZMCGH16tUZWRkAAAAo8GnJZDKE0LIbvB9++OEhhNRl7QAAACATFPg9iouLQwhLlixpwdzULDeEBwAAIHMU+D2GDRsWQli4cOHcuXMPauLSpUtnzZoVQjj33HMzsjIAAABQ4NNuvvnm1KffL7vssjvvvHPTpk0HnFJdXf3QQw8NGTIkmUx26NDhxhtvzPwyAQAAyFLuA79HSUnJtGnTrr/++rq6uilTpkydOvXMM88cMGBASUlJz5498/Pzc3Nza2trk8nk5s2b165du2TJksWLF+/cuTM1/cEHH+zfv3/bfgkAAAC0Ywr8n4wbN65z584TJ06sqqqqq6tbvHjx4sWLDziroKBg+vTpV111VSusEAAAgKzlFPo/M3bs2NWrV99///1lZWUHHFxaWlpeXr5mzRrtHQAAgEzzDvy+unXrVl5eXl5evn79+nffffe9996rqqravn17Mpns1KlTly5dunfvXlpa2q9fv2OPPbatFwsAAEC2UOD3q7i4uLi4OHV1egAAAGhbTqEHAACAGFDgAQAAIAYUeAAAAIgBBR4AAABiQIEHAACAGFDgAQAAIAYUeAAAAIgBBR4AAABiQIEHAACAGFDgAQAAIAYUeAAAAIgBBR4AAABiQIEHAACAGFDgAQAAIAYUeAAAAIgBBR4AAABiQIEHAACAGFDgAQAAIAYUeAAAAIgBBR4AAABiQIEHAACAGFDgAQAAIAYUeAAAAIgBBR4AAABiQIEHAACAGFDgAQAAIAYUeAAAAIgBBR4AAABiQIEHAACAGFDgAQAAIAYUeAAAAIgBBR4AAABiQIEHAACAGFDgAQAAIAYUeAAAAIgBBR4AAABiQIEHAACAGFDgAQAAIAYUeAAAAIgBBR4AAABiQIEHAACAGFDgAQAAIAYUeAAAAIgBBR4AAABiQIEHAACAGFDgAQAAIAYUeAAAAIgBBR4AAABiQIEHAACAGFDgAQAAIAYUeAAAAIgBBR4AAABiQIEHAACAGFDgAQAAIAYUeAAAAIgBBR4AAABiQIEHAACAGFDgAQAAIAYUeAAAAIgBBR4AAABiQIEHAACAGFDgAQAAIAYUeAAAAIgBBR4AAABiQIEHAACAGFDgAQAAIAYUeAAAAIgBBR4AAABi4NC2XkDU1dTUfPLJJzU1Ndu3b8/NzS0oKCgsLCwoKGjrdQEAAJBdFPgmfPTRR0899dT8+fNXrFixbt26hoaGfQb06tWrX79+w4YNGz16dO/evdtkkQAAAGQVp9D/merq6ttuu613794TJkyYN2/e2rVrG7f3EMLGjRsXLFgwceLEkpKSG264YevWra2/VAAAALKKd+D/ZM2aNUOHDq2srEzvycvLKy4uLioqys/Pz83N3bVrVzKZ3Lx58/r162tqakIItbW1M2bMeOGFF+bPn9+3b9+2WzsAAADtnAK/x65du0aOHJlq70VFRePHjx81alT//v1zcnIaD25oaKioqHjuuedmzpy5atWqysrK0aNHL1u2LC8vr9UXDgAAQFZwCv0ejz322IoVK0III0aMqKiomDx58mmnndZkew8hJBKJsrKyO+64Y/ny5RMmTAghVFRUPProo626YgAAALKJAr/Hk08+GUIoKiqaO3du165dmzmrY8eO06dPHzhwYAhhzpw5GVwfAAAA2U2B36OioiKEMGrUqIM9DT6RSIwZMyaEsHr16oysDAAAABT4tGQyGUJo2Q3eDz/88BBC6rJ2AAAAkAkK/B7FxcUhhCVLlrRgbmqWG8IDAACQOQr8HsOGDQshLFy4cO7cuQc1cenSpbNmzQohnHvuuRlZGQAAACjwaTfffHPq0++XXXbZnXfeuWnTpgNOqa6ufuihh4YMGZJMJjt06HDjjTdmfpkAAABkKfeB36OkpGTatGnXX399XV3dlClTpk6deuaZZw4YMKCkpKRnz575+fm5ubm1tbXJZHLz5s1r165dsmTJ4sWLd+7cmZr+4IMP9u/fv22/BAAAANoxBf5Pxo0b17lz54kTJ1ZVVdXV1S1evHjx4sUHnFVQUDB9+vSrrrqqFVYIAABA1nIK/Z8ZO3bs6tWr77///rKysgMOLi0tLS8vX7NmjfYOAABApnkHfl/dunUrLy8vLy9fv379u++++95771VVVW3fvj2ZTHbq1KlLly7du3cvLS3t16/fscce29aLBQAAIFso8PtVXFxcXFycujo9AAAAtC2n0AMAAEAMKPAAAAAQA06h/0vt3Lmzqqoqtd2rV6+2XQwAAADtlQL/l/rNb35z4YUXprYbGhr+io9cVVW1cOHC+vr6g5346aef/tUXAwAAQNtS4KNr/Pjxv/jFL1o8/cMPP/wrLgYAAIC2pcBH19VXX52Tk9OCia+//vq6desGDRr0V18SAAAAbUWB/0sNHjz41VdfzcQjjxw5cuTIkS2YePvtt0+dOtVt6gEAANoTBf4v1a1btwEDBrT1KgAAAGjn3EYOAAAAYkCBBwAAgBhwCv0B1NTUfPLJJzU1Ndu3b8/NzS0oKCgsLCwoKGjrdQEAAJBdFPgmfPTRR0899dT8+fNXrFixbt26xjdU79WrV79+/YYNGzZ69OjevXu3ySIBAADIKk6h/zPV1dW33XZb7969J0yYMG/evLVr1zZu7yGEjRs3LliwYOLEiSUlJTfccMPWrVtbf6kAAABkFe/A/8maNWuGDh1aWVmZ3pOXl1dcXFxUVJSfn5+bm7tr165kMrl58+b169fX1NSEEGpra2fMmPHCCy/Mnz+/b9++bbd2AAAA2jkFfo9du3aNHDky1d6LiorGjx8/atSo/v375+TkNB7c0NBQUVHx3HPPzZw5c9WqVZWVlaNHj162bFleXl6rLxwAAICs4BT6PR577LEVK1aEEEaMGFFRUTF58uTTTjutyfYeQkgkEmVlZXfcccfy5csnTJgQQqioqHj00UdbdcUAAABkEwV+jyeffDKEUFRUNHfu3K5duzZzVseOHadPnz5w4MAQwpw5czK4PgAAALKbAr9HRUVFCGHUqFEHexp8IpEYM2ZMCGH16tUZWRkAAAAo8GnJZDKE0LIbvB9++OEhhNRl7QAAACATFPg9iouLQwhLlixpwdzULDeEBwAAIHMU+D2GDRsWQli4cOHcuXMPauLSpUtnzZoVQjj33HMzsjIAAABQ4NNuvvnm1KffL7vssjvvvHPTpk0HnFJdXf3QQw8NGTIkmUx26NDhxhtvzPwyAQAAyFLuA79HSUnJtGnTrr/++rq6uilTpkydOvXMM88cMGBASUlJz5498/Pzc3Nza2trk8nk5s2b165du2TJksWLF+/cuTM1/cEHH+zfv3/bfgkAAAC0Ywr8n4wbN65z584TJ06sqqqqq6tbvHjx4sWLDziroKBg+vTpV111VSusEAAAgKzlFPo/M3bs2NWrV99///1lZWUHHFxaWlpeXr5mzRrtHQAAgEzzDvy+unXrVl5eXl5evn79+nffffe9996rqqravn17Mpns1KlTly5dunfvXlpa2q9fv2OPPbatFwsAAEC2UOD3q7i4uLi4OHV1+jj6zne+8x//8R+t/KSffvppdXV1Tk5OIpFo5acme9TX19fX14sZGbV79+4QQk5OTlsvhHaroaFh9+7dhxxyyCGHOB2STBEzWkF9fX1DQ0OPHj1SVwRvTVu2bGnlZ4wCBb4d6tOnTwihqqqqqqqqTRZQV1fXJs9LVhEzWkF9fX1bL4F2bvfu3an/LYLMETNaQXPu4ZUJiUQi1X2yR6KhoaGt18Bf37p169rkN/W3vvWtOXPm3HHHHSNHjmz9ZydLjB8/ftWqVTNmzOjbt29br4V2a8iQISGEhQsXtvE6aL9Wrlx5/fXXn3TSSTNnzmzrtdBu/epXv/re9743YsSISZMmtfVaaLe++93v/vrXv/7Od74zZsyY1n/2vLy8oqKi1n/eNuQd+PaprT6ff9hhh4UQTjrppK997WttsgCyQUFBQQjh9NNPP/3009t6LbRzfpWROV26dAkhFBQUiBmZs3LlyhBCz549xYzM+elPfxpCOPLII0tKStp6LVnB52EAAAAgBhR4AAAAiAEFHgAAAGJAgQcAAIAYUOABAAAgBhR4AAAAiAEFHgAAAGJAgQcAAIAYUOABAAAgBhR4AAAAiAEFHgAAAGJAgQcAAIAYUOABAAAgBhR4AAAAiAEFHgAAAGJAgQcAAIAYOLStF0C7cthhh4UQunbt2tYLoT3r2rVrIpFIhQ0yxO8xMu2www5LJBKSRkalAuYVk4zy938rSzQ0NLT1Gmg/Pv/889/97ncXXHBBTk5OW6+FdmvDhg2VlZWDBw9u64XQni1fvjyE0K9fv7ZeCO3Z7373u5KSkt69e7f1Qmi3du/evWDBgsGDBxcUFLT1Wmi3/P3fyhR4AAAAiAGfgQcAAIAYUOABAAAgBhR4AAAAiAEFHgAAAGJAgQcAAIAYUOABAAAgBhR4AAAAiAEFHgAAAGJAgQcAAIAYUOABAAAgBhR4AAAAiAEFHgAAAGJAgQcAAIAYUOABAAAgBhR4AAAAiAEFHgAAAGJAYGTmiAAAFrRJREFUgQcAAIAYUOABAAAgBhR4AAAAiAEFHgAAAGJAgQcAAIAYUOABAAAgBhR4AAAAiAEFvv3YtGnTunXr6uvr23ohtGcti5lwclAEhlYgZrQCMSPTZCwLKfDtRF1dXVlZWZ8+fT7++OMDDq6srLzjjjtOPvnkzp07d+/effDgwY888siuXbuycxbNd1Axa9ms6AdGzDLtoALz4osvXnvttaWlpV27dj3iiCMGDhx49dVX/8///M8Xz4p+YMQs05ofs9ra2mnTpl1yySX9+vXr3LnzCSecMHz48Hvvvbe6uvqLJ0Y/MGKWaS170Ux58803c3NzE4nESy+99AXDoh8YMcuoZmbs9ttvTxzIa6+91uTc6KclGzPWQLvwq1/9KvUN3bx58xePnDlzZl5eXuMknHLKKZWVldk2i4PS/Ji1bFb0AyNmraCZgfn0008vuuiixt+LlCuuuGLr1q1NTox+YMSsFTQzZq+99tqXvvSlJjNWWFg4a9as/U2MfmDErBW07EWzoaEhmUyefPLJqbkvvvji/oZFPzBilmnNzNjIkSMbfxf28eqrrzaeGP20ZGfGFPj2YPv27WVlZc35Af7JT36SSCRSIwcPHjxp0qTrr7/+6KOPTu0pKSn59NNPs2cWB6X5MWvZrOgHRsxaQTMDU1tbO3To0NSwRCLxt3/7t3fdddett956zjnnpF+8zz///Pr6+n0mRj8wYtYKmhmzjz/+uFu3bqlhPXr0uO666+67775/+qd/OvHEE9PZe/nllxtPjH5gxKwVtOxFM+Wmm25K/yrbX4GPfmDELNOan7HU/wd16dLlK/u3fPnyfWZFPy1ZmzEFPvZ++9vf7v036xf8AH/yySdHHnlkCCEnJ2fOnDnp/clkcvjw4anpt956a5bM4qA0P2YtmxX9wIhZK2h+YGbOnJka07Fjx3nz5u196IUXXki/eE+fPn3vQ9EPjJi1gubH7LrrrkuNufrqq3fs2JHeX1tbe9ddd6UOFRcX79y5c+9Z0Q+MmLWClr1opsybNy/spckCH/3AiFmmNT9ju3fvzs3NDSH8/d//ffMfP/ppyeaMKfBx9YMf/GDEiBE9e/YMf+4LfoDvv//+1JhJkybtc6i6ujr1J++hhx66zyO011k0Rwti1rJZ0Q+MmGVOCwKTPqv55z//eeOjv/nNb1L/JX/EEUfU1dWl90c/MGKWOQcbs23btqVSdPLJJ9fW1u5zdPfu3WeccUbqEZYtW7b3oegHRswyp2UvmnvbsmVLjx49Qgg5OTmpuU0W+OgHRswypAUZW7duXWrM3Xff3fwnin5asjljCnxcDRkyJDTlC2J6yimnpKL84YcfNj563333pR7hkUceyYZZNEcLYtayWdEPjJhlzsEGZuXKlakB/fv3399jpsvV66+/nt4Z/cCIWeYcbMxeffXV1IDJkyc3OaC8vDw1YJ9Pwkc/MGKWOS170dzbiBEjQgi9evW69tprU3ObLPDRD4yYZUgLMpa+DuIPf/jD5j9R9NOSzRlT4ONq5syZd+/luOOO++If4PR/v5199tlNDnjjjTdSA4YPH97uZ9FMBxuzls2KfmDELKMONjDPPvtsasCECRP295jjx49PjXnmmWdSe6IfGDHLqION2axZs1IDfvzjHzc5YOrUqakB//Zv/5beGf3AiFlGtexFM+2RRx4JISQSieeff37SpEmpuY0LfPQDI2aZ04KMzZgxIzXmlVdeaeazRD8tWZ6xQwPxNG7cuL3/+dZbb61Zs+YLxr/77rupjQEDBjQ5oH///nl5eTt27FixYkW7n0UzHWzMWjYr+oERs4w62MBs27atU6dOIYSSkpL9jdmxY0dq46ijjkptRD8wYpZRBxuz8847L3U/wtLS0iYHpG+5dPzxx6d3Rj8wYpZRLXvRTFm5cmWqtN9yyy3nnXfe888/v7+R0Q+MmGVOCzL2/vvvpzZOPPHEmpqapUuXrlq1avv27T179hw8eHBRUVHjKdFPS5ZnzH3gs8V7772X2tjfn7w5OTnFxcUhhHXr1iWTyfY9i0iJfmDELFKuuOKKHTt27Nix4/bbb29yQG1t7W9/+9sQQiKROOmkk1I7ox8YMYuU3r17Dxo0aNCgQYWFhY2PvvTSS6krjR155JHpqyWFOARGzKKptrZ27NixyWSytLT0wQcf/OLB0Q+MmEVKqsDn5eX97Gc/KykpGTJkyPjx42+//fYxY8b06tXriiuu+OSTT/aZEv20ZHnGFPhsUVVVldpo8n/a9j7U0NCQ/klur7OIlOgHRszi5bvf/e6GDRtCCBdddFG6fUU/MGIWcb///e+fe+65xx577Jprrrngggs+//zz3Nzcn/zkJ/n5+ekx0Q+MmEVTeXn5G2+80aFDh9mzZzd5U+u9RT8wYhYpqQK/Y8eOW2+9dcuWLXsfamhomD17dllZ2aJFi/beH/20ZHnGnEKfLbZv357a6Ny58/7GpP8KSQ9ur7OIlOgHRsxi5OGHH/7Wt74VQsjNzb333nvT+6MfGDGLuBEjRlRXV6f/ecYZZzz++OPpmzCnRD8wYhZBixYtmjJlSgjhvvvuO/300w84PvqBEbPoaGho+L//+7/UdmFh4eTJk0eNGtW9e/fKysrXXnutvLx848aNH3300WWXXVZRUVFQUJAaGf20ZHnGvAOfLdJnj6RuBdmk9KF00NvrLCIl+oERs1iorKwcPnz4zTff3NDQcMghh8yePbt///7po9EPjJjFy7Jly7797W/v8+nT6AdGzKKmurr6yiuvrK+vP+uss+6+++7mTIl+YMQsOj788MPUt6OkpOTNN9+8+eabjznmmE6dOpWVlV1zzTXvvvvuWWedFULYuHHjPffck54V/bRkecYU+GyRuuZTCKG2tnZ/Y3bt2pXaSCe+vc4iUqIfGDGLuJqamvLy8rKysvnz54cQjjjiiP/+7/+++OKL9x4T/cCIWcRt3ry5pqZm1apVv/zlL7/+9a/X19c//fTTgwYNWr16dXpM9AMjZlFz0003rV+/vnPnzk888UT63u9fLPqBEbPoOProo7du3bp169YVK1Ycc8wx+xw9/PDD//M///OQQw4JITz66KM1NTWp/dFPS5ZnTIHPFl26dEltfMGFHNKH0qfQtNdZREr0AyNmUfb000+ffPLJ//qv//rHP/4xhHDhhReuWLHioosu2mdY9AMjZhGXm5ubn59/4oknjhw58uWXX77xxhtDCJs2bUrfED7EITBiFimzZ89+8sknQwhTp0494YQTmjkr+oERs+jIyckpLCwsLCxMN959nHrqqYMGDQoh7Nq1K31zjeinJcszpsBni+7du6c2Nm/evL8x6UNHHHFE+55FpEQ/MGIWTZ999tmll1560UUXffDBByGEv/mbv3n55Zeffvrpo48+uvHg6AdGzOLle9/7XuoP4p///Od1dXWpndEPjJhFx2effTZhwoQQwvDhw/e5N9gXi35gxCxe0jfL/PDDD1Mb0U9LlmfMReyyRd++fVMba9eubXJAQ0PD+vXrQwg9e/Y87LDD2vcsIiX6gRGzCKqurh48ePDy5ctDCEccccS///u/X3nllYlEYn/jox8YMYuU119/vaGhoVOnTl/+8pebHJCXl1dWVvbGG2/s3r1748aNxx57bIhDYMQsOj7//PPPPvsshDBv3rwv+N01dOjQ1MbVV1/9ox/9KMQhMGIWLz169EhtpHMY/bRkecYU+GzRr1+/1MaSJUuaHFBRUZH66Et6ZDueRaREPzBiFjU7d+78xje+kWrv559//uOPP97ku+57i35gxCxSLrnkknXr1nXu3Pmzzz5LfUC0sY4dO6Y20h/CjH5gxKwdiH5gxCw6li1btnPnzkQicfbZZ+9vTPoy9elX0uinJcsz5hT6bNGnT5/UGTKLFy/e+0Y4aQsWLEhtDBs2rN3PIlKiHxgxi5p77733lVdeCSGMHTv217/+9QHbe4hDYMQsUlJv79TU1Ox9jbq9NTQ0rFixIoSQk5PTs2fP1M7oB0bMoqOgoODu/TvzzDNTw8aMGZPaM3z48NSe6AdGzKLj29/+9le/+tVBgwa9/vrrTQ6or69funRpCKFDhw7p1EU/LdmesQbahQsuuCD1Dd28efP+xqQvtPPQQw/tc2jXrl0nnXRSCOHQQw9dv359NsyiBZoTs5bNin5gxKzVHDAwNTU13bp1CyEcf/zxyWSy+Y8c/cCIWas5YMweeuih1IBx48Y1OWDGjBmpAV/72tf23h/9wIhZq2nZi2bKpEmTUnNffPHFxkejHxgxax0HzNj3v//91IBRo0Y1OeCRRx5JDRg7duze+6OflmzOmALfTjTnRWLr1q2pyzB26dJl6dKl6f319fW33HJLavr48eOzZBYtkLkCH/3AiFmrOWBgZs2alRowZcqUg3rk6AdGzFrNAWO2ZcuW/Pz8EEIikZg2bVpdXd3eR+fOnZv6TuXk5Pzv//7v3oeiHxgxazWZK/DRD4yYtY4DZmzbtm1HHXVUasw///M/79ixI32ovr5+5syZqcu5d+vWbZ9HiH5asjljCnw70cwXifQfvvn5+bfccsuPf/zjH/zgB+lPxRx33HEff/xx9sziYGWuwDfEITBi1joOGJjU7btCCP369RtyIO+///7ec6MfGDFrHc35vfTDH/4w/H8nnXTS5Zdf/s1vfvPaa6899dRT0/snT57ceGL0AyNmrSNzBb4hDoERs1bQnIw9/fTThx6656pnvXr1uuqqq775zW9efvnl6YvPhxB+9KMfNZ4Y/bRkbcYU+Hai+S8SU6ZMSf8Y7620tLSioiLbZnFQMlrgG+IQGDFrBQcMzPnnn9/4W7A/b7311j7Tox8YMWsFzfy9NG3atNzc3Cajdfjhhzd+Zz4t+oERs1aQ0QLfEIfAiFmmNTNjzz777P4uFnPYYYf913/91/4mRj8t2ZkxBb6dOKgXibfeemv8+PHHH398p06dCgsLBwwYMHXq1JqamuycRfNlusA3xCEwYpZpBwzMiSee2ORfIU1qXOAb4hAYMcu05v9eev/99++7776vfOUrRx99dKdOnUpLSy+88MJ77733gG/sRD8wYpZpmS7wDXEIjJhlVPMz9tlnn02fPn3o0KG9evXq2LFjYWHhWWed9cADD2zduvWLJ0Y/LVmYsURDQ0Pz/xICAAAA2oTbyAEAAEAMKPAAAAAQAwo8AAAAxIACDwAAADGgwAMAAEAMKPAAAAAQAwo8AAAAxIACDwAAADGgwAMAAEAMKPAAAAAQAwo8AAAAxIACDwAAADGgwAMAAEAMKPAAAAAQAwo8AAAAxIACDwAAADGgwAMAAEAMKPAAAAAQAwo8AAAAxIACDwAAADGgwAMAAEAMKPAAAAAQAwo8AAAAxIACDwAAADGgwAMAAEAMKPAAAAAQAwo8AAAAxIACDwAAADGgwAMAAEAMKPAAAAAQAwo8AAAAxIACDwAAADGgwAMAAEAMKPAAAAAQAwo8AAAAxIACDwAAADGgwAMAAEAMKPAAAAAQAwo8AAAAxIACDwAAADGgwAMAAEAMKPAAAAAQAwo8AAAAxIACDwAAADGgwAMAAEAMKPAAAAAQAwo8AAAAxIACDwAAADGgwAMAAEAMKPAAAAAQAwo8AAAAxIACDwAAADGgwAMAUbRp06Z169bV19e39UIAICoUeADgz5xzzjmJROKYY45pwzXU1dWVlZX16dPn448/bsNlAECkKPAAQOQsWLCgurq6rVcBANGiwAMA0VJTU3PXXXe19SoAIHIUeAAgQhYuXPh3f/d37733XlsvBAAi59C2XgAAQJg+ffrzzz//xhtvfPjhh229FgCIKAUeAMiUZDK5Y8eOwsLCA478xS9+sXDhwsyvCABizCn0AJAVamtrH3300fPOO69nz565ubnHHHPMiBEjZs+e/cX3aautrZ02bdrAgQOPPPLILl26fPnLX77uuusqKysbjzzjjDMSicQ//uM/hhCSyWR5eXmfPn26dOny1ltvNWd5Y8eOvXsvxx13XMu+TABox7wDDwDt38qVKy+88MI//OEP6T0bNmzYsGHDvHnzpk2b9swzz/Tq1avxrI8++mjYsGFvvPFGes8777zzzjvvzJ49e86cOaNHj27yuZLJ5LBhwxYtWnRQKxw3btze/3zrrbfWrFlzUI8AAO2eAg8A7dzmzZsHDx68ZcuWEEJRUdFXv/rVvn37rlu37pe//OW2bduWLl167rnnvvnmm3l5eXvP2rlzZ6q9f+lLX7rgggtKS0vXrl37+OOPb9iwYdeuXddee+3ZZ5/do0ePxk83YcKERYsWHX/88RdccEGfPn3Kyspa6esEgPZOgQeAdm7y5Mmp9j569Ognnniic+fOqf1VVVWjR49+5ZVXVq5cOX369DvvvHPvWVu3bt26detNN930/e9/v0OHDqmd99xzz9lnn/32229XV1cvWrTokksu2ee5Fi1atGnTpkmTJj3wwAOdOnXK/BcHAFnEZ+ABoD37wx/+8Nhjj4UQTj311Keeeird3kMIhYWFP/vZz1LlfO7cuY3nfuUrX3n44YfT7T2EkJ+f/8ADD6S233nnncZTNm3aNHDgwClTpmjvAPBXp8ADQHv28MMP7969O4Rwzz33JBKJfY4WFRVdeumlpaWltbW1ja9md++99zZ+wPQp8X/84x+bfMby8vK/dNEAQFOcQg8A7dnvf//7EEIikfjGN77R5IAnnnhif3PPOuusxjsP+Nb6qaeeejALBACayzvwANCerV27NoTQo0ePgz2nvaCgoHv37gf7dLm5uUcfffTBzgIAmkOBB4D2rLq6OoTQ5F3ivljXrl1b8HRHHnlk4xP1AYC/CgUeANqz/Pz8EEJVVVXrPJ32DgCZo8ADQHuWOqH9gw8+qKura3LAli1b3n777bfffjuZTLbu0gCAg6PAA0B7dvbZZ4cQdu/e/fLLLzc54Lbbbjv11FNPO+20mpqa1l0aAHBwFHgAaM+uueaa1Ma//Mu/ND768ccfz58/P4RwyimntOCSdQBAa1LgAaA9+/rXvz5q1KgQwuLFi6+88sodO3akD23btu3yyy/ftm1bCOGSSy5psyUCAM3jPvAA0M5NmTLlxRdfrKmpeeKJJxYuXHjOOef07dt3w4YNzz777JYtW0IIZ5555j333NPWywQADkCBB4B27sQTT3zppZcuvvjiDRs2fPDBBz/96U/3PjpkyJDHH3/80EP9SQAAUefVGgDavwEDBqxcuXLGjBnPPPNMRUXF559/fsIJJ5SWll588cWXXnppW68OAGiWRENDQ1uvAQAAADgAF7EDAACAGFDgAQAAIAYUeAAAAIgBBR4AAABiQIEHAACAGFDgAQAAIAYUeAAAAIgBBR4AAABiQIEHAACAGFDgAQAAIAYUeAAAAIgBBR4AAABiQIEHAACAGFDgAQAAIAYUeAAAAIgBBR4AAABiQIEHAACAGFDgAQAAIAYUeAAAAIgBBR4AAABiQIEHAACAGFDgAQAAIAYUeAAAAIgBBR4AAABiQIEHAACAGFDgAQAAIAYUeAAAAIgBBR4AAABiQIEHAACAGFDgAQAAIAYUeAAAAIgBBR4AAABiQIEHAACAGFDgAQAAIAYUeAAAAIgBBR4AAABiQIEHAACAGFDgAQAAIAYUeAAAAIgBBR4AAABiQIEHAACAGFDgAQAAIAYUeAAAAIgBBR4AAABiQIEHAACAGFDgAQAAIAYUeAAAAIgBBR4AAABiQIEHAACAGPh/RnzpdBhnaDYAAAAASUVORK5CYII=" width="672" /></p>
+<ul>
+<li>Modifica los límites <code>From</code> y <code>To</code> para
+explorar otras regiones de ese o de otro cromosoma.</li>
+</ul>
 </div>
 <div id="control-de-calidad-de-lecturas-cortas" class="section level2">
 <h2>Control de calidad de lecturas cortas</h2>
-<ol style="list-style-type: decimal">
-<li>Ejecuta el código siguiente. ¿Tienes claro para qué sirve? Si surge
-algún error, intenta resolverlo:</li>
-</ol>
-<pre class="r"><code>library(&#39;ShortRead&#39;)</code></pre>
-<ol start="2" style="list-style-type: decimal">
-<li>Ejecuta y edita, si quieres, el código siguiente, e intenta
-responder las preguntas siguientes. Puedes usar <code>help(qa)</code>
-para consultar la ayuda de la función <code>qa()</code>.</li>
-</ol>
-<pre class="r"><code>ResumenCalidad &lt;- qa(&#39;data&#39;, type = &#39;fastq&#39;, pattern = &#39;*.fastq&#39;)</code></pre>
+<p>El archivo <code>data/yeast.fastq.gz</code> contiene las secuencias
+cortas producidas por la secuenciación de la cepa de interés. Antes de
+alinear estas secuencias al genoma de referencia, realizamos un análisis
+de su calidad.</p>
+<p>La función <code>qa()</code> del paquete <code>ShortRead</code>
+realiza un análisis de la calidad de las lecturas de uno o varios
+archivos FASTQ. Observa los cambios que se producen en tu carpeta de
+trabajo cuando ejecutas los comandos siguientes.</p>
+<pre class="r"><code>suppressMessages(library(&#39;ShortRead&#39;))
+QC &lt;- qa(&#39;data&#39;, type = &#39;fastq&#39;, pattern = &#39;*.fastq.gz&#39;)
+report(QC, dest = &#39;informe_de_calidad&#39;)</code></pre>
+<pre><code>## [1] &quot;informe_de_calidad/index.html&quot;</code></pre>
 <ul>
-<li>¿Sabrías decir para qué sirve cada parte del código anterior?</li>
-<li>¿Qué ha sucedido?</li>
-<li>¿Dónde están los resultados?</li>
-<li>¿Crees que es práctico el nombre “ResumenCalidad”? ¿O prefieres usar
-otro?</li>
-</ul>
-<ol start="3" style="list-style-type: decimal">
-<li>El comando siguiente muestra el primer elemento del informe de
-calidad: una tabla con el número de lecturas presentes en cada archivo
-<em>fastq</em>. Siguiendo el ejemplo, consulta cada uno de los elementos
-del objeto <code>ResumenCalidad</code> e intenta responder a las
-preguntas siguientes.</li>
-</ol>
-<pre class="r"><code>ResumenCalidad[[&#39;readCounts&#39;]]</code></pre>
-<ul>
-<li>¿Cuál de los dos archivos fastq crees que contiene secuencias de
-mayor calidad?</li>
-<li>¿Por qué crees que el marco de datos <code>alignQuality</code> está
-vacío?</li>
-<li>¿Cuál es la composición nucleotídica del genoma secuenciado?</li>
-<li>¿Encuentras por algún lado cuál es la longitud de las lecturas?</li>
-</ul>
-<ol start="4" style="list-style-type: decimal">
-<li>El comando siguiente genera un informe en formato <code>html</code>
-a partir de los datos en <code>ResumenCalidad</code>. Abre el informe y
-asegúrate de comprender sus diferentes apartados. Tal vez te ayude a
-contestar alguna de las preguntas anteriores. ¿Por qué crees que el
-número de nucleótidos observados disminuye con el número de <em>ciclos
-de secuenciación</em>?</li>
-</ol>
-<pre class="r"><code>report(ResumenCalidad, dest = &#39;InformeCalidad&#39;)</code></pre>
-<ol start="5" style="list-style-type: decimal">
-<li>Como nuestros archivos <em>fastq</em> son pequeños, podemos leerlos
-y cargar todas las secuencias en el espacio de trabajo. Esto nos ayudará
-a ver las longitudes de las lecturas.</li>
-</ol>
-<pre class="r"><code>R1 &lt;- readFastq(&#39;data/ERR4423464_1.fastq&#39;)
-R2 &lt;- readFastq(&#39;data/ERR4423464_2.fastq&#39;)
-sread(R1)
-sread(R2)
-quality(R1)
-quality(R2)
-# La función &quot;width()&quot; extrae las longitudes de las 65135 secuencias.
-# La función &quot;head()&quot; muestra los 6 primeros valores de su argumento.
-head(width(R1))
-head(width(R2))
-summary(width(R1))
-summary(width(R2))
-hist(width(R1))
-hist(width(R2))</code></pre>
-<ul>
-<li>¿Cuál crees que es la longitud de la lectura más corta en cada
-archivo?</li>
-<li>¿Por qué crees que hay lecturas de menos de 200 <em>ciclos</em> (o
-nucleótidos)?</li>
+<li>¿Qué longitudes tienen las secuencias?</li>
+<li>¿Cómo varía la calidad de la secuencia a lo largo de su
+longitud?</li>
 </ul>
 </div>
-<div id="mapeo-de-lecturas-cortas-a-un-genoma-de-referencia" class="section level2">
-<h2>Mapeo de lecturas cortas a un genoma de referencia</h2>
-<ol style="list-style-type: decimal">
-<li>Mapear las lecturas en un genoma de referencia es encontrar su
-alineamiento local óptimo. Los algoritmos exigen que el genoma de
-referencia (generalmente un archivo FASTA) esté
-<strong>indexado</strong>. Así pues, el primer paso es indexar el genoma
-de referencia.</li>
-</ol>
-<pre class="r"><code>library(Rbowtie2)
-# Si &quot;Rbowtie2&quot; no está instalado, ejecuta:
-#   install.packages(&#39;Rbowtie2&#39;)
-
-bowtie2_build(references = &#39;data/referencia.fna&#39;,
-              bt2Index = &#39;SARS-Cov2&#39;,
-              &#39;--quiet&#39;,
-              overwrite = TRUE)</code></pre>
-<ul>
-<li>Observa los cambios en la carpeta de trabajo.</li>
-<li>Una vez creado el índice, ¿en qué caso habría que volver a
-crearlo?</li>
-</ul>
-<ol start="2" style="list-style-type: decimal">
-<li>Ejecuta el comando siguiente, observa el resultado y los cambios en
-la carpeta de trabajo, y asegúrate de poder contestar las preguntas
-siguientes.</li>
-</ol>
-<pre class="r"><code>bowtie2(bt2Index  = &#39;SARS-CoV2&#39;,
-        samOutput = &#39;ERR4423464.sam&#39;,
-        seq1 = &#39;data/ERR4423464_1.fastq&#39;,
-        seq2 = &#39;data/ERR4423464_2.fastq&#39;,
-        overwrite = TRUE)</code></pre>
-<ul>
-<li>¿Cómo podrías guardar el mensaje de salida en una variable?</li>
-<li>¿Cuántos pares de lecturas alinearon de forma discordante?</li>
-<li>¿Qué ventajas puede tener ejecutar este análisis desde una sesión de
-R, en lugar de usar directamente el programa <code>bowtie2</code> en un
-terminal Linux?</li>
-</ul>
-<ol start="3" style="list-style-type: decimal">
-<li>Veamos los resultados del mapeo.</li>
-</ol>
-<pre class="r"><code>library(&#39;Rsamtools&#39;)
-asBam(&#39;ERR4423464.sam&#39;, destination=&#39;ERR4423464&#39;, overwrite = TRUE)
-quickBamFlagSummary(&#39;ERR4423464.bam&#39;)</code></pre>
-<ul>
-<li>¿Te parece que el mapeo es satisfactorio?</li>
-<li>¿A qué puede deberse que algunas lecturas no encuentran su lugar de
-origen en el genoma de referencia?</li>
-<li>¿Para qué crees que sirve tener las lecturas mapeadas? ¿Qué análisis
-vendrían después?</li>
-<li>Los datos y los resultados quedan <em>ocultos</em> detrás de una
-variable o de un archivo enorme. Piensa de qué otras maneras te gustaría
-visualizar los datos para conocerlos mejor.</li>
-</ul>
+<div id="mapeo-de-lecturas-cortas" class="section level2">
+<h2>Mapeo de lecturas cortas</h2>
+<p>El programa <code>bwa</code> se ejecuta fuera de R, y podemos
+invocarlo en un bloque de código de <code>bash</code> desde RStudio para
+alinear las lecturas cortas al genoma de referencia. Primero, el
+programa necesita generar un <em>índice</em> del genoma de referencia.
+Observa los cambios que se producen en tu carpeta de trabajo al ejecutar
+los comandos siguientes.</p>
+<pre class="bash"><code>bwa index data/yeast.fasta</code></pre>
+<pre><code>## [bwa_index] Pack FASTA... 0.01 sec
+## [bwa_index] Construct BWT for the packed sequence...
+## [bwa_index] 0.23 seconds elapse.
+## [bwa_index] Update BWT... 0.01 sec
+## [bwa_index] Pack forward-only FASTA... 0.02 sec
+## [bwa_index] Construct SA from BWT and Occ... 0.14 sec
+## [main] Version: 0.7.17-r1188
+## [main] CMD: bwa index data/yeast.fasta
+## [main] Real time: 0.766 sec; CPU: 0.404 sec</code></pre>
+<p>Y después se realiza el alineamiento.</p>
+<pre class="bash"><code>bwa mem data/yeast.fasta data/yeast.fastq.gz -o yeast.sam</code></pre>
+<pre><code>## [M::bwa_idx_load_from_disk] read 0 ALT contigs
+## [M::process] read 59584 sequences (2740864 bp)...
+## [M::mem_process_seqs] Processed 59584 reads in 0.537 CPU sec, 0.539 real sec
+## [main] Version: 0.7.17-r1188
+## [main] CMD: bwa mem -o yeast.sam data/yeast.fasta data/yeast.fastq.gz
+## [main] Real time: 0.717 sec; CPU: 0.597 sec</code></pre>
+<p>El resultado se habrá guardado en el archivo de texto
+<code>yeast.sam</code>. Podemos extraer algunas estadísticas útiles del
+alineamiento si primero lo convertimos al formato binario
+<code>BAM</code> (<code>samtools view -b</code>), después lo ordenamos
+(<code>samtools sort</code>), y por último lo <em>indexamos</em>
+(<code>samtools index</code>). Todo ello, desde el terminal de
+<code>bash</code> o en un bloque de código de <code>bash</code> en
+RStudio:</p>
+<pre class="bash"><code>samtools view -b -o yeast.bam yeast.sam
+samtools sort -o sorted.bam yeast.bam
+samtools index sorted.bam</code></pre>
+<pre class="bash"><code>mkdir bamstats
+samtools stats sorted.bam &gt; bamstats/stats.txt
+plot-bamstats -p bamstats/ bamstats/stats.txt</code></pre>
+<pre><code>## Warning: empty x range [1:1], adjusting to [0.99:1.01]
+## Warning: empty y2 range [1.95652:1.95652], adjusting to [1.93696:1.97609]
+## Warning: empty y range [0:0], adjusting to [-1:1]</code></pre>
 </div>
 
 
