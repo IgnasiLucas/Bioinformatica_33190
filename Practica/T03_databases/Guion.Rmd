@@ -38,7 +38,7 @@ cortas) procedentes del estómago de vacas del Reino Unido:
 ### Descarga de registros
 Para extraer directamente las secuencias y su información asociada, ENA
 nos ofrece otro portal, con una API muy parecida: el ENA Browser Portal,
-cuya documentación deberíamos poder descargar aquí (pero el enlace no funciona): [https://www.ebi.ac.uk/ena/browser/api/doc](https://www.ebi.ac.uk/ena/browser/api/doc).
+cuya documentación deberíamos poder descargar de aquí: [https://www.ebi.ac.uk/ena/browser/api/doc](https://www.ebi.ac.uk/ena/browser/api/doc).
 
 Como ejemplo, el enlace siguiente te permite descargar la secuencia del cromosoma
 mitocondrial de un neandertal.
@@ -57,10 +57,10 @@ la estructura siguiente:
 2. El **endpoint** `/search`, que especifica que realizamos una consulta o
 búsqueda. Existen otros *endpoints*.
 3. Los parámetros de la búsqueda, que incluyen cinco campos separados por "&":
-  - `/result=<tipo de datos>`, donde "<tipo de datos>" puede ser cualquiera de
+  - `/result=<tipo de datos>`, donde `<tipo de datos>` puede ser cualquiera de
   los *results* disponibles: *read_run*, *read_experiment*, *sample*, *study*,
   *sequence_release*, *sequence_update*, *wgs_set*, *tsa_set*, *assembly*,
-  *coding_release*, *coding_update*, *noncoding_releaes*, *noncoding_update*,
+  *coding_release*, *coding_update*, *noncoding_release*, *noncoding_update*,
   y *taxonomy*.
   - Opcionalmente, `query=<filtros>`, donde `<filtros>` debe sustituirse por
   una o más condiciones que deben cumplir los registros para ser presentados.
@@ -150,24 +150,22 @@ como ejemplo los genomas de platelmintos del ejercicio 1:
 # Si no has ejecutado el bloque 3 arriba, la variable URL no estará definida.
 platelmintos <- read.table(URLencode(URL),
     header = TRUE,
-    colClasses = c('numeric', 'factor', 'factor', 'Date', 'numeric', 'character'),
+    colClasses = c('numeric', 'factor', 'character', 'Date', 'numeric', 'character'),
     sep = '\t',
     na.strings = '')
 ```
 
 El código siguiente crea una nueva columna en la tabla con el género al que
 pertenece cada secuencia. Se toma como género la primera palabra del nombre
-científico. Para ello, tenemos que transformar los nombres científicos en cadenas
-de caracteres con la función `as.character()` (los habíamos leído como *factor*);
-después debemos separar las partes de cada nombre delimitadas por un espacio en
-blanco, con la función `strsplit()`. Y por último usamos la función `sapply()`
-para aplicar a cada nombre científico la función de selección
+científico. Para ello, debemos separar las partes de cada nombre delimitadas por
+un espacio en blanco, con la función `strsplit()`. Y por último usamos la función
+`sapply()` para aplicar a cada nombre científico la función de selección
 de componentes, `"["`, y la opción "1", para seleccionar sólo el primero de los
 componentes en que habíamos dividido cada nombre científico.
 
 ```{r SepararGenero}
 platelmintos$genus <- sapply(
-   strsplit(as.character(platelmintos$scientific_name), ' '),
+   strsplit(platelmintos$scientific_name, ' '),
    '[',
    1)
 ```
