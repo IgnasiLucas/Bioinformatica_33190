@@ -1,0 +1,45 @@
+---
+title: "Guia de instalación"
+author: "J. Ignacio Lucas Lledó"
+date: "`r Sys.Date()`"
+output:
+   html_document:
+      toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# En Ubuntu o Debian
+
+## `git`
+
+## `R` y `RStudio`
+
+## Paquetes de `R`
+
+```{r, eval=FALSE}
+install.packages('R.utils')
+install.packages('ape')
+install.packages('seqinr')
+install.packages('curl')
+install.packages('rjson')
+install.packages('knitr')
+install.packages('plyr')
+install.packages('ggplot2')
+install.packages('kableExtra')
+install.packages('BiocManager')
+BiocManager::install('DECIPHER')
+BiocManager::install('ShortRead')
+```
+
+## Ejecutables de BLAST
+
+## Samtools
+
+## BWA
+
+# MS Windows
+
+

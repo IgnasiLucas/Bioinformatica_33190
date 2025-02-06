@@ -1,3 +1,5 @@
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/IgnasiLucas/Bioinformatica_33190/HEAD)
+
 ## Introducció
 L'objectiu d'aquest repositori és compartir els materials del curs de Bioinformàtica
 del grau de Biotecnologia de la Universitat de València, i permetre que qualsevol
