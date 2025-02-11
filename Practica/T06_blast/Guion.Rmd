@@ -18,16 +18,34 @@ Existen tres tipos de ejecutables: programas de búsqueda (`blastn`, `blastp`, `
 ## Preparación del entorno
 Para poder incorporar las búsquedas BLAST en un *script* de R, utilizaremos la función `system2()`, la cual nos permite invocar cualquier comando propio de la línea de comandos y guardar su resultado en alguna variable o en un archivo.
 
-Lo primero es asegurarnos de que tenemos `blast+` instalado. En los ordenadores del aula, los ejecutables se encuentran en la carpeta "C:\Program Files\NCBI\blast-BLAST_VERSION+\bin", que no se encuentra en el *PATH* del ordenador. Es decir, esa no es ninguna de las carpetas donde el ordenador busca programas ejecutables. La mejor solución es modificar el *PATH* para que incluya la carpeta de instalación de `blast+`:
+Lo primero es asegurarnos de que tenemos `blast+` instalado. Para ello, ejecuta el
+comando siguiente y observa si aparece algún error:
+
+```{r, eval=FALSE}
+system2('blastn', args = '-version', stdout = TRUE, stderr = TRUE)
+```
+
+Si obtienes un error, puede que no tengas los programas de `ncbi-blast+` instalados,
+o bien, que los tengas instalados en una carpeta no incluída en el *PATH* del
+ordenador. Si no recuerdas haber instalado `ncbi-blast+`, sigue las instrucciones
+de instalación [de este enlace](https://www.ncbi.nlm.nih.gov/books/NBK569861/) y
+vuelve a ejecutar el comando anterior. Si el error persiste, entonces indica en
+el bloque siguiente la dirección de la carpeta donde lo has instalado y después
+ejecútalo para añadir esa carpeta al *PATH* (la lista de carpetas donde RStudio
+buscará ejecutables). 
 
 ```{r PATH, eval=FALSE}
 # Este bloque no se ejecuta ("eval=FALSE") porque no funcionaría en cualquier
 # ordenador. Para que funcione, edita la variable BLAST_PATH a continuación,
 # especificando la dirección de los ejecutables de BLAST en tu ordenador.
-BLAST_PATH <- 'C:/Program Files/NCBI/blast-BLAST_VERSION+/bin'
-Sys.setenv(PATH = paste(Sys.getenv('PATH'),
-                        BLAST_PATH,
-                        sep=.Platform$path.sep))
+
+BLAST_PATH <- 'C:/Archivos de programa/NCBI/blast-BLAST_VERSION+/bin'
+
+if (! grepl(BLAST_PATH, Sys.getenv('PATH')) {
+   Sys.setenv(PATH = paste(Sys.getenv('PATH'),
+                           BLAST_PATH,
+                           sep=.Platform$path.sep))
+}
 ```
 
 En adelante supondré que los ejecutables de `blast+` están en el *PATH*, de manera
