@@ -13,11 +13,31 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # En Ubuntu o Debian
 
-## `git`
+## git
 
-## `R` y `RStudio`
+```{bash, eval=FALSE}
+sudo apt install git
+```
 
-## Paquetes de `R`
+## R
+Intenta lo siguiente para instalar `R`:
+
+```{bash, eval=FALSE}
+sudo apt install r-base
+```
+
+Y si no funciona, consulta la documentación:
+
+[https://cran.r-project.org/bin/linux/ubuntu/fullREADME.html#installing-r](https://cran.r-project.org/bin/linux/ubuntu/fullREADME.html#installing-r)
+
+## RStudio
+Visita la página siguiente:
+
+[https://posit.co/download/rstudio-desktop/](https://posit.co/download/rstudio-desktop/)
+
+Descarga el instalador adecuado para tu sistema operativo y ejecútalo.
+
+## Paquetes de R
 
 ```{r, eval=FALSE}
 install.packages('R.utils')
@@ -36,10 +56,100 @@ BiocManager::install('ShortRead')
 
 ## Ejecutables de BLAST
 
+```{bash, eval=FALSE}
+sudo apt install ncbi-blast+
+```
+
+## Perl
+
+```{bash, eval=FALSE}
+sudo apt install perl
+```
+
 ## Samtools
+
+```{bash, eval=FALSE}
+sudo apt install samtools
+```
 
 ## BWA
 
+[https://github.com/bwa-mem2/bwa-mem2/releases](https://github.com/bwa-mem2/bwa-mem2/releases)
+
+
 # MS Windows
+
+## Bash y git
+
+1. Descarga el git para MS Windows: [https://gitforwindows.org/](https://gitforwindows.org/)
+2. Ejecuta el instalador y sigue los pasos siguientes:
+   1. Pulsa *Next* cuatro veces (o sólo dos, si ya tienes git instalado). No hace falta cambiar nada de la información, la localización, los componente ni el menú de inicio.
+   2. Del menú *Choosing the default editor used by Git*, selecciona *Use the Nano editor by default*, que encontraràs yendo hacia arriba entre las opciones.
+   3. En la página de *Adjusting the name of the initial branch in new repositories*, especifica el nombre *soca* para mayor compatibilidad con los materiales del curso.
+   4. Asegúrate de tener seleccionada la opción *Git from the command line and also from 3rd-party software* y pulsa *Next*.
+   5. Selecciona *Use bundled OpenSSH*.
+   6. Asegúrate de tener seleccionada la opción *Use the native Windows Secure Channel Library* y pulsa *Next*.
+   7. Asegúrate de tener seleccionada la opción *Checkout Windows-style, commit Unix-style line endings* y pulsa *Next*.
+   8. Asegúrate de tener seleccionada la opción *Use Windows' default console window* y pulsa *Next*.
+   9. Asegúrate de tener seleccionada la opción *Default (fast-forward or merge)* y pulsa *Next*.
+   10. Asegúrate de tener seleccionada la opción *Git Credential Manager* y pulsa *Next*.
+   11. Asegúrate de tener seleccionada la opción *Enable file system caching* y pulsa *Next*.
+   12. Pulsa *Install*.
+   13. Pulsa *Finish* o *Next*.
+3. Si no tienes la variable ambiental HOME configurada (o si no sabes lo que es):
+   1. En el menú de inicio teclea `cmd` y pulsa `Enter` para abrir una ventana de comandos.
+   2. Teclea en la ventana de comandos la línea siguiente, tal como aparece: `setx HOME "%USERPROFILE%"`.
+   3. Pulsa `Enter`.
+   4. Cierra la ventana de comandos tecleando `exit` y pulsando `Enter`.
+   
+Con esto debes haber instalado el terminal de bash para MS Windows, git y también nano, creo.
+
+## R
+Visita la página siguiente:
+
+[https://cran.r-project.org/bin/windows/base/](https://cran.r-project.org/bin/windows/base/)
+
+https://cran.r-project.org/doc/manuals/r-release/R-admin.html#Installing-R-under-Windows
+
+Descarga el intalador y ejecútalo.
+
+## RStudio
+Descarga el instalador adecuado para tu sistema operativo y ejecútalo:
+
+[https://posit.co/download/rstudio-desktop/](https://posit.co/download/rstudio-desktop/)
+
+## Paquetes de R
+
+```{r, eval=FALSE}
+install.packages('R.utils')
+install.packages('ape')
+install.packages('seqinr')
+install.packages('curl')
+install.packages('rjson')
+install.packages('knitr')
+install.packages('plyr')
+install.packages('ggplot2')
+install.packages('kableExtra')
+install.packages('BiocManager')
+BiocManager::install('DECIPHER')
+BiocManager::install('ShortRead')
+```
+
+## Ejecutables de BLAST
+Dirígete a la página siguiente y descarga el instalador adecuado para tu sistema operativo:
+
+[https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/)
+
+Y sigue las instrucciones del instalador.
+
+## Perl
+Entre los ejecutables de BLAST+, hay un *script* de Perl, `update_blastdb.pl`, que
+no funcionará si no tienes el intérprete de Perl y alguno de sus módulos instalados.
+En el enlace siguiente puedes seguir las instrucciones para instalar Perl y una
+selección de módulos (*paquetes*) en MS Windows.
+
+[https://learn.perl.org/installing/windows.html](https://learn.perl.org/installing/windows.html)
+
+
 
 
