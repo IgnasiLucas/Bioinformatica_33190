@@ -30,7 +30,7 @@ BiocManager::install("DECIPHER")
 En la [página web de DECIPHER](http://www2.decipher.codes/index.html) 
 podéis encontrar mucha documentación sobre cómo
 usar el paquete. Entre toda esa documentación, os recomiendo la guía
-[The Art of Multiple Sequence Alignment in R](http://www2.decipher.codes/Documentation/Documentation-ArtOfAlignment.html).
+[The Art of Multiple Sequence Alignment in R](https://www2.decipher.codes/Documentation-ArtOfAlignment.html).
 Reproduzco su figura 6 a continuación:
 
 ![](fig6.png)
@@ -99,7 +99,7 @@ Guarda también el alineamiento en espacio de aminoácidos en la sesión de trab
 por ejemplo bajo el nombre `AA_aligned`, y también en un archivo FASTA.
 
 ## Escalonamiento de alineamientos
-A veces, dos se producen dos inserciones independientes en la misma región de un
+A veces, se producen dos inserciones independientes en la misma región de un
 gen, y por tanto no serían regiones homólogas. Tenemos la opción de *refinar* el
 alineamiento buscando zonas de este tipo, en las que algunas secuencias tengan un
 fragmento y otras tengan otro fragmento de origen diferente. La función
