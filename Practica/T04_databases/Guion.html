@@ -480,6 +480,7 @@ if (window.hljs) {
 div.csl-bib-body { }
 div.csl-entry {
 clear: both;
+margin-bottom: 0em;
 }
 .hanging div.csl-entry {
 margin-left:2em;
@@ -595,7 +596,7 @@ display: none;
 
 
 <h1 class="title toc-ignore">Pràctica del tema 4. IntrePro</h1>
-<h4 class="date">Última actualización: 13/02/2024</h4>
+<h4 class="date">Última actualización: 11/02/2025</h4>
 
 </div>
 
@@ -639,25 +640,25 @@ contenido se muestra aquí:</p>
 <pre><code>## {
 ##     &quot;entries&quot;: {
 ##         &quot;member_databases&quot;: {
-##             &quot;pfam&quot;: 20762,
+##             &quot;pfam&quot;: 24104,
 ##             &quot;cathgene3d&quot;: 6566,
 ##             &quot;ssf&quot;: 2019,
-##             &quot;panther&quot;: 15920,
-##             &quot;cdd&quot;: 18874,
+##             &quot;panther&quot;: 15912,
+##             &quot;cdd&quot;: 19760,
 ##             &quot;profile&quot;: 1379,
+##             &quot;ncbifam&quot;: 32088,
 ##             &quot;smart&quot;: 1322,
-##             &quot;ncbifam&quot;: 6749,
 ##             &quot;prosite&quot;: 1311,
 ##             &quot;prints&quot;: 2106,
 ##             &quot;hamap&quot;: 2389,
 ##             &quot;pirsf&quot;: 3292,
 ##             &quot;sfld&quot;: 303,
-##             &quot;antifam&quot;: 263
+##             &quot;antifam&quot;: 278
 ##         },
-##         &quot;integrated&quot;: 53516,
-##         &quot;unintegrated&quot;: 29693,
-##         &quot;interpro&quot;: 40922,
-##         &quot;all&quot;: 125796
+##         &quot;integrated&quot;: 60194,
+##         &quot;unintegrated&quot;: 53158,
+##         &quot;interpro&quot;: 47824,
+##         &quot;all&quot;: 161652
 ##     }
 ## }
 ## </code></pre>
@@ -783,7 +784,7 @@ kable(pfam02[[&#39;results&#39;]][[&#39;metadata&#39;]])</code></pre>
 <td align="left">PF00026</td>
 <td align="left">Eukaryotic aspartyl protease</td>
 <td align="left">pfam</td>
-<td align="left">family</td>
+<td align="left">domain</td>
 <td align="left">IPR033121</td>
 <td align="left">NA</td>
 <td align="left">NA</td>
@@ -871,7 +872,7 @@ kable(pfam02[[&#39;results&#39;]][[&#39;metadata&#39;]])</code></pre>
 </tr>
 <tr class="even">
 <td align="left">PF00036</td>
-<td align="left">EF hand</td>
+<td align="left">EF hand domain</td>
 <td align="left">pfam</td>
 <td align="left">domain</td>
 <td align="left">IPR002048</td>
@@ -950,46 +951,50 @@ podemos acceder a cada dato del registro:</p>
 <pre class="r"><code>pf06235 &lt;- fromJSON(paste0(API, &#39;entry/pfam/PF06235&#39;))
 str(pf06235)</code></pre>
 <pre><code>## List of 1
-##  $ metadata:List of 17
-##   ..$ accession        : chr &quot;PF06235&quot;
-##   ..$ entry_id         : NULL
-##   ..$ type             : chr &quot;family&quot;
-##   ..$ go_terms         : NULL
-##   ..$ source_database  : chr &quot;pfam&quot;
-##   ..$ member_databases : NULL
-##   ..$ integrated       : chr &quot;IPR009356&quot;
-##   ..$ hierarchy        : NULL
-##   ..$ name             :List of 2
+##  $ metadata:List of 21
+##   ..$ accession               : chr &quot;PF06235&quot;
+##   ..$ entry_id                : NULL
+##   ..$ type                    : chr &quot;family&quot;
+##   ..$ go_terms                : NULL
+##   ..$ source_database         : chr &quot;pfam&quot;
+##   ..$ member_databases        : NULL
+##   ..$ integrated              : chr &quot;IPR009356&quot;
+##   ..$ hierarchy               : NULL
+##   ..$ name                    :List of 2
 ##   .. ..$ name : chr &quot;NADH dehydrogenase subunit 4L (NAD4L)&quot;
 ##   .. ..$ short: chr &quot;NAD4L&quot;
-##   ..$ description      :&#39;data.frame&#39;:    1 obs. of  3 variables:
+##   ..$ description             :&#39;data.frame&#39;: 1 obs. of  4 variables:
 ##   .. ..$ text   : chr &quot;&lt;p&gt;This family consists of NADH dehydrogenase subunit 4L (NAD4L) proteins from the mitochondria of several para&quot;| __truncated__
 ##   .. ..$ llm    : logi FALSE
 ##   .. ..$ checked: logi FALSE
-##   ..$ wikipedia        : NULL
-##   ..$ literature       : NULL
-##   ..$ set_info         : NULL
-##   ..$ overlaps_with    : NULL
-##   ..$ counters         :List of 11
+##   .. ..$ updated: logi FALSE
+##   ..$ wikipedia               : NULL
+##   ..$ literature              : NULL
+##   ..$ set_info                : NULL
+##   ..$ overlaps_with           : NULL
+##   ..$ counters                :List of 11
 ##   .. ..$ subfamilies         : int 0
-##   .. ..$ domain_architectures: int 5
+##   .. ..$ domain_architectures: int 6
 ##   .. ..$ interactions        : int 0
-##   .. ..$ matches             : int 408
+##   .. ..$ matches             : int 411
 ##   .. ..$ pathways            : int 0
-##   .. ..$ proteins            : int 408
-##   .. ..$ proteomes           : int 5
+##   .. ..$ proteins            : int 411
+##   .. ..$ proteomes           : int 8
 ##   .. ..$ sets                : int 0
 ##   .. ..$ structural_models   :List of 1
-##   .. .. ..$ alphafold: int 313
+##   .. .. ..$ alphafold: int 312
 ##   .. ..$ structures          : int 0
-##   .. ..$ taxa                : int 696
-##   ..$ entry_annotations:List of 5
-##   .. ..$ hmm              : int 0
-##   .. ..$ logo             : int 0
-##   .. ..$ alignment:uniprot: int 404
-##   .. ..$ alignment:full   : int 6
-##   .. ..$ alignment:seed   : int 12
-##   ..$ cross_references : Named list()</code></pre>
+##   .. ..$ taxa                : int 704
+##   ..$ entry_annotations       :List of 4
+##   .. ..$ hmm           : int 0
+##   .. ..$ logo          : int 0
+##   .. ..$ alignment:seed: int 12
+##   .. ..$ alignment:full: int 6
+##   ..$ cross_references        : Named list()
+##   ..$ is_llm                  : logi FALSE
+##   ..$ is_reviewed_llm         : logi FALSE
+##   ..$ is_updated_llm          : logi FALSE
+##   ..$ representative_structure: NULL</code></pre>
 <pre class="r"><code>nombre_largo &lt;- pf06235[[&#39;metadata&#39;]][[&#39;name&#39;]][[&#39;name&#39;]]
 nombre_largo</code></pre>
 <pre><code>## [1] &quot;NADH dehydrogenase subunit 4L (NAD4L)&quot;</code></pre>
@@ -1043,7 +1048,7 @@ pfam00019 &lt;- fromJSON(paste0(API, &#39;protein/reviewed/entry/pfam/PF00019&#3
 names(pfam00019)</code></pre>
 <pre><code>## [1] &quot;count&quot;    &quot;next&quot;     &quot;previous&quot; &quot;results&quot;</code></pre>
 <pre class="r"><code>pfam00019[[&#39;count&#39;]]</code></pre>
-<pre><code>## [1] 229</code></pre>
+<pre><code>## [1] 228</code></pre>
 <pre class="r"><code>names(pfam00019[[&#39;results&#39;]])</code></pre>
 <pre><code>## [1] &quot;metadata&quot; &quot;entries&quot;</code></pre>
 <pre class="r"><code># La función &quot;flaten()&quot; corrige el anidamiento de marcos de datos,
@@ -1068,6 +1073,9 @@ length
 </th>
 <th style="text-align:left;">
 gene
+</th>
+<th style="text-align:left;">
+in_alphafold
 </th>
 <th style="text-align:left;">
 source_organism.taxId
@@ -1098,6 +1106,9 @@ reviewed
 MSTN
 </td>
 <td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:left;">
 9600
 </td>
 <td style="text-align:left;">
@@ -1122,6 +1133,9 @@ reviewed
 </td>
 <td style="text-align:left;">
 MSTN
+</td>
+<td style="text-align:left;">
+TRUE
 </td>
 <td style="text-align:left;">
 9544
@@ -1150,6 +1164,9 @@ reviewed
 MSTN
 </td>
 <td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:left;">
 9597
 </td>
 <td style="text-align:left;">
@@ -1174,6 +1191,9 @@ reviewed
 </td>
 <td style="text-align:left;">
 MSTN
+</td>
+<td style="text-align:left;">
+TRUE
 </td>
 <td style="text-align:left;">
 9598
@@ -1202,6 +1222,9 @@ reviewed
 MSTN
 </td>
 <td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:left;">
 9595
 </td>
 <td style="text-align:left;">
@@ -1226,6 +1249,9 @@ reviewed
 </td>
 <td style="text-align:left;">
 gdf6b
+</td>
+<td style="text-align:left;">
+TRUE
 </td>
 <td style="text-align:left;">
 7955
@@ -1254,6 +1280,9 @@ reviewed
 GDF9
 </td>
 <td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:left;">
 9555
 </td>
 <td style="text-align:left;">
@@ -1278,6 +1307,9 @@ reviewed
 </td>
 <td style="text-align:left;">
 gdf2
+</td>
+<td style="text-align:left;">
+TRUE
 </td>
 <td style="text-align:left;">
 7955
@@ -1306,6 +1338,9 @@ reviewed
 unc-129
 </td>
 <td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:left;">
 6239
 </td>
 <td style="text-align:left;">
@@ -1330,6 +1365,9 @@ reviewed
 </td>
 <td style="text-align:left;">
 dbl-1
+</td>
+<td style="text-align:left;">
+TRUE
 </td>
 <td style="text-align:left;">
 6239
@@ -1358,6 +1396,9 @@ reviewed
 GDF15
 </td>
 <td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:left;">
 9541
 </td>
 <td style="text-align:left;">
@@ -1382,6 +1423,9 @@ reviewed
 </td>
 <td style="text-align:left;">
 LEFTY2
+</td>
+<td style="text-align:left;">
+TRUE
 </td>
 <td style="text-align:left;">
 9606
@@ -1410,6 +1454,9 @@ reviewed
 Mstn
 </td>
 <td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:left;">
 10090
 </td>
 <td style="text-align:left;">
@@ -1434,6 +1481,9 @@ reviewed
 </td>
 <td style="text-align:left;">
 Inhbe
+</td>
+<td style="text-align:left;">
+TRUE
 </td>
 <td style="text-align:left;">
 10090
@@ -1462,6 +1512,9 @@ reviewed
 nodal4-a
 </td>
 <td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:left;">
 8355
 </td>
 <td style="text-align:left;">
@@ -1486,6 +1539,9 @@ reviewed
 </td>
 <td style="text-align:left;">
 MSTN
+</td>
+<td style="text-align:left;">
+TRUE
 </td>
 <td style="text-align:left;">
 9606
@@ -1514,6 +1570,9 @@ reviewed
 MSTN
 </td>
 <td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:left;">
 9557
 </td>
 <td style="text-align:left;">
@@ -1538,6 +1597,9 @@ reviewed
 </td>
 <td style="text-align:left;">
 MSTN
+</td>
+<td style="text-align:left;">
+TRUE
 </td>
 <td style="text-align:left;">
 9940
@@ -1566,6 +1628,9 @@ reviewed
 MSTN
 </td>
 <td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:left;">
 9823
 </td>
 <td style="text-align:left;">
@@ -1590,6 +1655,9 @@ reviewed
 </td>
 <td style="text-align:left;">
 MSTN
+</td>
+<td style="text-align:left;">
+TRUE
 </td>
 <td style="text-align:left;">
 9913
@@ -2154,13 +2222,13 @@ Tetratricopeptide Repeats-Sensor
 </div>
 <div id="información-de-la-sesión" class="section level2">
 <h2>Información de la sesión</h2>
-<pre><code>## R version 4.3.2 (2023-10-31)
+<pre><code>## R version 4.2.2 Patched (2022-11-10 r83330)
 ## Platform: x86_64-pc-linux-gnu (64-bit)
-## Running under: Debian GNU/Linux 11 (bullseye)
+## Running under: Debian GNU/Linux 12 (bookworm)
 ## 
 ## Matrix products: default
-## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
-## LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.13.so;  LAPACK version 3.9.0
+## BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.11.0
+## LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.11.0
 ## 
 ## locale:
 ##  [1] LC_CTYPE=ca_ES.UTF-8       LC_NUMERIC=C              
@@ -2170,29 +2238,25 @@ Tetratricopeptide Repeats-Sensor
 ##  [9] LC_ADDRESS=C               LC_TELEPHONE=C            
 ## [11] LC_MEASUREMENT=ca_ES.UTF-8 LC_IDENTIFICATION=C       
 ## 
-## time zone: Europe/Madrid
-## tzcode source: system (glibc)
-## 
 ## attached base packages:
 ## [1] stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-## [1] kableExtra_1.3.4 knitr_1.43       jsonlite_1.8.5  
+## [1] kableExtra_1.4.0 knitr_1.49       jsonlite_1.8.9  
 ## 
 ## loaded via a namespace (and not attached):
-##  [1] vctrs_0.6.5       svglite_2.1.1     httr_1.4.6        cli_3.6.2        
-##  [5] rlang_1.1.3       xfun_0.39         highr_0.10        stringi_1.8.3    
-##  [9] glue_1.7.0        colorspace_2.1-0  htmltools_0.5.5   sass_0.4.6       
-## [13] scales_1.2.1      rmarkdown_2.22    evaluate_0.21     munsell_0.5.0    
-## [17] jquerylib_0.1.4   fastmap_1.1.1     yaml_2.3.7        lifecycle_1.0.4  
-## [21] stringr_1.5.1     compiler_4.3.2    rvest_1.0.3       rstudioapi_0.14  
-## [25] systemfonts_1.0.4 digest_0.6.32     viridisLite_0.4.2 R6_2.5.1         
-## [29] magrittr_2.0.3    webshot_0.5.5     bslib_0.5.0       tools_4.3.2      
-## [33] xml2_1.3.4        cachem_1.0.8</code></pre>
+##  [1] rstudioapi_0.17.1 xml2_1.3.6        magrittr_2.0.3    munsell_0.5.1    
+##  [5] viridisLite_0.4.2 colorspace_2.1-1  R6_2.5.1          rlang_1.1.5      
+##  [9] fastmap_1.2.0     stringr_1.5.1     tools_4.2.2       xfun_0.50        
+## [13] cli_3.6.3         jquerylib_0.1.4   systemfonts_1.2.1 htmltools_0.5.8.1
+## [17] yaml_2.3.10       digest_0.6.37     lifecycle_1.0.4   sass_0.4.9       
+## [21] vctrs_0.6.5       glue_1.8.0        cachem_1.1.0      evaluate_1.0.3   
+## [25] rmarkdown_2.29    stringi_1.8.4     compiler_4.2.2    bslib_0.8.0      
+## [29] scales_1.3.0      svglite_2.1.3</code></pre>
 </div>
 <div id="bibliography" class="section level1 unnumbered">
 <h1 class="unnumbered">Bibliography</h1>
-<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
 <div id="ref-jsonlite" class="csl-entry">
 Ooms, Jeroen. 2014. <span>“The Jsonlite Package: A Practical and
 Consistent Mapping Between JSON Data and r Objects.”</span> arXiv. <a href="https://doi.org/10.48550/ARXIV.1403.2805">https://doi.org/10.48550/ARXIV.1403.2805</a>.
