@@ -64,22 +64,37 @@ programa `blastn`. Asegúrate de poder contestar las preguntas siguientes:
 - ¿Es posible crear un archivo HTML con los resultados?
 
 ## Descarga de las bases de datos
-El bloque de código siguiente descarga y descomprime dos bases de datos: 16S_ribosomal_RNA y Swissprot:
+Hay dos opciones para descargar las bases de datos que necesitamos. Usa sólo
+una de ellas.
+
+### Opción 1
+Los programas de `blast+` incluyen un script de Perl que permite descargar o
+actualizar las bases de datos de BLAST. Si en tu ordenador tienes un intérprete
+de Perl instalado (es improbable), así como los módulos adicionales necesarios,
+y si el *script* `update_blastdb.pl` está en el *PATH*, entonces el bloque de
+código siguiente debería funcionar.
 
 ```{r databases}
 # Utilizo "if" para evitar descargar lo mismo cada vez que compilo el documento.
 if (! file.exists('16S_ribosomal_RNA.ndb')) {
-   system2('update_blastdb.pl',
+   system2('update_blastdb',
            args = c('--decompress', '16S_ribosomal_RNA'))
 }
 if (! file.exists('swissprot.pdb')){
-   system2('update_blastdb.pl',
+   system2('update_blastdb',
            args = c('--decompress', 'swissprot'))
 }
 ```
 
-Los comandos anteriores sólo funcionarán si los ejecutas en un ordenador donde
-el intérprete de Perl esté instalado.
+### Opción 2
+Si el bloque de código anterior da algún error o no produce ningún resultado,
+deberás descargar las bases de datos manualmente y descomprimirlas:
+
+1. Apunta tu navegador a [https://ftp.ncbi.nlm.nih.gov/blast/db/](https://ftp.ncbi.nlm.nih.gov/blast/db/)
+2. Descarga los archivos comprimidos `16S_ribosomal_RNA.tar.gz` y `swissprot.tar.gz`.
+3. Descomprime los archivos.
+4. Para mayor comodidad, mueve todos los archivos de las dos bases de datos a la
+   carpeta de trabajo.
 
 ## BLASTN
 La secuencia con número de acceso KU524801.1 es una parte del gen 16S rRNA amplificada
@@ -172,6 +187,7 @@ gen codificante en esta secuencia.
 Primero, descargaremos el contig de ENA con la API del *Browser*.
 
 ```{r MIZB01000000}
+# Açò no funciona. S'ha d'arreglar.
 if (! file.exists('MIZB01000000.fa')) {
    # La libreria R.utils proporciona la función gunzip() para descomprimir.
    library('R.utils')
