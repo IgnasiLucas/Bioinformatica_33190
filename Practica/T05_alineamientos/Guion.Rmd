@@ -27,7 +27,7 @@ if (!requireNamespace("BiocManager", quietly=TRUE))
 BiocManager::install("DECIPHER")
 ```
 
-En la [página web de DECIPHER](http://www2.decipher.codes/index.html) 
+En la [página web de DECIPHER](http://www2.decipher.codes/index.html)
 podéis encontrar mucha documentación sobre cómo
 usar el paquete. Entre toda esa documentación, os recomiendo la guía
 [The Art of Multiple Sequence Alignment in R](https://www2.decipher.codes/Documentation-ArtOfAlignment.html).
