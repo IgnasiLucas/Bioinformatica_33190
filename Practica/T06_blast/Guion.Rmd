@@ -18,8 +18,8 @@ Existen tres tipos de ejecutables: programas de búsqueda (`blastn`, `blastp`, `
 ## Preparación del entorno
 Para poder incorporar las búsquedas BLAST en un *script* de R, utilizaremos la función `system2()`, la cual nos permite invocar cualquier comando propio de la línea de comandos y guardar su resultado en alguna variable o en un archivo.
 
-Lo primero es asegurarnos de que tenemos `blast+` instalado. Para ello, ejecuta el
-comando siguiente y observa si aparece algún error:
+Lo primero es asegurarnos de que tenemos `blast+` instalado y que el ordenador sabe
+dónde. Para ello, ejecuta el comando siguiente y observa si aparece algún error:
 
 ```{r, eval=FALSE}
 system2('blastn', args = '-version', stdout = TRUE, stderr = TRUE)
@@ -32,7 +32,7 @@ de instalación [de este enlace](https://www.ncbi.nlm.nih.gov/books/NBK569861/) 
 vuelve a ejecutar el comando anterior. Si el error persiste, entonces indica en
 el bloque siguiente la dirección de la carpeta donde lo has instalado y después
 ejecútalo para añadir esa carpeta al *PATH* (la lista de carpetas donde RStudio
-buscará ejecutables). 
+buscará ejecutables).
 
 ```{r PATH, eval=FALSE}
 # Este bloque no se ejecuta ("eval=FALSE") porque no funcionaría en cualquier
@@ -77,6 +77,9 @@ if (! file.exists('swissprot.pdb')){
            args = c('--decompress', 'swissprot'))
 }
 ```
+
+Los comandos anteriores sólo funcionarán si los ejecutas en un ordenador donde
+el intérprete de Perl esté instalado.
 
 ## BLASTN
 La secuencia con número de acceso KU524801.1 es una parte del gen 16S rRNA amplificada
