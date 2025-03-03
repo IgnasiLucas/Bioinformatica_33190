@@ -12,7 +12,9 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ## Programas BLAST {.vcenter .flexbox}
 
-![<sup>[Shawn T. O'Neil, 2021](https://open.oregonstate.education/computationalbiology/)](imatges/T07_blast_programs.png){width=700px}
+![](imatges/T07_blast_programs.png){width=700px}
+
+[<sup>Shawn T. O'Neil, 2021</sup>](https://open.oregonstate.education/computationalbiology/)
 
 ## Estrategias de BLAST
 
@@ -57,7 +59,7 @@ ggplot(data=M, mapping=aes(x=X, y=Y, color=Familia)) + geom_point()
 ```
 
 ## La limitación del BLAST
-```{r}
+```{r, warning=FALSE}
 seed <- sample(1:dim(M)[1], size=1)
 while ((M[seed,'X'] < 38) || (M[seed,'X'] > 60)) {
   seed <- sample(1:dim(M)[1], size=1)
