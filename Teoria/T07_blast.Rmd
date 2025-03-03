@@ -195,14 +195,15 @@ for (i in 1:nchar(A[1])) {
   z <- table(A.broken[i,])
   M[names(z), i] <- z
 }
-as.data.frame(M) %>% kable() %>% kable_styling()
+as.data.frame(M) %>% kable() %>% kable_styling(font_size = 7)
 ```
 
 ## Cambiamos 0 por un valor pequeño {.smaller}
 ```{r}
-MM <- as.data.frame((M + 1) / 25)
-as.data.frame((M + 1)/25) %>% kable() %>%
-   kable_styling(full_width = TRUE,
+MM <- as.data.frame((M + 0.1) / (5 + 0.1 * dim(M)[1]))
+MM %>% kable(digits = 2) %>%
+   kable_styling(full_width = FALSE,
+                 font_size = 7,
                  bootstrap_options = 'striped')
 ```
 
@@ -215,7 +216,8 @@ La puntuación de un aminoácido *i* en cada posición *j* depende de cuanto má
 
 ## PSSM {.smaller}
 ```{r}
-kable(as.data.frame(round(log2(((M+1)/25)/(1/20)), 2))) %>% kable_styling(bootstrap_options='basic') 
+#kable(as.data.frame(round(log2(((M+1)/25)/(1/20)), 2))) %>% kable_styling(bootstrap_options='basic')
+kable(log2(MM / (1/20)), digits = 2) %>% kable_styling()
 ```
 
 ## Funcionamiento de la PSSM
