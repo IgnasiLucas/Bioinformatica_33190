@@ -6,34 +6,32 @@ output: html_document
 
 ## Descàrrega de 1000 assemblatges de transcriptomes del protal d'ENA
 
-El bloc següent descarrega una llista dels 1000 primers transcriptomes (*tsa_set*)
-de ENA i en selecciona un no massa gran. El resultat pot dependre de les actualitzacions
-d'ENA, però en els últims anys, cada vegada que s'executa es descarrega el transcriptoma
-de l'escarabat *Ips typographus*.
+La idea és descarregar un transcriptoma no massa gran d'algun organisme del qual
+no esperem trobar molts parents ben representats a Swissprot. Per exemple, un
+basidiomicota (identificador taxonòmic 5204). 
 
 ```{r descarrega}
 library('curl')
+library('kableExtra')
 portal   <- 'https://www.ebi.ac.uk/ena/portal/api/'
 endpoint <- 'search?'
 result   <- 'result=tsa_set'
-fields   <- '&fields=scientific_name,fasta_file,fasta_file_bytes'
-limit    <- '&limit=1000'
+query    <- URLencode('&query=tax_tree(5204) AND base_count<10000000')
+fields   <- '&fields=scientific_name,set_fasta_ftp,base_count'
+limit    <- '&limit=10000'
 
-URL <- paste0(portal, endpoint, result, fields, limit, sep='', collapse='')
+URL <- paste0(portal, endpoint, result, query, fields, limit, sep='', collapse='')
+tsa <- read.table(URL, header = TRUE, sep = '\t', quote = '"')
+kable(tsa[order(tsa$base_count),]) %>% kable_styling()
+```
 
+Entre tots aquests, trie les dades del fong *Trametes sanguinea*, amb número
+d'accés GAKI01000000.
+
+```{r}
 if (! file.exists('tsa.fa')) {
-   if (! file.exists('tsa.tsv')) {
-      curl_download(URL, destfile = 'tsa.tsv')
-   }
-
-   tsa <- read.table('tsa.tsv', header = TRUE, sep = "\t")
-   # Ordene els registres per mida de l'arxiu fasta:
-   tsa <- tsa[order(tsa$fasta_file_bytes),]
-   # Seleccione el registre 250, arbitràriament, però sabent que no és dels grans.
-   fasta_url <- tsa[250, 'fasta_file']
-   # El descarregue...
++   fasta_url <- tsa[tsa$accession == 'GAKI01000000', 'set_fasta_ftp']
    curl_download(fasta_url, destfile = 'tsa.fa.gz')
-   # ...i descomprimisc:
    system2('gunzip', args = 'tsa.fa.gz')
 }
 ```
@@ -44,7 +42,7 @@ i extraure les seqüències d'aminoàcids possiblement codificades. El bloc seg�
 és una mica llarg, però sembla funcionar. Aprofite un parell de funcions d'Avril
 Cohlan que faciliten la tasca.
 
-```{r traduir}
+```{r traduir, message=FALSE}
 library('seqinr')
 library("Biostrings")
 
@@ -217,32 +215,35 @@ if (! file.exists('blastp.out')) {
                     '-db', 'swissprot',
                     '-out', 'blastp.out',
                     '-evalue', '1.0',
-                    '-outfmt', '6'))
+                    '-outfmt', '6',
+                    '-max_target_seqs', '1'))
 }
 
-blast1 <- read.table('blastp.out', col.names = c('qaccver', 'saccver', 'pident', 'length', 'mismatch',
-                                                 'gapopen', 'qstart', 'qend', 'sstart', 'send', 'evalue', 'bitscore'),
+blast1 <- read.table('blastp.out',
+                     col.names = c('qaccver', 'saccver', 'pident',
+                                   'length', 'mismatch', 'gapopen',
+                                   'qstart', 'qend', 'sstart', 'send',
+                                   'evalue', 'bitscore'),
                      as.is = TRUE)
 
 lowestE <- ddply(blast1, 'qaccver', .fun = function(x) min(x$evalue))
-badHits <- lowestE[lowestE$V1 >= 0.1, 'qaccver']
+lowestE <- lowestE[order(lowestE$V1),]
+plot(ecdf(lowestE$V1))
+```
+
+Més del 30% de les proteïnes hipotètiques d'esta espècie obtenen resultats de
+BLASTP amb valors E majors als del punt d'inflexió. El llindar arbitrari de
+0.1 deixaria `r sum(lowestE$V1 > 0.1)` proteïnes amb afiliació dubtosa, que són
+massa. Per tal que el PSIBLAST siga àgil, cal fer una selecció aleatòria de
+només una part d'aquestes proteïnes. Diguem, 20, per exemple.
+
+```{r}
+badHits <- sample(lowestE[lowestE$V1 >= 0.1, 'qaccver'], 20)
 badHitsProt <- proteines[badHits]
 
 write.fasta(as.list(badHitsProt), as.string = TRUE, names = badHits,
             nbchar = 50000, file.out = 'badHits.fa')
 ```
-
-De les `r length(proteines)` proteïnes suposadament codificades al transcriptoma
-d'*Ips typographus* amb 150 aminoàcids o més, n'hi ha `r length(badHits)` que en
-una cerca BLASTP contra Swissprot no obtenen cap resultat amb un valor E menor
-de 0.1. Hi ha diferents explicacions possibles al fet que una proteïna no trobe
-homòlegs pròxims en Swissprot:
-
-1. La proteïna no existeix realment: prové d'un marc obert de lectura que no es
-tradueix mai en la cèl·lula.
-2. La base de dades és incompleta i no inclou cap homòleg pròxim.
-3. Es tracta d'una proteïna nova, evolutivament apareguda en algun ancestre pròxim
-de l'espècie estudiada, i per tant no poden haver-ne homòlegs en la base de dades.
 
 ## Información de la sesión
 
