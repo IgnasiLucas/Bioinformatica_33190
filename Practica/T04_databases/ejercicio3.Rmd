@@ -1,0 +1,64 @@
+---
+title: "Ejercicio 3"
+author: "J. Ignacio Lucas Lledó"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**Usa la función `fromJSON()` para guardar la información del registro P01923 
+(proteína de Swiss-Prot) y explora la estructura de los datos con la función
+`str()`. ¿Puedes extraer la secuencia?**
+
+Para acceder a la información de un registro concreto de la base de datos
+InterPro, construímos la URL con los tres campos: el tipo de datos (*protein*),
+la base de datos concreta (*reviewed*, que es la manera de decir *Swissprot*),
+y el número del registro que queremos consultar (*P01923*):
+
+```{r}
+library('jsonlite')
+API <- 'https://www.ebi.ac.uk/interpro/api/'
+P01923 <- fromJSON(paste0(API, 'protein/reviewed/P01923'))
+```
+
+En el objeto `P01923` se guarda bastante información y si no conocemos su estructura
+o cómo acceder a los campos concretos, podemos usar las estrategias siguientes:
+
+```{r}
+# Nombres de los componentes del objeto
+names(P01923)
+```
+
+```{r}
+# Como solo tiene un componente, consultamos los nombres de los componentes de ese:
+names(P01923[['metadata']])
+```
+
+```{r}
+# Algunos componentes podrían no tener nombre (no es el caso). Podemos usar también:
+str(P01923)
+```
+
+Vemos que dentro de `metadata` hay un componente llamado `sequence`. Podemos
+extrerlo, e inclusos convertirlo en un `AAString`, si cargamos el paquete
+`Biostrings`.
+
+```{r}
+secuencia <- P01923[['metadata']][['sequence']]
+# Como simple cadena de caracteres:
+secuencia
+```
+
+```{r}
+# Como objeto de clase AAString:
+suppressMessages(library('Biostrings'))
+secuencia.AA <- AAString(secuencia)
+secuencia.AA
+```
+
+```{r}
+sessionInfo()
+```
