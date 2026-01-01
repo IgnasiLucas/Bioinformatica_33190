@@ -1,0 +1,42 @@
+---
+title: "Presentación de la asignatura"
+format:
+  revealjs:
+    embed-resources: true
+---
+
+## Sesiones teóricas {.smaller}
+
+1. Nociones de GNU/Linux
+2. Archivos de texto y alineamientos
+3. Principios de gestión de datos
+4. Bases de datos públicas de secuencias
+5. Visualización y exploración de datos
+6. Reproducibilidad y control de versiones
+7. BLAST
+8. Reconstrucción filogenética
+9. Ensamblaje de secuencias
+10. Anotación de genomas
+11. Análisis de expresión génica
+12. Análisis bioinformáticos de proteínas
+13. Repaso o acabar lo que falta
+
+## Sesiones prácticas {.smaller}
+
+1. Órdenes básicas de BASH
+2. Alineamiento múltiple de secuencias
+3. Mapaje de secuencias cortas
+4. Acceso programático a ENA
+5. El paquete ggplot2 de R
+6. Uso de Git y Github
+7. BLAST
+8. Reconstrucción filogenética
+9. Ensamblaje de un genoma
+10. Anotación funcional de un genoma
+11. Análisis de la expresión génica
+12. Predicción de estructura terciaria de proteínas
+13. Por determinar
+
+## Metodología
+
+- Lecturas
