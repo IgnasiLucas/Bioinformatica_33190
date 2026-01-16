@@ -1,0 +1,118 @@
+---
+title: "Práctica 2. Mapeo de secuencias cortas"
+lang: es
+date: today
+execute: 
+  output: true
+  error: true
+engine: knitr
+bibliography: ../../references.bib
+language:
+   title-block-published: "Última actualización:"
+   section-title-references: "Bibliografía"
+format:
+   html:
+      embed-resources: true
+---
+
+# Preparación
+Usaremos los programas siguientes:
+
+- [fastp](https://github.com/OpenGene/fastp) [@Chen2018]. Si descargas el
+  ejecutable en la carpeta actual, debes concederte el permiso de ejecución:
+  `chmod u+x fastp`. Y además tendrás que invocarlo como `./fastp` para que
+  Bash lo encuentre. Alternativamente, puedes copiarlo a una carpeta en tu
+  `PATH`. Puedes consultar el `PATH` mediante `echo $PATH`.
+- [bwa](https://github.com/lh3/bwa) [@Li2009]. El código fuente está disponible
+  [aquí]() y necesita ser descomprimido y compilado. 
+- [samtools]()
+- 
+
+
+# Objetivos
+1. Control de calidad de lecturas cortas.
+2. Mapeo de lecturas cortas a un genoma de referencia.
+3. Identificación de variantes.
+
+# Datos
+
+A continuación descargamos un par de archivos FASTQ de la base de datos
+[ENA](https://www.ebi.ac.uk/ena/browser/home). Han sido seleccionados porque
+su tamaño (comprimidos) no supera los 100 MB. Son secuencias de la cepa Tsu4-125
+de *Bradyrhizobium japonicum* (bacteria simbionte de la planta de soja). Proceden
+de la [Universidad de Tohoku](https://www.tohoku.ac.jp/en/) y forman parte de un
+[proyecto](https://www.ebi.ac.uk/ena/browser/view/PRJDB3261) en el que se
+secuenciaron 16 cepas más de *Bradyrhizobium*.
+
+```{bash}
+if [ ! -e DRR025089_1.fastq.gz ]; then
+   wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/DRR025/DRR025089/DRR025089_1.fastq.gz
+fi
+if [ ! -e DRR025089_2.fastq.gz ]; then
+   wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/DRR025/DRR025089/DRR025089_2.fastq.gz
+fi
+```
+
+:::{.callout-note icon=false}
+## Desafío
+Una vez descargados los archivos FASTQ, échales un vistazo desde la línea
+de comandos. Puedes hacerlo con `zless`, una versión de `less` capaz de mostrar
+archivos comprimidos, o bien descomprimiendo los archvios con `gunzip`. Para no
+ocupar espacio de disco innecesariamente, puedes usar
+`gunzip -c DRR025089_1.fastq.gz | less -S`, que envía el contenido del archivo
+a la salida estándar (no a un archivo nuevo), de donde `less -S` lo lee, sin
+modificar nada en la carpeta. ¿Sabrías contar el número de líneas de cada archivo?
+:::
+
+Necesitaremos también el genoma de referencia de `Bradyrhizobium japonicum`.
+Usaremos el de la cepa ACCC 15027 (hay otros).
+
+```{bash}
+# Con la opción "-o /dev/null" nos deshacemos de los mensajes,
+# y con "-O referencia.fa" escogemos un nombre adecuado para el archivo.
+if [ ! -e referencia.fa ]; then
+   wget -o /dev/null -O referencia.fa \
+        https://www.ebi.ac.uk/ena/browser/api/fasta/GCA_042137995.2 
+fi
+```
+
+:::{.callout-note icon=false}
+## Pregunta
+¿Crees que deberíamos guardar los archivos descargados en `../../data`?
+:::
+
+
+# Control de calidad
+
+```{bash}
+if [ ! -e fastp.html ]; then
+   # Si "fastp" está en la carpeta actual y  no en el PATH, escribe "./fastp"
+   # en lugar de "fastp".
+   fastp -i DRR025089_1.fastq.gz \
+         -o DRR025089_1_clean.fastq \
+         -I DRR025089_2.fastq.gz \
+         -O DRR025089_2_clean.fastq \
+         --merge \
+         --merged_out DR025089_m_clean.fastq
+fi
+```
+
+:::{.callout-note icon=false}
+## Ejercicios
+1. Revisa la ayuda del programa ejecutando `fastp -h`, y asegúrate de entender
+   las opciones que hemos usado.
+2. Revisa el informe generado por `fastp` en el archivo `fastp.html` y redacta un
+   pequeño resumen de las principales conclusiones que sacas.
+3. Descarga un segundo conjunto de archivos FASTQ de la misma especie y repite
+   el análisis de calidad con ellos. Puedes ver algunas opciones en
+   [este enlace](https://www.ebi.ac.uk/ena/browser/advanced-search?result=read_run&query=study_accession%3D%22PRJDB3261%22&fields=run_accession%2Cexperiment_title%2Cstudy_accession%2Cfastq_bytes%2Cfastq_ftp%2Cscientific_name%2Cfirst_public&excludeAccessionType=run&excludeAccessions=DRR025089).
+   Es mejor no descargar archivos demasiado grandes.
+:::
+
+# Mapeo
+
+
+
+# Identificación de variantes
+
+

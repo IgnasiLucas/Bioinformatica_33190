@@ -15,7 +15,7 @@ format:
       embed-resources: true
 ---
 
-# Requisitos
+# Preparación
 Hacen falta los programas `needle` y `water` de [EMBOS](http://emboss.open-bio.org/),
 el programa [`exonerate`](https://www.animalgenome.org/bioinfo/resources/manuals/exonerate/index.html)
 [@Slater2005], y el programa [`muscle`](https://www.drive5.com/muscle5/)[@Edgar2022].
