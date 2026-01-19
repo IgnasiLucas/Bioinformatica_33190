@@ -36,6 +36,7 @@ Usaremos los programas siguientes:
   Los tres programas pueden descargarse del mismo enlace, donde hay instrucciones
   para instalar la versión más reciente. Para algunos sistemas operativos existen
   paquetes propios, que pueden instalarse así: `apt install samtools`.
+- [freebayes](https://github.com/freebayes/freebayes/releases) [@Garrison2012].
 
 # Objetivos
 1. Control de calidad de lecturas cortas.
@@ -194,7 +195,7 @@ Ahora podemos importar los datos de cobertura a una sesión de R y representarlo
 gráficamente:
 
 ```{r}
-COV <- read.table('stat.COV.txt',
+COV <- read.table('COV.txt',
                   col.names = c('intervalo', 'cobertura', 'bases'))
 plot(COV$cobertura, COV$bases, type = 'l')
 ```
@@ -203,8 +204,19 @@ plot(COV$cobertura, COV$bases, type = 'l')
 ## Desafíos
 1. La distribución de cobertura tiene una cola larga. ¿Puedes centrar la
    representación gráfica entre 0 y 20? Pista: usa la opción `xlim` de `plot()`.
-2. ¿Te resulta útil la ejecución condicional de los pasos anteriores?
+2. ¿Qué otras estadísticas crees que vale la pena revisar?
+3. El genoma de referencia incluye dos plásmidos. ¿La cepa secuenciada los tiene?
+4. Visualiza los alineamientos en el terminal con la orden siguiente:
+```
+samtools tview DRR025089.bam referencia.fa
+```
 :::
 
 # Identificación de variantes
+
+```{bash}
+if [ ! -e DRR025089.vcf ]; then
+   freebayes -p 1 -f referencia.fa DRR025089.bam > DRR025089.vcf
+fi
+```
 

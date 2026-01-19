@@ -2238,7 +2238,7 @@ vertical-align: -.125em;
     <div>
     <div class="quarto-title-meta-heading">Última actualización:</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">16 de enero de 2026</p>
+      <p class="date">19 de enero de 2026</p>
     </div>
   </div>
   
@@ -2254,10 +2254,14 @@ vertical-align: -.125em;
 <h1>Preparación</h1>
 <p>Usaremos los programas siguientes:</p>
 <ul>
-<li><a href="https://github.com/OpenGene/fastp">fastp</a> <span class="citation" data-cites="Chen2018">(<a href="#ref-Chen2018" role="doc-biblioref">Chen et al. 2018</a>)</span>. Si descargas el ejecutable en la carpeta actual, debes concederte el permiso de ejecución: <code>chmod u+x fastp</code>. Y además tendrás que invocarlo como <code>./fastp</code> para que Bash lo encuentre. Alternativamente, puedes copiarlo a una carpeta en tu <code>PATH</code>. Puedes consultar el <code>PATH</code> mediante <code>echo $PATH</code>.</li>
-<li><a href>bwa</a></li>
-<li><a href>samtools</a></li>
-<li></li>
+<li><p><a href="https://github.com/OpenGene/fastp">fastp</a> <span class="citation" data-cites="Chen2018">(<a href="#ref-Chen2018" role="doc-biblioref">Chen et al. 2018</a>)</span>. Si descargas el ejecutable en la carpeta actual, debes concederte el permiso de ejecución: <code>chmod u+x fastp</code>. Y además tendrás que invocarlo como <code>./fastp</code> para que Bash lo encuentre. Alternativamente, puedes copiarlo a una carpeta en tu <code>PATH</code>. Puedes consultar el <code>PATH</code> mediante <code>echo $PATH</code>.</p></li>
+<li><p><a href="https://github.com/lh3/bwa">bwa</a> <span class="citation" data-cites="Li2009">(<a href="#ref-Li2009" role="doc-biblioref">Li y Durbin 2009</a>)</span>. Puedes descargar el código fuente con y compilarlo siguiendo estos pasos:</p>
+<pre><code>git clone https://github.com/lh3/bwa.git
+cd bwa
+make</code></pre>
+<p>Puedes copiar el ejecutable a cualquier carpeta en tu <code>PATH</code> o bien, invocarlo con su dirección completa cada vez que quieras ejecutarlo.</p></li>
+<li><p><a href="https://www.htslib.org/">samtools</a>, junto con <code>htslib</code> y <code>bcftools</code> <span class="citation" data-cites="Danecek2021">(<a href="#ref-Danecek2021" role="doc-biblioref">Danecek et al. 2021</a>)</span>. Los tres programas pueden descargarse del mismo enlace, donde hay instrucciones para instalar la versión más reciente. Para algunos sistemas operativos existen paquetes propios, que pueden instalarse así: <code>apt install samtools</code>.</p></li>
+<li><p><a href="https://github.com/freebayes/freebayes/releases">freebayes</a> <span class="citation" data-cites="Garrison2012">(<a href="#ref-Garrison2012" role="doc-biblioref">Garrison y Marth 2012</a>)</span>.</p></li>
 </ul>
 </section>
 <section id="objetivos" class="level1">
@@ -2272,12 +2276,15 @@ vertical-align: -.125em;
 <h1>Datos</h1>
 <p>A continuación descargamos un par de archivos FASTQ de la base de datos <a href="https://www.ebi.ac.uk/ena/browser/home">ENA</a>. Han sido seleccionados porque su tamaño (comprimidos) no supera los 100 MB. Son secuencias de la cepa Tsu4-125 de <em>Bradyrhizobium japonicum</em> (bacteria simbionte de la planta de soja). Proceden de la <a href="https://www.tohoku.ac.jp/en/">Universidad de Tohoku</a> y forman parte de un <a href="https://www.ebi.ac.uk/ena/browser/view/PRJDB3261">proyecto</a> en el que se secuenciaron 16 cepas más de <em>Bradyrhizobium</em>.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-e</span> DRR025089_1.fastq.gz <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">wget</span> ftp://ftp.sra.ebi.ac.uk/vol1/fastq/DRR025/DRR025089/DRR025089_1.fastq.gz</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-e</span> DRR025089_2.fastq.gz <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>   <span class="fu">wget</span> ftp://ftp.sra.ebi.ac.uk/vol1/fastq/DRR025/DRR025089/DRR025089_2.fastq.gz</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-e</span> DRR025089_1.fastq.gz <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>   <span class="co"># Con la opción &quot;-o /dev/null&quot; nos deshacemos de los mensajes.</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>   <span class="fu">wget</span> <span class="at">-o</span> /dev/null <span class="dt">\</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        ftp://ftp.sra.ebi.ac.uk/vol1/fastq/DRR025/DRR025089/DRR025089_1.fastq.gz</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-e</span> DRR025089_2.fastq.gz <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>   <span class="fu">wget</span> <span class="at">-o</span> /dev/null <span class="dt">\</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        ftp://ftp.sra.ebi.ac.uk/vol1/fastq/DRR025/DRR025089/DRR025089_2.fastq.gz</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="callout callout-style-default callout-note no-icon callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -2289,17 +2296,17 @@ vertical-align: -.125em;
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Una vez descargados los archivos FASTQ, échales un vistazo desde la línea de comandos. Puedes hacerlo con <code>zless</code>, una versión de <code>less</code> capaz de mostrar archivos comprimidos, o bien descomprimiendo los archvios con <code>gunzip</code>. Para no ocupar espacio de disco innecesariamente, puedes usar <code>gunzip -c DRR025089_1.fastq.gz | less -S</code>, que envía el contenido del archivo a la salida estándar (no a un archivo nuevo), de donde <code>less -S</code> lo lee, sin modificar nada en la carpeta. ¿Sabrías contar el número de líneas de cada archivo?</p>
+<p>Una vez descargados los archivos FASTQ, échales un vistazo desde la línea de órdenes. Puedes hacerlo con <code>zless</code>, una versión de <code>less</code> capaz de mostrar archivos comprimidos, o bien descomprimiendo los archvios con <code>gunzip</code>. Para no ocupar espacio de disco innecesariamente, puedes usar <code>gunzip -c DRR025089_1.fastq.gz | less -S</code>, que envía el contenido del archivo a la salida estándar (no a un archivo nuevo), de donde <code>less -S</code> lo lee, sin modificar nada en la carpeta. ¿Sabrías contar el número de líneas de cada archivo?</p>
 </div>
 </div>
 <p>Necesitaremos también el genoma de referencia de <code>Bradyrhizobium japonicum</code>. Usaremos el de la cepa ACCC 15027 (hay otros).</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Con la opción &quot;-o /dev/null&quot; nos deshacemos de los mensajes,</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># y con &quot;-O referencia.fa&quot; escogemos un nombre adecuado para el archivo.</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-e</span> referencia.fa <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>   <span class="fu">wget</span> <span class="at">-o</span> /dev/null <span class="at">-O</span> referencia.fa <span class="dt">\</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>        https://www.ebi.ac.uk/ena/browser/api/fasta/GCA_042137995.2 </span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Con la opción &quot;-o /dev/null&quot; nos deshacemos de los mensajes,</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># y con &quot;-O referencia.fa&quot; escogemos un nombre adecuado para el archivo.</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-e</span> referencia.fa <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>   <span class="fu">wget</span> <span class="at">-o</span> /dev/null <span class="at">-O</span> referencia.fa <span class="dt">\</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        https://www.ebi.ac.uk/ena/browser/api/fasta/GCA_042137995.2 </span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="callout callout-style-default callout-note no-icon callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -2307,27 +2314,31 @@ vertical-align: -.125em;
 <i class="callout-icon no-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Nota</span>Pregunta
+<span class="screen-reader-only">Nota</span>Preguntas
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>¿Crees que deberíamos guardar los archivos descargados en <code>../../data</code>?</p>
+<ul>
+<li>¿Crees que deberíamos guardar los archivos descargados en <code>../../data</code>?</li>
+<li>¿Cómo podrías guardar los mensajes de <code>wget</code> en un archivo?</li>
+<li>¿De cuántas secuencias diferentes se compone este genoma de referencia?</li>
+</ul>
 </div>
 </div>
 </section>
 <section id="control-de-calidad" class="level1">
 <h1>Control de calidad</h1>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-e</span> fastp.html <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>   <span class="co"># Si &quot;fastp&quot; está en la carpeta actual y  no en el PATH, escribe &quot;./fastp&quot;</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>   <span class="co"># en lugar de &quot;fastp&quot;.</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>   <span class="ex">fastp</span> <span class="at">-i</span> DRR025089_1.fastq.gz <span class="dt">\</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">-o</span> DRR025089_1_clean.fastq <span class="dt">\</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>         <span class="at">-I</span> DRR025089_2.fastq.gz <span class="dt">\</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">-O</span> DRR025089_2_clean.fastq <span class="dt">\</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">--merge</span> <span class="dt">\</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>         <span class="at">--merged_out</span> DR025089_m_clean.fastq</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-e</span> fastp.html <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>   <span class="co"># Si &quot;fastp&quot; está en la carpeta actual y  no en el PATH, escribe &quot;./fastp&quot;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>   <span class="co"># en lugar de &quot;fastp&quot;.</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>   <span class="ex">fastp</span> <span class="at">-i</span> DRR025089_1.fastq.gz <span class="dt">\</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">-o</span> DRR025089_1_clean.fastq <span class="dt">\</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>         <span class="at">-I</span> DRR025089_2.fastq.gz <span class="dt">\</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">-O</span> DRR025089_2_clean.fastq <span class="dt">\</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">--merge</span> <span class="dt">\</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>         <span class="at">--merged_out</span> DRR025089_m_clean.fastq</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="callout callout-style-default callout-note no-icon callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -2340,7 +2351,7 @@ vertical-align: -.125em;
 </div>
 <div class="callout-body-container callout-body">
 <ol type="1">
-<li>Revisa la ayuda del programa ejecutando <code>fastp -h</code>, y asegúrate de entender las opciones que hemos usado.</li>
+<li>Revisa la ayuda del programa ejecutando <code>fastp -h</code>, y asegúrate de entender al menos las opciones que hemos usado.</li>
 <li>Revisa el informe generado por <code>fastp</code> en el archivo <code>fastp.html</code> y redacta un pequeño resumen de las principales conclusiones que sacas.</li>
 <li>Descarga un segundo conjunto de archivos FASTQ de la misma especie y repite el análisis de calidad con ellos. Puedes ver algunas opciones en <a href="https://www.ebi.ac.uk/ena/browser/advanced-search?result=read_run&amp;query=study_accession%3D%22PRJDB3261%22&amp;fields=run_accession%2Cexperiment_title%2Cstudy_accession%2Cfastq_bytes%2Cfastq_ftp%2Cscientific_name%2Cfirst_public&amp;excludeAccessionType=run&amp;excludeAccessions=DRR025089">este enlace</a>. Es mejor no descargar archivos demasiado grandes.</li>
 </ol>
@@ -2349,15 +2360,110 @@ vertical-align: -.125em;
 </section>
 <section id="mapeo" class="level1">
 <h1>Mapeo</h1>
+<p>El objetivo de esta sección es alinear las lecturas cortas al genoma de referencia, mediante el programa <code>bwa</code>. El archivo final será un archivo BAM <em>ordenado</em>. Para obtener ese archivo es necesario generar algunos archivos auxiliares: primero, el índice del genoma de referencia, después los alineamientos en formato SAM (no comprimidos) y finalmente un archivo BAM, que es la versión comprimida del SAM (todavía no ordenado). La jerarquía de condiciones de ejecución siguiente permitirá borrar los archivos auxiliares, para ahorrar espacio, y no tener que generarlos de nuevo cada vez que compilemos este documento si el archivo final ya está presente en la carpeta de trabajo.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-e</span> DRR025089.bam <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>   <span class="cf">if</span> <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-e</span> DRR025089_unsorted.bam <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-e</span> DRR025089.sam <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>         <span class="cf">if</span> <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-e</span> referencia.fa.bwt <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>            <span class="ex">bwa</span> index referencia.fa</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>         <span class="cf">fi</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>         <span class="ex">bwa</span> mem <span class="at">-M</span> <span class="at">-R</span> <span class="st">&#39;@RG\tID:DRR025089\tSM:SAMD00022947&#39;</span> <span class="dt">\</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>                 <span class="at">-o</span> DRR025089.sam <span class="dt">\</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>                 referencia.fa <span class="dt">\</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>                 DRR025089_1_clean.fastq <span class="dt">\</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>                 DRR025089_2_clean.fastq <span class="dt">\</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>         <span class="dv">1</span><span class="op">&gt;</span> bwa.log <span class="dv">2</span><span class="op">&gt;</span> bwa.err</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>      <span class="cf">fi</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>      <span class="ex">samtools</span> view <span class="at">-b</span> <span class="at">-o</span> DRR025089_unsorted.bam DRR025089.sam</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">fi</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="ex">samtools</span> sort <span class="at">-o</span> DRR025089.bam DRR025089_unsorted.bam</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="ex">samtools</span> index DRR025089.bam</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="callout callout-style-default callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Desafíos
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li>Entre las órdenes anteriores, añade la descarga del genoma de referencia en el lugar adecuado y bajo la condición adecuada para que pueda borrarse una vez se haya generado el alineamiento.</li>
+<li>En un bloque de órdenes nuevo, alinea también los pares de lecturas cortas que <code>fastp</code> había combinado (<code>DR025089_m_clean.fastq</code>).</li>
+<li>Lee la lista de funciones que te ofrece <code>samtools</code> al ejecutarlo sin ningún argumento. ¿Qué función usarías para combinar dos archvivos BAM en uno?</li>
+<li>¿Cuánto espacio de disco ocupan los archivos FASTQ, el genoma de referencia y su índice y el archivo SAM?</li>
+<li>Podíamos haber ahorrado algún paso aprovechando las <em>tuberías</em> de BASH:</li>
+</ol>
+<pre><code>bwa mem -M -R &#39;@RG\tID:DRR025089\tSM:SAMD00022947&#39; \
+        referencia.fa DRR025089_1_clean.fastq DRR025089_2_clean.fastq | \
+samtools view -u - | \
+samtools sort - &gt; DRR025089.bam</code></pre>
+<p>Este estilo tiene también la ventaja de ser más rápido. ¿Crees que hay algún inconveniente al usar las tuberías?</p>
+</div>
+</div>
+<p>Antes de proseguir, es importante comprobar el resultado del paso anterior. Podemos extraer algunas estadísticas del archivo BAM así:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-e</span> DRR025089.stats.txt <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>   <span class="ex">samtools</span> stats DRR025089.bam <span class="op">&gt;</span> DRR025089.stats.txt</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Extraemos la sección sobre profundidad de cobertura</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-e</span> stat.<span class="va">$i</span>.txt <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>   <span class="fu">grep</span> ^COV DRR025089.stats.txt <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f</span> 2- <span class="op">&gt;</span> COV.txt</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Ahora podemos importar los datos de cobertura a una sesión de R y representarlos gráficamente:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>COV <span class="ot">&lt;-</span> <span class="fu">read.table</span>(<span class="st">&#39;COV.txt&#39;</span>,</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>                  <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">&#39;intervalo&#39;</span>, <span class="st">&#39;cobertura&#39;</span>, <span class="st">&#39;bases&#39;</span>))</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(COV<span class="sc">$</span>cobertura, COV<span class="sc">$</span>bases, <span class="at">type =</span> <span class="st">&#39;l&#39;</span>)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="callout callout-style-default callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Desafíos
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li>La distribución de cobertura tiene una cola larga. ¿Puedes centrar la representación gráfica entre 0 y 20? Pista: usa la opción <code>xlim</code> de <code>plot()</code>.</li>
+<li>¿Qué otras estadísticas crees que vale la pena revisar?</li>
+<li>El genoma de referencia incluye dos plásmidos. ¿La cepa secuenciada los tiene?</li>
+<li>Visualiza los alineamientos en el terminal con la orden siguiente:</li>
+</ol>
+<pre><code>samtools tview DRR025089.bam referencia.fa</code></pre>
+</div>
+</div>
 </section>
-<section id="identificación-de-variantes" class="level1 unnumbered">
-
+<section id="identificación-de-variantes" class="level1">
+<h1>Identificación de variantes</h1>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-e</span> DRR025089.vcf <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>   <span class="ex">freebayes</span> <span class="at">-p</span> 1 <span class="at">-f</span> referencia.fa DRR025089.bam <span class="op">&gt;</span> DRR025089.vcf</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
 
 </section>
 
-<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">Identificación de variantes</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">Bibliografía</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
 <div id="ref-Chen2018" class="csl-entry" role="listitem">
 Chen, Shifu, Yanqing Zhou, Yaru Chen, y Jia Gu. 2018. <span>«fastp: an ultra-fast all-in-one <span>FASTQ</span> preprocessor»</span>. <em>Bioinformatics</em> 34 (17): i884-90. <a href="https://doi.org/10.1093/bioinformatics/bty560">https://doi.org/10.1093/bioinformatics/bty560</a>.
+</div>
+<div id="ref-Danecek2021" class="csl-entry" role="listitem">
+Danecek, Petr, James K Bonfield, Jennifer Liddle, John Marshall, Valeriu Ohan, Martin O Pollard, Andrew Whitwham, et al. 2021. <span>«<span>Twelve years of SAMtools and BCFtools</span>»</span>. <em>GigaScience</em> 10 (2). <a href="https://doi.org/10.1093/gigascience/giab008">https://doi.org/10.1093/gigascience/giab008</a>.
+</div>
+<div id="ref-Garrison2012" class="csl-entry" role="listitem">
+Garrison, E., y G. Marth. 2012. <span>«Haplotype-based variant detection from short-read sequencing»</span>. <a href="https://arxiv.org/abs/1207.3907">https://arxiv.org/abs/1207.3907</a>.
+</div>
+<div id="ref-Li2009" class="csl-entry" role="listitem">
+Li, Heng, y Richard Durbin. 2009. <span>«Fast and accurate short read alignment with Burrows–Wheeler transform»</span>. <em>Bioinformatics</em> 25 (14): 1754-60. <a href="https://doi.org/10.1093/bioinformatics/btp324">https://doi.org/10.1093/bioinformatics/btp324</a>.
 </div>
 </div></section></div></main>
 <!-- /main column -->
