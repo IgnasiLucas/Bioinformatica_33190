@@ -23,11 +23,19 @@ Usaremos los programas siguientes:
   `chmod u+x fastp`. Y además tendrás que invocarlo como `./fastp` para que
   Bash lo encuentre. Alternativamente, puedes copiarlo a una carpeta en tu
   `PATH`. Puedes consultar el `PATH` mediante `echo $PATH`.
-- [bwa](https://github.com/lh3/bwa) [@Li2009]. El código fuente está disponible
-  [aquí]() y necesita ser descomprimido y compilado. 
-- [samtools]()
-- 
-
+- [bwa](https://github.com/lh3/bwa) [@Li2009]. Puedes descargar el código fuente
+  con y compilarlo siguiendo estos pasos:
+  ```
+  git clone https://github.com/lh3/bwa.git
+  cd bwa
+  make
+  ```
+  Puedes copiar el ejecutable a cualquier carpeta en tu `PATH` o bien, invocarlo
+  con su dirección completa cada vez que quieras ejecutarlo.
+- [samtools](https://www.htslib.org/), junto con `htslib` y `bcftools` [@Danecek2021].
+  Los tres programas pueden descargarse del mismo enlace, donde hay instrucciones
+  para instalar la versión más reciente. Para algunos sistemas operativos existen
+  paquetes propios, que pueden instalarse así: `apt install samtools`.
 
 # Objetivos
 1. Control de calidad de lecturas cortas.
@@ -35,7 +43,6 @@ Usaremos los programas siguientes:
 3. Identificación de variantes.
 
 # Datos
-
 A continuación descargamos un par de archivos FASTQ de la base de datos
 [ENA](https://www.ebi.ac.uk/ena/browser/home). Han sido seleccionados porque
 su tamaño (comprimidos) no supera los 100 MB. Son secuencias de la cepa Tsu4-125
@@ -46,17 +53,20 @@ secuenciaron 16 cepas más de *Bradyrhizobium*.
 
 ```{bash}
 if [ ! -e DRR025089_1.fastq.gz ]; then
-   wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/DRR025/DRR025089/DRR025089_1.fastq.gz
+   # Con la opción "-o /dev/null" nos deshacemos de los mensajes.
+   wget -o /dev/null \
+        ftp://ftp.sra.ebi.ac.uk/vol1/fastq/DRR025/DRR025089/DRR025089_1.fastq.gz
 fi
 if [ ! -e DRR025089_2.fastq.gz ]; then
-   wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/DRR025/DRR025089/DRR025089_2.fastq.gz
+   wget -o /dev/null \
+        ftp://ftp.sra.ebi.ac.uk/vol1/fastq/DRR025/DRR025089/DRR025089_2.fastq.gz
 fi
 ```
 
 :::{.callout-note icon=false}
 ## Desafío
 Una vez descargados los archivos FASTQ, échales un vistazo desde la línea
-de comandos. Puedes hacerlo con `zless`, una versión de `less` capaz de mostrar
+de órdenes. Puedes hacerlo con `zless`, una versión de `less` capaz de mostrar
 archivos comprimidos, o bien descomprimiendo los archvios con `gunzip`. Para no
 ocupar espacio de disco innecesariamente, puedes usar
 `gunzip -c DRR025089_1.fastq.gz | less -S`, que envía el contenido del archivo
@@ -77,10 +87,11 @@ fi
 ```
 
 :::{.callout-note icon=false}
-## Pregunta
-¿Crees que deberíamos guardar los archivos descargados en `../../data`?
+## Preguntas
+- ¿Crees que deberíamos guardar los archivos descargados en `../../data`?
+- ¿Cómo podrías guardar los mensajes de `wget` en un archivo?
+- ¿De cuántas secuencias diferentes se compone este genoma de referencia?
 :::
-
 
 # Control de calidad
 
@@ -93,14 +104,14 @@ if [ ! -e fastp.html ]; then
          -I DRR025089_2.fastq.gz \
          -O DRR025089_2_clean.fastq \
          --merge \
-         --merged_out DR025089_m_clean.fastq
+         --merged_out DRR025089_m_clean.fastq
 fi
 ```
 
 :::{.callout-note icon=false}
 ## Ejercicios
 1. Revisa la ayuda del programa ejecutando `fastp -h`, y asegúrate de entender
-   las opciones que hemos usado.
+   al menos las opciones que hemos usado.
 2. Revisa el informe generado por `fastp` en el archivo `fastp.html` y redacta un
    pequeño resumen de las principales conclusiones que sacas.
 3. Descarga un segundo conjunto de archivos FASTQ de la misma especie y repite
@@ -110,9 +121,90 @@ fi
 :::
 
 # Mapeo
+El objetivo de esta sección es alinear las lecturas cortas al genoma de
+referencia, mediante el programa `bwa`. El archivo final será un archivo BAM
+*ordenado*. Para obtener ese archivo es necesario generar algunos archivos
+auxiliares: primero, el índice del genoma de referencia, después los alineamientos
+en formato SAM (no comprimidos) y finalmente un archivo BAM, que es la versión
+comprimida del SAM (todavía no ordenado). La jerarquía de condiciones de ejecución
+siguiente permitirá borrar los archivos auxiliares, para ahorrar espacio, y no tener
+que generarlos de nuevo cada vez que compilemos este documento si el archivo final
+ya está presente en la carpeta de trabajo.
 
+```{bash}
+if [ ! -e DRR025089.bam ]; then
+   if [ ! -e DRR025089_unsorted.bam ]; then
+      if [ ! -e DRR025089.sam ]; then
+         if [ ! -e referencia.fa.bwt ]; then
+            bwa index referencia.fa
+         fi
+         bwa mem -M -R '@RG\tID:DRR025089\tSM:SAMD00022947' \
+                 -o DRR025089.sam \
+                 referencia.fa \
+                 DRR025089_1_clean.fastq \
+                 DRR025089_2_clean.fastq \
+         1> bwa.log 2> bwa.err
+      fi
+      samtools view -b -o DRR025089_unsorted.bam DRR025089.sam
+    fi
+    samtools sort -o DRR025089.bam DRR025089_unsorted.bam
+    samtools index DRR025089.bam
+fi
+```
 
+:::{.callout-note icon=false}
+## Desafíos
+1. Entre las órdenes anteriores, añade la descarga del genoma de referencia
+   en el lugar adecuado y bajo la condición adecuada para que pueda borrarse
+   una vez se haya generado el alineamiento.
+2. En un bloque de órdenes nuevo, alinea también los pares de lecturas cortas
+   que `fastp` había combinado (`DR025089_m_clean.fastq`).
+3. Lee la lista de funciones que te ofrece `samtools` al ejecutarlo sin ningún
+   argumento. ¿Qué función usarías para combinar dos archvivos BAM en uno?
+3. ¿Cuánto espacio de disco ocupan los archivos FASTQ, el genoma de referencia y
+   su índice y el archivo SAM?
+4. Podíamos haber ahorrado algún paso aprovechando las *tuberías* de BASH:
+
+```
+bwa mem -M -R '@RG\tID:DRR025089\tSM:SAMD00022947' \
+        referencia.fa DRR025089_1_clean.fastq DRR025089_2_clean.fastq | \
+samtools view -u - | \
+samtools sort - > DRR025089.bam
+```
+
+  Este estilo tiene también la ventaja de ser más rápido. ¿Crees que hay algún
+  inconveniente al usar las tuberías?
+:::
+
+Antes de proseguir, es importante comprobar el resultado del paso anterior.
+Podemos extraer algunas estadísticas del archivo BAM así:
+
+```{bash}
+if [ ! -e DRR025089.stats.txt ]; then
+   samtools stats DRR025089.bam > DRR025089.stats.txt
+fi
+
+# Extraemos la sección sobre profundidad de cobertura
+if [ ! -e stat.$i.txt ]; then
+   grep ^COV DRR025089.stats.txt | cut -f 2- > COV.txt
+fi
+```
+
+Ahora podemos importar los datos de cobertura a una sesión de R y representarlos
+gráficamente:
+
+```{r}
+COV <- read.table('stat.COV.txt',
+                  col.names = c('intervalo', 'cobertura', 'bases'))
+plot(COV$cobertura, COV$bases, type = 'l')
+```
+
+:::{.callout-note icon=false}
+## Desafíos
+1. La distribución de cobertura tiene una cola larga. ¿Puedes centrar la
+   representación gráfica entre 0 y 20? Pista: usa la opción `xlim` de `plot()`.
+2. ¿Te resulta útil la ejecución condicional de los pasos anteriores?
+:::
 
 # Identificación de variantes
-
 
