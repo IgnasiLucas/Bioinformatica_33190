@@ -1,0 +1,489 @@
+---
+title: "Trabajar con tablas o marcos de datos con R"
+lang: es
+date: today
+execute: 
+  output: true
+  error: true
+engine: knitr
+bibliography: ../../references.bib
+language:
+   title-block-published: "Última actualización:"
+   section-title-references: "Bibliografía"
+format:
+   html:
+      embed-resources: true
+---
+
+# Preparación
+
+En esta práctica trabajaremos en el entorno de R, con los paquetes siguientes:
+`dplyr`, `kableExtra` y `jsonlite`. Para descargar algunos datos de ejemplo, usaremos
+los programas `datasets` y `dataformat` [@OLeary2024], que pueden descargarse en
+[este enlace](https://www.ncbi.nlm.nih.gov/datasets/docs/v2/command-line-tools/download-and-install/).
+
+# Objetivos
+
+1. Conocer el uso de `datasets` y `dataformat`.
+2. Ver algún ejemplo de archivo en formato JSON.
+3. Manipular marcos de datos sin usar hojas de cálculo.
+
+# Datos
+Supón que tenemos interés en descargar un genoma de referencia de cualquier especie
+del género *Trypanosoma*, así como su anotación funcional, en formato
+[GFF3](https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md).
+Veamos primero de qué opciones disponemos:
+
+```{bash}
+if [ ! -e  trypanosoma_annotated.txt ]; then
+   datasets summary genome taxon Trypanosoma --annotated --as-json-lines | \
+   dataformat tsv genome --fields \
+      accession,organism-name,assminfo-release-date,assminfo-level,assmstats-atgc-count,annotinfo-featcount-gene-total,assminfo-type,assminfo-status > trypanosoma_annotated.txt
+fi
+```
+
+La línea larga que sigue a `--fields` especifica qué información sobre los genomas
+queremos ver en la tabla. Para saber qué campos se pueden seleccionar, puedes
+ejecutar la orden `dataformat tsv genome --help`. Veamos esa tabla en el informe
+HTML en un formato adecuado.
+
+```{r}
+#| messages: false
+
+library('kableExtra')
+genomas <- read.table('trypanosoma_annotated.txt',
+                      header = TRUE, sep = '\t')
+kable(genomas) %>% kable_styling()
+```
+
+:::{.callout-note icon=false}
+## Desafío
+1. ¿Qué diferencia hay entre las líneas 7 y 8 de la tabla anterior?
+2. Busca una función de R que te permita identificar las líneas repetidas en un
+   marco de datos.
+:::
+
+# Ordenar una tabla
+La función `order()` produce los índices ordenados de los elementos de un vector.
+Consulta su ayuda y experimenta con ella. Vamos a usar esta función para ordenar
+las filas del marco de datos `genomas` por fecha, que es la tercera columna,
+llamada `Assembly.Release.Date`.
+
+```{r}
+# Observa que asignamos el resultado del ordenamiento al mismo objeto que
+# estamos ordenando, para guardar el resultado sin tener que generar otro objeto.
+genomas <- genomas[order(genomas$Assembly.Release.Date), ]
+kable(genomas) %>% kable_styling()
+```
+
+Casualmente, la fecha estaba en formato "%Y-%m-%d", en el que el orden alfabético
+coincide con el orden temporal. Al crear `genomas`, `read.table()` había interpretado
+la tercera columna como texto. Para que las fechas sean entendidas como tales,
+podemos usar la función `as.Date()`:
+
+```{r}
+genomas$Assembly.Release.Date <- as.Date(genomas$Assembly.Release.Date,
+                                         '%Y-%m-%d')
+```
+
+Una vez convertida en "fecha", la columna "Assembly.Release.Date" puede usarse
+correctamente, por ejemplo, como eje de abscisas en una gráfica:
+
+```{r}
+# Aquí usamos "cumsum()" para obtener la suma acumulada del número de bases
+# secuenciadas.
+plot(x = genomas$Assembly.Release.Date,
+     y = cumsum(genomas$Assembly.Stats.ATGC.Count),
+     type = 'b',
+     xlab = 'Fecha de publicación',
+     ylab = 'Longitud total secuenciada (bp)',
+     main = 'Genomas anotados de Trypanosoma')
+```
+
+# Archivos JSON y GFF
+Habiendo visto las opciones, decidimos descargar el genoma y la anotación funcional
+de una de ellas, por ejemplo GCA_022059095.1.
+
+```{bash}
+if [ ! -e ncbi_data/data/GCA_022059095.1/genomic.gff ]; then
+   if [ ! -e ncbi_dataset.zip ]; then
+      datasets download genome accession GCA_022059095.1 --include genome,gff3
+   fi
+   unzip ncbi_dataset.zip
+fi
+```
+
+En la carpeta `ncbi_dataset/data` encontrarás un archivo en formato JSON con
+información sobre los datos descargados, y un archivo en formato "jsonlines".
+El formato "jsonlines" es una versión de JSON en la que cada registro ocupa una
+sola línea. Esto dificulta la visualización, pero agiliza el análisis de los
+datos en la línea de órdenes. Para ver mejor el contenido del archivo con la
+extensión `jsonl`, podríamos utilizar el programa [`jq`](https://jqlang.org/),
+o bien utilizar la función `prettify()` del paquete `jsonlite` de R:
+
+```{r}
+#| message: false
+
+library('jsonlite')
+prettify(readLines('ncbi_dataset/data/assembly_data_report.jsonl'))
+```
+
+Volviendo a lo que nos interesa, vamos a cargar en un marco de datos de una
+sesión de R la anotación funcional del genoma escogido. Aunque existen funciones
+específicas para leer archivos GFF, usaremos la función básica `read.table()`,
+con alguna precaución.
+
+```{r}
+# Como no tiene cabecera, le damos los nombres de las columnas:
+gff <- read.table('ncbi_dataset/data/GCA_022059095.1/genomic.gff', sep = '\t',
+                  col.names = c('seqid', 'source', 'type', 'start', 'end',
+                                'score', 'strand', 'phase', 'attributes'),
+                  quote = '')
+```
+
+Al leer el archivo GFF con `read.table()`, debemos especificar que el separador
+de columnas es el tabulador y que no hay texto entrecomillado en el archivo.
+Esto último se consigue con la opción `quote = ''`, y sirve para evitar que todo
+lo que se encuentre entre dos apóstrofes (*'*) se considere parte de un mismo campo
+de información, aunque sean cientos de líneas.
+
+Para comprobar que el archivo ha sido leído completo y sin errores, conviene
+revisar las dimensiones del marco de datos (`dim(gff)`) o incluso visualizar
+el principio (`head(gff)`) y el final (`tail(gff)`) del objeto, que es demasiado
+grande para mostrarlo en pantalla completo.
+
+## Seleccionar filas y columnas
+En el objeto `gff` hay 5 valores diferentes de la variable `type`: "CDS", "exon",
+"gene", "mRNA" y "region". Puedes comprobarlo con `unique(gff$type)`, o con
+`table(gff$type)`. Podemos separar la tabla en cinco marcos de datos, que
+correspondan a esos cinco tipos de anotación funcional.
+
+```{r}
+# Usamos un vector booleano como índice de las filas.
+# En las tablas nuevas, no necesitamos la tercera columna
+# y la eliminamos con el "-3".
+
+gene   <- gff[gff$type == 'gene',   -3]
+mrna   <- gff[gff$type == 'mRNA',   -3]
+exon   <- gff[gff$type == 'exon',   -3]
+cds    <- gff[gff$type == 'CDS',    -3]
+region <- gff[gff$type == 'region', -3]
+
+# Alinear las órdenes nos ayuda a detectar posibles errores
+```
+
+:::{.callout-note icon=false}
+## Desafío
+Identifica en cada uno de estos marcos de datos qué columnas son invariables. Es
+decir, las columnas que tienen el mismo valor en todas las líneas. Y elimina esas
+columnas.
+:::
+
+## Agrupar, operar y resumir
+Habiendo separado los diferentes tipos de anotaciones, ahora resulta fácil
+obtener estadísticas de cada uno. Podemos querer una tabla que nos diga para
+cada tipo de anotación, cuántos elementos de ese tipo hay en el genoma, qué
+longitud media tienen y qué desviación estándar. Hay diferentes maneras de
+conseguirlo. La más rudimentaria implicaría obtener cada estadística
+individualmente y después juntarlas en una nueva tabla. Por ejemplo, para
+regiones codificantes ("CDS"):
+
+```{r}
+cds$longitud <- cds$end - cds$start + 1
+resumen <- data.frame(
+   tipo       = 'CDS',
+   número     = nrow(cds),
+   long.Media = mean(cds$longitud),
+   long.SD    = sd(cds$longitud),
+)
+```
+
+:::{.callout-note icon=false}
+## Desafío
+¿Sabrías completar el marco de datos `resumen` con los datos de los otros cuatro
+tipos de anotación funcional?
+:::
+
+Este tipo de operación es bastante habitual, y se puede hacer sin necesidad de
+crear marcos de datos parciales. La función `split()` divide las líneas de un
+marco de datos en tantos marcos de datos como valores diferentes (*niveles*)
+haya en el *factor* que usemos para definir los grupos. El resultado es un solo
+objeto: una *lista* de marcos de datos:
+
+```{r}
+# Esto es una lista de marcos de datos:
+porTipo <- split(gff, gff$type)
+
+# Estas funciones nos permiten inspeccionar algunas características
+# del nuevo objeto:
+class(porTipo)
+length(porTipo)
+names(porTipo)
+sapply(porTipo, class)
+sapply(porTipo, nrow)
+```
+
+La función `sapply()`, toma al menos dos argumentos: una lista (o vector) y una
+función. Devuelve un vector (si es posible) con los resultados de aplicar la
+función a cada elemento de la lista. Con esto, el resumen que queríamos se puede
+obtener así:
+
+```{r}
+# Primero calculamos las longitudes de todas las anotaciones en gff:
+gff$longitud <- gff$end - gff$start + 1
+
+resumen <- data.frame(
+   tipo = names(porTipo),
+   número = sapply(porTipo, nrow),
+   long.Media = sapply(porTipo, function(x) mean(longitud)),
+   long.SD    = sapply(porTipo, function(x)   sd(longitud))
+)
+
+# Aprovechamos para mostrar nombres de columnas más legibles:
+kable(resumen,
+      col.names = c('Tipo', 'Número', 'Longitud Media',
+                    'Desviación estándar'),
+      row.names = FALSE) %>% 
+   kable_styling(full_width = FALSE)
+```
+
+Las operaciones de agrupar y resumir se pueden hacer también con funciones
+del paquete `dplyr`, que forma parte de un conjunto de paquetes diseñados para
+funcionar armoniosamente entre ellos. Son los paquetes del
+[`tidyverse`](https://tidyverse.org/), muy populares en ciencia de datos. Casi
+se pueden considerar un dialecto de R. Las funciones (o *verbos*) más interesantes
+de `dplyr` son `group_by()` y `summarise()`.
+
+```{r}
+#| meassage: false
+
+library('dplyr')
+# Observa el uso de "tuberías" ("%>%"):
+resumen <- gff %>% group_by(type) %>% summarise(
+   número     = n(),
+   Long.Media = mean(longitud),
+   Long.SD    = sd(longitud)
+)
+kable(resumen,
+      col.names = c('Tipo', 'Número', 'Longitud Media',
+                    'Desviación estándar'),
+      row.names = FALSE) %>%
+   kable_styling(full_width = FALSE)
+```
+
+:::{.callout-note icon=false}
+## Desafío
+Crea una tabla con el número total de genes en cada cromosoma. ¿Puedes contar
+cuántos hay codificados en cada sentido ("strand") y en cada cromosoma?
+:::
+
+# Comparar o cruzar datos
+Imagina que un estudio señala los cromosomas siguientes como posiblemente
+asociados a la resistencia a un fármaco. Quieres saber qué genes hay en estos
+cinco cromosomas:
+
+- JAJSEB010000048.1
+- JAJSEB010000012.1
+- JAJSEB010000020.1 
+- JAJSEB010000016.1 
+- JAJSEB010000033.1 
+
+Antes hemos usado el operador lógico `==` para crear un vector booleano con el
+que seleccionar algunas líneas. En este caso usaremos el operador `%in%`, que
+compara conjuntos o vectores de caracteres:
+
+```{r}
+candidatos <- c("JAJSEB010000048.1",
+                "JAJSEB010000012.1",
+                "JAJSEB010000020.1",
+                "JAJSEB010000016.1",
+                "JAJSEB010000033.1")
+interesantes <- gff[gff$seqid %in% candidatos, ]
+dim(interesantes)
+```
+
+:::{.callout-note icon=false}
+## Desafío
+¿Puedes limitar la selección a anotaciones de tipo "gene"?
+:::
+
+El estudio avanza y reduce el tamaño de las regiones candidatas, así que ahora
+necesitas identificar los genes presentes en exactamente las regiones siguientes:
+
+- JAJSEB010000048.1:184638-253478
+- JAJSEB010000012.1:133444-348860
+- JAJSEB010000020.1:73393-149614
+- JAJSEB010000016.1:161247-272009
+- JAJSEB010000033.1:123135-170687
+
+Aunque existen programas específicos para comparar segmentos cromosómicos
+([bedtools](https://github.com/arq5x/bedtools2)), continuaremos practicando con
+marcos de datos de R. Ahora ya no podemos usar `%in%`, porque de cada cromosoma
+queremos unos segmentos diferentes. Una estrategia es crear cinco filtros booleanos,
+y después combinarlos con la operación lógica "o", es decir `|`. En cada filtro
+seleccionaremos las anotaciones que estén completamente contenidas en el intervalo
+indicado.
+
+```{r}
+f1 <- gff$seqid == 'JAJSEB010000048.1' & gff$start >= 184638 & gff$end <= 253478
+f2 <- gff$seqid == 'JAJSEB010000012.1' & gff$start >= 133444 & gff$end <= 348860
+f3 <- gff$seqid == 'JAJSEB010000020.1' & gff$start >= 73393  & gff$end <= 149614
+f4 <- gff$seqid == 'JAJSEB010000016.1' & gff$start >= 161247 & gff$end <= 272009
+f5 <- gff$seqid == 'JAJSEB010000033.1' & gff$start >= 123135 & gff$end <= 170687
+
+f <- f1 | f2 | f3 | f4 | f5
+
+interesantes <- gff[f, ]
+```
+
+:::{.callout-note icon=false}
+## Desafío
+¿Puedes cambiar los filtros para que incluyan también genes *parcialmente*
+contenidos en los intervalos indicados?
+:::
+
+# Las llaves y la función `match()`
+En las bases de datos relacionales se llama *llave* a la columna o al conjunto
+de columnas cuyos valores identifican unívocamente cada línea de la tabla. En los
+marcos de datos de R, las líneas pueden tener nombre, el cual puede usarse como
+*llave* o índice para seleccionar líneas. Pero el uso del nombre de las líneas
+no es recomendable. Lo más práctico es que en cualquier tabla haya una columna
+cuyos valores no puedan repetirse. Esto ayuda a evitar duplicidades, mantener
+la integridad de la tabla y relacionar unas tablas con otras.
+
+:::{.callout-note icon=false}
+¿Cuál es la *llave* en un archivo GFF?
+:::
+
+El código siguiente descarga la tabla de genomas de *Trypanosoma* ensamblados
+a nivel de cromosoma, de la [European Nucleotide Archive](https://www.ebi.ac.uk/ena/)
+
+curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -d 'result=assembly&query=tax_tree(5690)%20AND%20assembly_level%3D%22chromosome%22&fields=assembly_title%2Ctax_id%2Cassembly_level%2Cbase_count%2Ccenter_name%2Ccountry%2Cdepth%2Cgenome_representation%2Clast_updated%2Cscientific_name&format=tsv' "https://www.ebi.ac.uk/ena/portal/api/search"
+
+```{r}
+# Aprenderemos esta sintaxis en el próximo tema:
+portal <- 'https://www.ebi.ac.uk/ena/portal/api/search?'
+result <- 'result=assembly&'
+query  <- 'query=tax_tree(5690)&'
+fields <- 'fields=accession%2Cversion%2Cscientific_name%2Cbase_count%2Clast_updated%2Cassembly_level'
+URL <- paste0(portal, result, query, fields)
+genomas.ena <- read.table(URL, header = TRUE, sep = '\t', quote = '', na.strings = '')
+```
+
+Tanto el nuevo marco de datos `genomas.ena`, como el que habíamos creado antes
+con datos de NCBI, `genomas`, tienen una columna de valores únicos: "accession"
+o "Assembly.Accession". Para los registros comunes entre las dos tablas, podemos
+transferir información de una a otra. Por ejemplo, vamos a añadir a la tabla
+`genomas` la fecha de última modificación del ensamblaje, que encontramos en
+`genomas.ena`. Para asegurarnos de que a cada ensamblaje le asignamos el valor
+correcto, usaremos la función `match()`.
+
+En `genomas`, "Assembly.Accession" incluye un sufijo que indica el número de
+versión del ensamblaje. Este sufijo no está presente en `genomas.ena$accession`.
+Para hacer comparables ambas tablas, quitaremos el sufijo de la primera tabla.
+
+```{r}
+# Este es un uso avanzado de `sapply()` y `strsplit()`:
+genomas$acc <- sapply(
+   strsplit(genomas$Assembly.Accession, '.', fixed = TRUE),
+   '[', 1
+)
+
+genomas$last_updated <- genomas.ena[match(genomas$acc,
+                                          genomas.ena$accession),
+                                    'last_updated']
+```
+
+:::{.callout-note icon=false}
+## Desafíos
+1. ¿Cómo comprobarías que al eliminar el sufijo de la versión, `genomas$acc` sigue
+   siendo una *llave* de la tabla `genomas`?
+2. Siguiendo el mismo esquema añade a `genomas` el "base_count" y compáralo con
+   el "Assembly.Stats.ATGC.Count". Si observas alguna diferencia, intenta explicarla.
+:::
+
+## Apéndice
+En los archivos GFF, la columna `attributes` es una lista de
+parejas de valores "clave = valor", separadas por punto y coma (";"). Habiendo
+creado antes un marco de datos para cada tipo de anotación (genes, CDS, etc.),
+es de suponer que todas las líneas de un marco de datos tendrán el mismo conjunto
+de parejas "clave = valor". Aquí se muestra una manera de extraer esta información
+y convertirla en columnas adicionales de un marco de datos.
+
+Veamos el primer valor de `attributes` en el marco de datos `gene`:
+
+```{r}
+gene[1, 'attributes']
+```
+
+La función `strsplit()` en R divide una cadena de caracteres en partes delimitadas
+por algún carácter o expresión regular. En este caso, queremos dividir esa cadena por
+los puntos y coma:
+
+```{r}
+strsplit(gene[1, 'attributes'], ';')
+```
+
+`strsplit()` ha dividido la cadena de caracteres original en una *lista* que
+contiene un único vector de cinco cadenas de caracteres. El motivo de generar una
+lista en lugar de un simple vector es que `strsplit()` puede actuar simultáneamente
+sobre todas las cadenas de caracteres de un vector, y necesita repartir el resultado
+en diferentes vectores:
+
+```{r}
+strsplit(gene[1:3, 'attributes'], ';')
+```
+
+Podemos guardar la lista de los vectores de los atributos de cada gen en un
+nuevo objeto, para continuar operando sobre el después:
+
+```{r}
+atributos <- strsplit(gene[ , 'attributes'], ';')
+
+# Veamos los 6 primeros elementos:
+head(atributos)
+
+# Y la longitud total de la lista:
+length(atributos)
+```
+
+Una vez tenemos una lista de los atributos de cada gen, podemos usar funciones
+de la familia `lapply()` para operar en paralelo sobre todos sus elementos. Examina
+la ayuda de `lapply()` para familiarizarte con estas funciones. A continuación,
+la usaremos para separar la clave del valor en todos los atributos de todos los
+genes. Además asignaremos la clave como nombre del valor correspondiente
+(en R, los elementos de un vector pueden tener nombre).
+
+```{r}
+atributos2 <- lapply(
+   atributos,
+   # Definimos una función para aplicarla a cada elemento de "atributos".
+   function(x) {
+      # "x" es un vector de atributos de un solo gen
+      lista <- strsplit(x, '=')
+      # "lista" es una lista de vectores de 2 componentes, clave y valor
+      valores <- sapply(lista, '[', 2)
+      names(valores) <- sapply(lista, '[', 1)
+      return(valores)
+   }
+)
+head(atributos2)
+```
+
+El orden de los atributos se ha mantenido idéntico al orden de sus correspondientes
+genes. Por eso podemos ahora añadir las columnas de atributos que queramos al
+marco de datos `gene`:
+
+```{r}
+gene$ID           <- sapply(atributos2, '[', 'ID')
+gene$Name         <- sapply(atributos2, '[', 'Name')
+gene$gene_biotype <- sapply(atributos2, '[', 'gene_biotype')
+gene$locus_tag    <- sapply(atributos2, '[', 'locus_tag')
+
+f <- names(gene) != 'attributes'
+kable(gene[1:15, f]) %>% kable_styling()
+```
+
+
+
+
