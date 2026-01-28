@@ -2,7 +2,7 @@
 title: "Práctica 1. Nociones de Bash y alineamientos básicos"
 lang: es
 date: today
-execute: 
+execute:
   output: true
   error: true
 engine: knitr
@@ -63,7 +63,7 @@ Bash que has aprendido:
 ├── doc
 └── results
     ├── 2026-01-29
-    │   └── README.Qmd
+    │   └── README.qmd
     ├── 2026-02-03
     ├── 2026-02-10
     ├── 2026-02-17
@@ -83,7 +83,7 @@ Bash que has aprendido:
 # Alineamiento de pares de secuencia
 En los enlaces siguientes encontrarás las secuencias descritas a continuación:
 
-- [HumanChr17](https://rest.ensembl.org/sequence/region/human/17:63832000..63843000:1) 
+- [HumanChr17](https://rest.ensembl.org/sequence/region/human/17:63832000..63843000:1)
   Un fragmento del cromosoma 17 humano.
 - [ChimpChr17](https://rest.ensembl.org/sequence/region/chimpanzee/17:63309800..63321000:1)
   Un fragmento del cromosoma 17 de chimpancé, homólogo al anterior.
