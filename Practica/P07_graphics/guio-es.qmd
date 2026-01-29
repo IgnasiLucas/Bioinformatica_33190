@@ -3,7 +3,7 @@ title: "Visualización y exploración de datos"
 lang: es
 date: today
 execute: 
-  output: true
+  eval: true
   error: true
 engine: knitr
 bibliography: ../../references.bib
@@ -35,7 +35,7 @@ Contiene 16 columnas, descritas a continuación y también
 - **CHROM**, **POS**, **ID**: cromosoma, posición e identificador del SNP.
 - **REF**: alelo de referencia.
 - **ALT**: alelo alternativo.
-- **PROVISIONAL_REF.": indica si el alelo de referencia es provisional o no.
+- **PROVISIONAL_REF.**: indica si el alelo de referencia es provisional o no.
 - **A1**: alelo cuya dosis se usa en la regresión como variable independiente.
 - **OMITTED**: el otro alelo.
 - **A1_FREQ**: frecuencia del alelo A1 en la población.
@@ -48,7 +48,7 @@ Contiene 16 columnas, descritas a continuación y también
 - **ERRCODE**: código de error, si lo hay, o bien "." (sin error).
 
 Cargamos los datos en una sesión de R para empezar a explorarlos, y activamos
-el paquete `ggplot2`.
+el paquete `ggplot2`, que usaremos después.
 
 ```{r}
 library('ggplot2')
@@ -57,7 +57,7 @@ gwas <- read.table('gwas.txt')
 
 :::{.callout-note icon=false}
 ## Desafío
-La orden `read.table('gwas.txt')` es errónea. ¿Puedes arreglarla?
+La orden `read.table('gwas.txt')` no da error, pero es errónea. ¿Puedes arreglarla?
 :::
 
 # Comprobar las suposiciones
@@ -205,10 +205,14 @@ resultado (valor *p*) y la magnitud (y el signo) del efecto estimado. Los valore
 *p* se muestran en escala logarítmica y con el signo cambiado, para que los
 resultados más significativos destaquen como *mayores*. Podemos añadir algunas
 líneas que indiquen los umbrales arbitrarios que utilizamos para seleccionar los
-resultados creíbles. A la hora de decidir estos umbrales es fundamental conocer
+resultados creíbles, o bien añadir color a los puntos seleccionados como positivos.
+A la hora de decidir estos umbrales es fundamental conocer
 la tasa de falsos positivos esperada con cada umbral (FDR). Para ello, añadimos
-al marco de datos una columna con el valor *q*, calculado con la función `qvalue()`
-del paquete `qvalue`.
+al marco de datos una columna con el valor *q* [^1], calculado con la función `qvalue()`
+del paquete `qvalue` [@qvalue].
+
+[^1]: El valor *q* de un test es la proporción de falsos positivos que esperamos
+   entre todos los resultados con un valor *p* menor o igual al de ese test.
 
 ```{r}
 library('qvalue')
@@ -244,12 +248,12 @@ corresponde con la posición en el cromosoma, y la altura del punto es proporcio
 a su significación. Lo difícil es poner los cromosomas unos detrás de otros y
 alternar el color de los puntos en cada cromosoma. Para ello, no tenemos más
 remedio que añadir algunas columnas al marco de datos (o bien usar algún paquete
-de R específico).
+de R específico, pero no hace falta).
 
 ```{r}
 #| fig.width: 10
 
-# Como no tenemos la longitud de cada cromosoma, usaremos su posición máxima.
+# Como no tenemos a mano la longitud de cada cromosoma, usaremos su posición máxima.
 PosicionMaxima <- sapply(split(gwas$POS, gwas$CHROM), max)
 
 # Al colocar los cromosomas uno detrás de otro, la coordenada global de un SNP
@@ -273,4 +277,12 @@ ggplot(data = gwas, mapping = aes(x = GlobalPosition, y = -log(P), color = color
    geom_point() + theme(legend.position = 'none')
 ```
 
-# Función de distribución
+# Información de la sesión
+
+```{r}
+sessionInfo()
+```
+
+
+
+
