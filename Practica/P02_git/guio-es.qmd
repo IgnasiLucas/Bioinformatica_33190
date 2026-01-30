@@ -1,0 +1,180 @@
+---
+title: "Control de versiones con Git"
+lang: es
+date: today
+execute: 
+  eval: true
+  error: true
+engine: knitr
+bibliography: ../../references.bib
+language:
+   title-block-published: "Última actualización:"
+   section-title-references: "Bibliografía"
+format:
+   html:
+      embed-resources: true
+---
+
+# Preparación
+Para esta práctica necesitamos tener Git instalado. Podéis comprobar si ya está
+instalado desde el terminal de Bash, tecleando `git --version`. En WSL2, podéis
+instalar Git desde el terminal con la orden `apt install git`. En MacOS, hay
+[varias opciones](https://git-scm.com/install/mac), pero la más sencilla parece
+ser instalar las *command line tools*, también desde un terminal, mediante la
+orden `xcode-select --install`.
+
+# Objetivos
+1. Configurar Git e inicializar el repositorio.
+2. Ejecutar al menos un par de *commits*.
+3. Crear el archivo oculto `.gitignore`
+4. Crear un repositorio remoto en [Github](https://github.com).
+
+# Configuración
+Para facilitar la comunicación, es importante usar el correo electrónico institucional
+y el nombre verdadero. Utilizad el mismo correo electrónico al crear una cuenta
+en Github.
+
+```
+git config --global user.name "Nombre y apellidos"
+git config --global user.email "...@alumni.uv.es"
+```
+
+Es recomendable configurar `nano` como editor de texto usado para escribir los
+mensajes con los que etiquetamos las *instantáneas* o los *commits*. Se abre
+automáticamente, por ejemplo, cuando fusionamos dos ramas.
+
+```
+git config --global core.editor "nano -w"
+```
+
+Git usa el término "rama" (*branch*) para referirse a una cadena lineal de
+*commits*. A la rama principal, con la que se inicia un repositorio la llama
+*master*, por defecto, que puede traducirse como "dueño", "patrón" o "señor".
+Estas [desafortunadas connotaciones han motivado](https://sfconservancy.org/news/2020/jun/23/gitbranchname/)
+un abandono progresivo de este término. En su lugar, Github usa *main*. Pero
+podemos darle cualquier nombre. Tratándose de una "rama principal", sería
+natural llamarla "tronco", "cepa" o, en valenciano, "soca". Para ello:
+
+```
+git config --global init.defaultBranch soca
+```
+
+Puedes ver la configuración actual con `git config --list`.
+
+# Creación del repositorio
+Desde la carpeta principal, en el terminal ejecutamos `git init`. Se habrá
+creado una carpeta oculta, `.git`. A partir de ese momento, Git observará las
+modificaciones de todos los archivos en esa carpeta y **en todas sus subcarpetas**.
+
+Es importante no crear repositorios en subcarpetas de un repositorio previo.
+
+Una vez creado el repositorio, puedes usar el comando `git status`, para
+comprobar el estado de tus archivos.
+
+# Seguimiento de modificaciones
+Utiliza `git add ...` para añadir archivos al área de preparación o "escenario"
+[^1]. Consulta `git status` y cuando los hayas añadido todos, ejecuta
+`git commit -m "...", donde debes sustituir los "..." por un mensaje entrecomillado
+que describa los cambios introducidos en la carpeta. Por ejemplo:
+
+[^1]: "staging area" parece ser un término militar sin traducción al castellano.
+
+```
+git commit -m "Iniciada la primera práctica, aunque el alineamiento no está hecho todavía."
+```
+
+Consulta `git status` y también `git log`. Asegúrate de que la rama lleva el nombre
+que habías elegido.
+
+# Ignorar cosas
+Git está diseñado para compartir archivos pequeños que van cambiando a lo largo
+de un proyecto. No es un sistema de copias de seguridad. La carpeta de datos debería
+ser excluida del seguimiento ofrecido por Git. El motivo es que allí pueden residir
+archivos muy grandes que además no deberían modificarse nunca. Además, en cualquier
+carpeta de resultados puede haber archivos de los que no queremos que Git observe:
+si son de más de 10 Mb, o si son archivos temporales sin importancia, por ejemplo.
+
+Para ignorar ciertos archivos, podemos crear el archivo `.gitignore`, directamente
+en la carpeta de trabajo. Es un archivo de texto, y su contenido es una lista de
+archivos a ignorar. Por ejemplo:
+
+```
+.gitignore
+data/
+*.bam
+```
+
+Estas tres líneas indican:
+
+1. Ignora el archivo `.gitignore` (en general, recomendable).
+2. Ignora el contenido de la carpeta local `data`.
+3. Ignora todos los archivos que terminen en `.bam`. Observa el uso del
+   asterisco, "*", como comodín: representa cualquier cadena de caracteres.
+   
+# Crear un repositorio en Github
+Tienes que haber creado una cuenta de usuario o ususaria. Github te guía en la
+creación de un nuevo repositorio. Es recomendable darle el mismo nombre que tiene
+la carpeta en la que has creado tu repositorio local. Puedes configurar el repositorio
+en Github como privado, si prefieres que nadie lo vea. Pero en ese caso, asegúrate
+de añadir como colaborador a tu profesor de Bioinformática.
+
+Github te da la opción de añadir un archivo `README.md`, un archivo `.gitignore`
+y una licencia. Si ya tienes un README.md local, no hace falta crear otro. En
+cuanto a la licencia, los guiones de prácticas están publicados con licencia
+[Creative Commons Attribution Share Alike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/deed.en).
+Si usas estos guiones como punto de partida, debes respetar la obligación de compartir
+el trabajo derivado con el mismo tipo de licencia.
+
+# Vincular el repositorio local al remoto
+En la página de Github donde reside tu repositorio, encontrarás un botón verde
+con la inscripción `<> Code`. Al pincharlo, la pestaña izquierda ("Local") te
+sugiere que puedes "clonar" el repositorio y te ofrece tres opciones, una de
+las cuales es "HTTPS". No vamos a clonarlo, porque la versión local ya tiene
+más información que la remota. Pero igualmente copia la dirección HTTPS que está
+allí indicada y vuelve al terminal.
+
+Desde el terminal, estando en la carpeta de trabajo, puedes vincular tu repositorio
+local al remoto mediante una orden como esta:
+
+```
+git remote add origin https://github.com/usuario/repositorio.git
+```
+
+pero usando la dirección URL de tu repositorio, que has copiado antes. La palabra
+"origin" identificará el remoto en tu repositorio local. Podrías haberle dado
+cualquier otro nombre. Pero "origin" es un estándar muy aceptado.
+
+
+# Enviar tu trabajo al remoto
+```
+git push -u origin soca
+```
+
+Con eso le estarías diciendo a Git que envíe el estado actual de tu rama local
+a la rama "soca" del remoto "origin", y que además establezca esa rama remota
+como asociada por defecto a tu rama local. Puedes darle otro nombre a la rama
+remota, si lo prefieres.
+
+El hecho es que Git te permite tener varias ramas (versiones) de tu carpeta
+de trabajo. Y también varios remotos. Una vez que una rama remota está designada
+como "aguas-arriba" de una rama local, enviar actualizaciones al remoto es más
+fácil:
+
+```
+git push
+```
+
+Ya no hace falta especificar a qué rama remota estamos enviando las actualizaciones.
+Desde luego, no es recomendable trabajar con más de un remoto ni más de una rama
+si no es estrictamente necesario.
+
+# Traer actualizaciones del remoto a la carpeta local
+Una vez la rama local está configurada para prestar atención a los cambios que
+pueden haber aparecido en una rama remota, al ejecutar `git pull`, automáticamente
+Git intentará implementar en la carpeta local cualquier modificación que se haya
+producido en la rama remota.
+
+El comando `git pull` es una combinación de `git fetch` y `git merge`, que
+significan: "echa un vistazo al estado de la rama remota" y "fusiona la rama remota
+con la local", respectivamente. Después de `git fetch`, puede comprobar si ha
+habido cambios en el remoto con `git status`.
