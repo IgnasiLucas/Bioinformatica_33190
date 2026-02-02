@@ -1,0 +1,43 @@
+---
+title: "BLAST"
+lang: es
+date: today
+execute: 
+  eval: true
+  error: true
+engine: knitr
+bibliography: ../../references.bib
+language:
+   title-block-published: "Última actualización:"
+   section-title-references: "Bibliografía"
+format:
+   html:
+      embed-resources: true
+---
+
+# Preparación
+Necesitamos tener instalado el paquete `ncbi-blast+`, que en Linux y en WSL2 se
+puede instalar mediante `sudo apt install ncbi-blast+`. Este método no instalará
+la versión más reciente, pero será suficiente. También podemos descargar los
+ejecutables más recientes
+[desde este sitio FTP](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/).
+
+Para MacOS, podéis consultar las instrucciones
+[en este enlace](https://www.ncbi.nlm.nih.gov/books/NBK569861/)
+
+# Objetivos
+
+1. Programar algunas búsquedas remotas básicas de BLAST.
+2. Conocer el formato tabular de los resultados de BLAST.
+3. Crear una base de datos de BLAST local.
+
+# Datos
+BLAST ejecuta alineamientos locales entre una secuencia "problema" o *query*,
+generalmente no muy larga, y un conjunto grande de secuencias (la base de datos)
+entre las que esperamos encontrar alguna secuencia homóloga a la *query*. Cada
+secuencia de la base de datos que pueda alinearse con la *query* se la llama
+*subject* en el alineamiento. 
+
+En primer lugar, usaremos como *queries* algunas lecturas cortas, procedentes de
+un archivo FASTQ, que no pudieron ser mapeadas al genoma de referencia de la especie
+

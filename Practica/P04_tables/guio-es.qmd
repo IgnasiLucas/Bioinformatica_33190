@@ -3,7 +3,7 @@ title: "Trabajar con tablas o marcos de datos con R"
 lang: es
 date: today
 execute: 
-  output: true
+  output: false
   error: true
 engine: knitr
 bibliography: ../../references.bib
@@ -232,11 +232,14 @@ obtener así:
 # Primero calculamos las longitudes de todas las anotaciones en gff:
 gff$longitud <- gff$end - gff$start + 1
 
+# Volvemos a separar las filas por tipo, ahora que tenemos las longitudes:
+porTipo <- split(gff, gff$type)
+
 resumen <- data.frame(
    tipo = names(porTipo),
    número = sapply(porTipo, nrow),
-   long.Media = sapply(porTipo, function(x) mean(longitud)),
-   long.SD    = sapply(porTipo, function(x)   sd(longitud))
+   long.Media = sapply(porTipo, function(x) mean(x$longitud)),
+   long.SD    = sapply(porTipo, function(x)   sd(x$longitud))
 )
 
 # Aprovechamos para mostrar nombres de columnas más legibles:
@@ -357,8 +360,6 @@ la integridad de la tabla y relacionar unas tablas con otras.
 
 El código siguiente descarga la tabla de genomas de *Trypanosoma* ensamblados
 a nivel de cromosoma, de la [European Nucleotide Archive](https://www.ebi.ac.uk/ena/)
-
-curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -d 'result=assembly&query=tax_tree(5690)%20AND%20assembly_level%3D%22chromosome%22&fields=assembly_title%2Ctax_id%2Cassembly_level%2Cbase_count%2Ccenter_name%2Ccountry%2Cdepth%2Cgenome_representation%2Clast_updated%2Cscientific_name&format=tsv' "https://www.ebi.ac.uk/ena/portal/api/search"
 
 ```{r}
 # Aprenderemos esta sintaxis en el próximo tema:

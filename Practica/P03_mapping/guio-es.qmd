@@ -1,9 +1,9 @@
 ---
-title: "Práctica 2. Mapeo de secuencias cortas"
+title: "Mapeo de secuencias cortas"
 lang: es
 date: today
 execute: 
-  output: true
+  output: false
   error: true
 engine: knitr
 bibliography: ../../references.bib
