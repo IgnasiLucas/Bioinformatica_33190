@@ -2183,7 +2183,7 @@ vertical-align: -.125em;
     <div>
     <div class="quarto-title-meta-heading">Última actualización:</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">30 de enero de 2026</p>
+      <p class="date">3 de febrero de 2026</p>
     </div>
   </div>
   
@@ -2248,17 +2248,20 @@ data/
 <section id="crear-un-repositorio-en-github" class="level1">
 <h1>Crear un repositorio en Github</h1>
 <p>Tienes que haber creado una cuenta de usuario o ususaria. Github te guía en la creación de un nuevo repositorio. Es recomendable darle el mismo nombre que tiene la carpeta en la que has creado tu repositorio local. Puedes configurar el repositorio en Github como privado, si prefieres que nadie lo vea. Pero en ese caso, asegúrate de añadir como colaborador a tu profesor de Bioinformática.</p>
-<p>Github te da la opción de añadir un archivo <code>README.md</code>, un archivo <code>.gitignore</code> y una licencia. Si ya tienes un README.md local, no hace falta crear otro. En cuanto a la licencia, los guiones de prácticas están publicados con licencia <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.en">Creative Commons Attribution Share Alike 4.0 International</a>. Si usas estos guiones como punto de partida, debes respetar la obligación de compartir el trabajo derivado con el mismo tipo de licencia.</p>
+<p>Github te da la opción de añadir un archivo <code>README.md</code>, un archivo <code>.gitignore</code> y una licencia. Si ya tienes un README.md local, no hace falta crear otro. En cuanto a la licencia, los guiones de prácticas están ya publicados con licencia <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.en">Creative Commons Attribution Share Alike 4.0 International</a>. Si usas estos guiones como punto de partida, deberías respetar la obligación de compartir el trabajo derivado con el mismo tipo de licencia. Como esta licencia no aparece entre las opciones de Github, lo correcto sería añadir un archivo de texto llamado <code>LICENSE.txt</code> a tu repositorio con el contenido <a href="https://creativecommons.org/licenses/by-sa/4.0/legalcode.txt">de este enlace</a>.</p>
+</section>
+<section id="crear-un-par-de-llaves-ssh" class="level1">
+<h1>Crear un par de llaves SSH</h1>
+<p>Para identificarte cada vez que actualizas el repositorio remoto, necesitas un par de llaves SSH. Las llaves son documentos de texto. Una llave es pública y actúa más bien como un cerrojo. Puedes darlo a quien quieras que compruebe tu identidad. La otra llave es privada: queda guardada en una carpeta oculta <code>.ssh/</code>, en el dirctorio de usuario de tu ordenador, sin permiso de lectura más que para la persona propietaria. La llave privada debe estar protegida por contraseña o <em>passphrase</em> (una frase es más fácil de recordar que una contraseña y más difícil de adivinar, aunque más larga de teclear). Para crear un par de llaves, ejecuta el código siguiente en el terminal (desde cualquier carpeta), usando tu dirección de correo electrónico de la Universidad:</p>
+<pre><code>ssh-keygen -t ed25519 -C &quot;usuaria@alumni.uv.es&quot;</code></pre>
+<p>Acepta la ubicación propuesta por defecto donde guardar las llaves pulsando <code>Enter</code> cuando te pregunte. A continuación, introduce la contraseña o <em>passphrase</em> que quieras y no la olvides. En tu directorio de usuario habrá aparecido una carpeta <code>.ssh/</code> con dos archivos: <code>ed25519</code> y <code>ed25519.pub</code>. Éste último es la llave pública. Puedes visualizarla en el terminal, por ejemplo con la orden <code>cat ~/.ssh/ed25519.pub</code>. Copia en el portapapele la llave (desde “ssh-…” hasta “…<span class="citation" data-cites="alumni.uv.es">(<a href="#ref-alumni.uv.es" role="doc-biblioref"><strong>alumni.uv.es?</strong></a>)</span>”). A continuación, accede a tu perfil de Github. Pincha sobre el icono en la esquina superior derecha y entra en el apartado “Settings” del menú. Busca la sección “SSH and GPG keys”, y pulsa en “New SSH key”. Nombra la llave de manera que te recuerde el ordenador donde se encuentra la llave privada (por ejemplo, “portatil”) y pega la llave pública en el recuadro destinado a ello. Por último, confirma la acción pulsando el botón verde.</p>
 </section>
 <section id="vincular-el-repositorio-local-al-remoto" class="level1">
 <h1>Vincular el repositorio local al remoto</h1>
-<p>En la página de Github donde reside tu repositorio, encontrarás un botón verde con la inscripción <code>&lt;&gt; Code</code>. Al pincharlo, la pestaña izquierda (“Local”) te sugiere que puedes “clonar” el repositorio y te ofrece tres opciones, una de las cuales es “HTTPS”. No vamos a clonarlo, porque la versión local ya tiene más información que la remota. Pero igualmente copia la dirección HTTPS que está allí indicada y vuelve al terminal.</p>
+<p>En la página de Github donde reside tu repositorio, encontrarás un botón verde con la inscripción <code>&lt;&gt; Code</code>. Al pincharlo, la pestaña izquierda (“Local”) te sugiere que puedes “clonar” el repositorio y te ofrece tres opciones, una de las cuales es “SSH”. No vamos a clonarlo, porque la versión local ya tiene más información que la remota. Pero igualmente copia la dirección SSH que está allí indicada (<code>git@github.com:usuario/repositorio</code>) y vuelve al terminal.</p>
 <p>Desde el terminal, estando en la carpeta de trabajo, puedes vincular tu repositorio local al remoto mediante una orden como esta:</p>
-<pre><code>git remote add origin https://github.com/usuario/repositorio.git</code></pre>
-<p>pero usando la dirección URL de tu repositorio, que has copiado antes. La palabra “origin” identificará el remoto en tu repositorio local. Podrías haberle dado cualquier otro nombre. Pero “origin” es un estándar muy aceptado.</p>
-</section>
-<section id="enviar-tu-trabajo-al-remoto" class="level1">
-<h1>Enviar tu trabajo al remoto</h1>
+<pre><code>git remote add origin git@github.com:usuario/repositorio</code></pre>
+<p>pero usando la dirección SSH de <em>tu</em> repositorio, que has copiado antes. La palabra “origin” identificará el remoto en tu repositorio local. Podrías haberle dado cualquier otro nombre. Pero “origin” es un estándar muy aceptado. A continuación, puedes enviar tu trabajo al repositorio remoto mediante esta orden:</p>
 <pre><code>git push -u origin soca</code></pre>
 <p>Con eso le estarías diciendo a Git que envíe el estado actual de tu rama local a la rama “soca” del remoto “origin”, y que además establezca esa rama remota como asociada por defecto a tu rama local. Puedes darle otro nombre a la rama remota, si lo prefieres.</p>
 <p>El hecho es que Git te permite tener varias ramas (versiones) de tu carpeta de trabajo. Y también varios remotos. Una vez que una rama remota está designada como “aguas-arriba” de una rama local, enviar actualizaciones al remoto es más fácil:</p>
@@ -2269,6 +2272,7 @@ data/
 <h1>Traer actualizaciones del remoto a la carpeta local</h1>
 <p>Una vez la rama local está configurada para prestar atención a los cambios que pueden haber aparecido en una rama remota, al ejecutar <code>git pull</code>, automáticamente Git intentará implementar en la carpeta local cualquier modificación que se haya producido en la rama remota.</p>
 <p>El comando <code>git pull</code> es una combinación de <code>git fetch</code> y <code>git merge</code>, que significan: “echa un vistazo al estado de la rama remota” y “fusiona la rama remota con la local”, respectivamente. Después de <code>git fetch</code>, puede comprobar si ha habido cambios en el remoto con <code>git status</code>.</p>
+<p>Cada vez que git se comunique con el remoto en Github, tu ordenador te pedirá la contraseña con la que has protegido la llave privada. Se le puede decir al ordenador que recuerde la contraseña y no te la pida cada vez, pero este guión no da para más.</p>
 </section>
 
 
