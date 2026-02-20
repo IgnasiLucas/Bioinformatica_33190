@@ -1,10 +1,15 @@
 ---
-title: "Bases de datos"
+title: "Datos"
 format:
    revealjs:
       embed-resources: true
       scrollable: true
 ---
+## Objetivos
+
+- Por qué no usar hojas de cálculo.
+- Marcos de datos ordenados.
+- Otros formatos: JSON y YAML.
 
 ## Hojas de cálculo
 Motivos para NO usarlas:
@@ -405,6 +410,4 @@ format:
 
 Usado bastante en archivos de configuración. Pares nombre-valor con estructura
 jerárquica.
-
-
 
