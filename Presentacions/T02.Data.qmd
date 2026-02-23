@@ -1,5 +1,5 @@
 ---
-title: "Datos"
+title: "Tema 2. Datos"
 format:
    revealjs:
       embed-resources: true

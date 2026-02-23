@@ -1,0 +1,44 @@
+---
+title: "Tema 3. Bases de datos públicas"
+format:
+   revealjs:
+      embed-resources: true
+      scrollable: true
+---
+
+## Objetivos
+
+1. Conocer la base de datos ENA y su API
+2. Búsqueda programática en ENA.
+3. Base de datos de taxonomia de NCBI.
+4. Bases de datos secundarias: Uniprot i Interpro.
+
+## Los principios [FAIR](https://www.go-fair.org/fair-principles/)
+Los datos y recursos digitales científicos deberían ser:
+
+- **F**áciles de encontrar.
+- **A**ccesibles.
+- **I**nteroperables.
+- **R**eutilizables.
+
+## *International Nucleotide Sequence Database Collaboration* 
+
+ | Tipo de datos | [ROIS-NIG](https://www.nig.ac.jp/nig/) | [EMBL-EBI](https://www.ebi.ac.uk/) | [NLM-NCBI](https://www.ncbi.nlm.nih.gov/) |
+ | ------------- | ------------ | ------------ | ------------ |
+ | Lecturas de secuenciación masiva | [SRA](https://www.ddbj.nig.ac.jp/dra/index-e.html) | [ENA](http://www.ebi.ac.uk/ena/about/formats) | [SRA](http://www.ncbi.nlm.nih.gov/sra/) |
+ | Secuencias ensambladas | [DDBJ](https://www.ddbj.nig.ac.jp/ddbj/index-e.html) | [ENA](http://www.ebi.ac.uk/ena/about/formats) | [GenBank](http://www.ncbi.nlm.nih.gov/genbank/) |
+ | Muestras biológicas | [BioSample](https://www.ddbj.nig.ac.jp/biosample/index-e.html) | [ENA](http://www.ebi.ac.uk/ena/about/formats) | [BioSample](http://www.ncbi.nlm.nih.gov/biosample/) |
+ | Estudios científicos | [BioProject](https://www.ddbj.nig.ac.jp/bioproject/index-e.html) | [ENA](http://www.ebi.ac.uk/ena/about/formats) | [BioProject](http://www.ncbi.nlm.nih.gov/bioproject/) |
+ 
+## European Nucleotide Archive (ENA)
+
+  "ENA is an open, supported platform for the management, sharing, integration, archiving and dissemination of sequence data"
+
+[Página principal](https://www.ebi.ac.uk/ena/browser/home)
+
+[Tutoriales y guías](https://www.ebi.ac.uk/ena/browser/guides)
+
+## Desafíos
+
+1. ¿Qué centros de investigación han secuenciado más muestras de neandertales?
+2. 
