@@ -1,0 +1,135 @@
+---
+title: "Preparació de les dades"
+author: "José Ignacio Lucas Lledó"
+format: html
+---
+
+## Triar l'organisme
+Vull obtenir un parell d'arxius FASTQ i el seu genoma de referència, per determinar
+quines lectures no troben homologia al genoma del qual suposadament provenen. Triaré
+algun àfid, amb l'esperança de què entre els fragments d'ADN de l'animal es troben
+també fragments d'ADN de la planta de la qual s'alimenta o dels bacteris que allotja.
+
+```{r}
+library(curl)
+portal <- 'https://www.ebi.ac.uk/ena/portal/api/search?'
+result <- 'result=assembly&'
+query  <- 'query=tax_tree(27482)&'
+fields <- 'fields=accession,scientific_name,tax_id,base_count,last_updated'
+aphids <- read.table(paste0(portal, result, query, fields),
+                     sep = '\t', header = TRUE)
+# Molts ensamblatges són molt petits, probablement només mitocondrials
+plot(density(aphids$base_count, bw = 'SJ'))
+abline(v=2.8e+08, col = 'orange', lty = 2)
+abline(v=4.5e+08, col = 'red', lty = 2)
+aphids <- aphids[aphids$base_count >= 2.8e+08 & aphids$base_count <= 4.5e+08, ]
+
+result <- 'result=read_run&'
+query  <- URLencode('query=tax_tree(27482) AND library_strategy="wgs"&')
+fields <- 'fields=run_accession,tax_id,scientific_name,fastq_bytes,fastq_ftp,first_public'
+reads  <- read.table(paste0(portal, result, query, fields),
+                     sep = '\t', header = TRUE)
+# Només cal considerar les dades d'espècies per a les quals tenim genoma de referència
+reads <- reads[reads$tax_id %in% aphids$tax_id, ]
+
+# Mirem les espècies menys seqüenciades:
+t <- table(reads$scientific_name)
+reads <- reads[reads$scientific_name %in% names(t[t < 5]), ]
+
+# fastq_bytes inclou sovint dos números separats per ";", que cal sumar.
+reads$fastq_bytes <- sapply(
+   reads$fastq_bytes,
+   function(x) sum(as.numeric(unlist(strsplit(x, ';'))))
+)
+
+# Vull descarregar entre 100 i 500 Mb
+reads <- reads[reads$fastq_bytes >= 100000000 & reads$fastq_bytes <= 500000000, ]
+
+# Triaré les dades més recents
+reads$first_public <- as.Date(reads$first_public, '%Y-%m-%d')
+reads <- reads[which.max(reads$first_public),]
+# Tot i ser una única línia de "reads", pot especificar més d'un arxiu FASTQ,
+# separats per ";". Guardaré els seus noms en un arxiu de text, que cal buidar.
+if (file.exists('ftq.txt')) file.remove('ftq.txt')
+devnull <- lapply(
+   strsplit(reads$fastq_ftp, ';'),
+   function(x) {
+      if (! file.exists(basename(x))) curl_download(paste0('https://', x), basename(x))
+      cat(basename(x), file = 'ftq.txt', append = TRUE)
+   }
+)
+refaccession <- aphids[aphids$tax_id == reads[1, 'tax_id'], 'accession']
+if (! file.exists(paste0(refaccession, '.fa'))){
+   curl_download(paste0('https://www.ebi.ac.uk/ena/browser/api/fasta/',
+                        refaccession), paste0(refaccession, '.fa'))
+}
+
+# Per passar informació del bloc de R al bloc de Bash, necessite arxius:
+cat(paste0(refaccession, '.fa'), file = 'ref.txt')
+```
+
+## Mapatge
+
+```{bash}
+REF=$(cat ref.txt)
+
+# En 'ftq.txt' estan els noms dels arxius FASTQ. Si tenen "_1" o "_2", són lectures
+# aparellades i caldria mapar-les com a tals. Si no, són úniques. Si hi haguera
+# més d'un parell d'arxius, maparé només el primer.
+
+FIRST=$(grep _1 ftq.txt | head -n 1)
+SECND=$(grep _2 ftq.txt | head -n 1)
+SINGL=$(grep -v _[12] ftq.txt | head -n 1)
+
+if [ ! -e unmapped.fa ]; then
+   if [ ! -e $REF.bwt ]; then
+      bwa index $REF 1> index.log 2> index.err
+   fi
+   if [ ! -z $FIRST ]; then
+      bwa mem $REF $FIRST $SECND | \
+      samtools view -b -f 12 | \
+      samtools fasta -N -o unmapped.fa
+   fi
+   if [ ! -z $SINGL ]; then
+      bwa mem $REF $SINGL | \
+      samtools view -b -f 4 | \
+      samtools fasta >> unmapped.fa
+   fi
+fi
+```
+
+```{r}
+#| message: false
+library('Biostrings')
+nomap <- readDNAStringSet('unmapped.fa')
+plot(ecdf(width(nomap)))
+```
+
+Utilitzarem només lectures d'almenys 200 bases. Intentarem eliminar les de baixa
+complexitat amb `vsearch`, aplicant l'algoritme DUST. El programa `vsearch` permet
+també des-replicar l'arxiu. És a dir, eliminar còpies (parcials o completes)
+d'altres seqüències.
+
+```{bash}
+if [ ! -e queries.fa ]; then
+   vsearch --derep_prefix unmapped.fa --minseqlength 200 --output - | \
+   vsearch --fastx_mask - --hardmask --fastaout - | \
+   vsearch --fastx_filter - --fastq_maxns 1 --fastaout queries.fa --fasta_width 0
+fi
+```
+
+Com hi ha massa seqüències, les repartiré en diferents arxius. Com que abans he
+utilitzat `--fasta_width 0`, sé que cada seqüència ocupa dues línies en l'arxiu
+`queries.fa`. Per tant, puc utilitzar `split` per repartir les línies d'aquest
+arxiu en múltiples arxius, sempre que el nombre de línies per arxiu siga parell,
+com ho és per defecte (1000).
+
+```{bash}
+if [ ! -d queries ]; then mkdir queries; fi
+if [ ! -e queries/q00.fa ]; then
+   split -d --additional-suffix=.fa queries.fa queries/q 
+fi
+```
+
+Així i tot, cada arxiu té 500 seqüències, que poden tardar bastant en ser enviades
+al BLASTN remot de NCBI. 

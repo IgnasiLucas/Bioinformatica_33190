@@ -25,19 +25,31 @@ ejecutables más recientes
 Para MacOS, podéis consultar las instrucciones
 [en este enlace](https://www.ncbi.nlm.nih.gov/books/NBK569861/)
 
+Los ejecutables de BLAST son programas independientes de R, y deben ejecutarse
+en un entorno de Bash. Para programar su ejecución desde este mismo documento,
+usaremos bloques de código de Bash. Si queréis probar el funcionamiento de los
+ejecutables antes de dejar constancia en el cuaderno de cómo se usan, podéis
+hacerlo en el terminal, pero no en la consola de R. La ayuda completa de cada
+programa también puede consultarse en un terminal de Bash, por ejemplo con la
+orden `blastn -help`.
+
 # Objetivos
-
-1. Programar algunas búsquedas remotas básicas de BLAST.
-2. Conocer el formato tabular de los resultados de BLAST.
-3. Crear una base de datos de BLAST local.
-
-# Datos
 BLAST ejecuta alineamientos locales entre una secuencia "problema" o *query*,
 generalmente no muy larga, y un conjunto grande de secuencias (la base de datos)
 entre las que esperamos encontrar alguna secuencia homóloga a la *query*. Cada
 secuencia de la base de datos que pueda alinearse con la *query* se la llama
-*subject* en el alineamiento. 
+*subject* en el alineamiento. Los objetivos de esta práctica son:
 
-En primer lugar, usaremos como *queries* algunas lecturas cortas, procedentes de
-un archivo FASTQ, que no pudieron ser mapeadas al genoma de referencia de la especie
+1. Determinar el origen de las lecturas que no pudieron ser mapeadas a su genoma
+   de referencia, usando BLAST *remoto*.
+2. Conocer el formato tabular de los resultados de BLAST.
+3. Crear una base de datos de BLAST local y ejecutar búsquedas locales.
+
+# Datos
+En el aula virtual encontraréis una carpeta comprimida con varios archivos FASTA.
+Todos ellos contienen lecturas no emparejadas de ADN genómico del insecto
+*Aphis aurantii*, secuenciadas con Ion Torrent en 2023
+([SRR13258790](https://www.ebi.ac.uk/ena/browser/view/SRR13258790)).
+Concretamente son las lecturas que no han podido mapearse al genoma de referencia
+([GCA_055615905](https://www.ebi.ac.uk/ena/browser/view/GCA_055615905)).
 
