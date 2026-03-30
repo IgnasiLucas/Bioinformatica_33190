@@ -35,12 +35,13 @@ denisovanos (de hace entre 30000 y 110000 años), 19 humanos neandertales
 Encontréis también el archivo en el aula virtual, con el nombre `mtDNA.fasta`,
 por si el enlace no funciona.
 
-# Ejercicio 1
+# Ejercicio
 ## Leer los datos en R
+Debes haber guardado el archivo `mtDNA.fasta` en la carpeta de datos.
 
 ```{r}
 library(phangorn)
-mtdna <- read.phyDat('mtDNA.fasta', format = 'fasta')
+mtdna <- read.phyDat('../../data/mtDNA.fasta', format = 'fasta')
 ```
 
 Después de ejecutar el bloque anterior, habrás cargado los datos en el objeto
@@ -87,6 +88,7 @@ mt_upgma <- upgma(distancias)
 :::
 
 ## Enraizar
+### Escogiendo el nodo
 El árbol `mt_nj` no está enraizado (puedes comprobarlo con `is.rooted()`). Tenemos
 un par de opciones para enraizarlo. Una opción es `root()`, función en la que
 debemos especificar o bien el *outgroup* o bien el **nodo** interno en el que queremos
@@ -99,6 +101,7 @@ ancestro de los humanos. Por tanto:
 mt_nj_rooted <- root(mt_nj, node = 75)
 ```
 
+### Con un *outgroup*
 La numeración de los nodos internos siempre sigue a la de las hojas (o puntas) del
 árbol. El orden es caprichoso y después de enraizar, lo que era el 75 en `mt_nj`
 ahora será el 43 en `mt_nj_rooted`. Para garantizar que el enraizado no depende
@@ -109,6 +112,7 @@ de la numeración, es más seguro usar el nombre del *outgroup*:
 mt_nj_rooted <- root(mt_nj, outgroup = 'G.gorilla_D38114')
 ```
 
+### En el punto medio
 Al representar el árbol enraizado (`plot(mt_nj_rooted)`) verás que no todas las
 hojas del árbol están a la misma altura. El punto exacto en el que se sitúa la
 raíz en una rama es arbitrario y `root()` no se esfuerza mucho en intentar que el
@@ -125,6 +129,45 @@ plot(mt_nj_rooted, align.tip.label = TRUE, main = 'NJ, enraizado en punto medio'
 nodelabels(frame = 'none')
 add.scale.bar()
 ```
+
+### Con datación de hojas
+El enraizado en punto medio asume que todas las hojas son contemporáneas, como
+sucede en muchos casos. Pero, en nuestros datos tenemos secuencias contemporáneas
+y también arcaicas. En el apéndice encontrarás referencias sobre las edades estimadas
+de esas secuencias. Conociendo estas edades, podemos aplicar un método de enraizado
+llamado *root-to-tip regression*, mediante la función `rtt()` de `ape`.
+
+Lo primero es crear un vector de *fechas* (o edades) para todas las hojas del árbol.
+Podemos expressar las edades de las secuencias arcaicas como el número (negativo)
+de años que hace que dejaron de evolucionar. Para saber el orden en que debemos
+especificar las edades, podemos usar `mt_nj$tip.label`.
+
+```{r}
+fechas <- c(0, 0, 0, 0, 0, 0, 0, 0, 0,
+            -400000,
+            -39000, -50000, -110000, -110000,
+            -39820, -40096, -38515, -38310, -39000, -40000, -41210,
+            -42430, -42540, -43230, -43780, -44290, -44770, -49000,
+            -50000, -82752, -65000, -122287, -110450,
+            0, 0, 0, 0, 0, 0, 0, 0, 0)
+# Observa que hay que asignar el resultado de setNames() a "fechas"
+fechas <- setNames(fechas, mt_nj$tip.label)
+fechas
+```
+
+A continuación se escoge la posición de la raíz que optimiza la regresión entre
+distancia de raíz a puntas y edades de las puntas [@Rambaut2016].
+
+```{r}
+mt_nj_rtt <- rtt(mt_nj, tip.dates = fechas, objective = 'rms')
+```
+
+:::{.callout-note icon=false}
+- ¿Se corresponden bien las distancias evolutivas estimadas con las dataciones?
+- ¿Qué secuencias crees que se ajustan menos a su supuesta edad?
+- ¿Qué razones puede haber para que la edad de una secuencia no se corresponda
+  con la cantidad de cambios que ha acumulado?
+:::
 
 ## Distancias
 Si has creado el objeto `distancias` antes, puedes usarlo para conocer la cantidad
@@ -160,6 +203,21 @@ mean(distMat[modernos, neandertales])
 - Calcula las distancias medias entre todos los grupos.
 - ¿Cuántas veces mayor es la distancia entre humanos y chimpancés que entre
    humanos y neandertales?
+- ¿Cómo calcularías la distancia media entre dos secuencias de humanos modernos?
+
+```{r}
+#| code-fold: true
+#| eval: false
+# La submatriz siguiente contiene ceros en la diagonal. Si queremos excluir
+# del cálculo de la media las distancias entre cada secuencia consigo misma,
+# habrá que tenerlo en cuenta:
+distMat[modernos, modernos]
+
+# Por ejemplo:
+z <- distMat[modernos, modernos]
+z[z == 0] <- NA
+mean(z, na.rm = TRUE)
+```
 :::
 
 ```{r}
@@ -198,7 +256,57 @@ longitudes que separan las hojas. Las podemos obtener con la función `copheneti
 distCofen <- cophenetic(mt_nj_rooted)
 ```
 
-## Escoger el modelo de evolución
+## Limpieza o filtrado del alineamiento
+Las distancias crudas, como número de diferencias, nos pueden informar de la
+presencia de pares de secuencias idénticas. Podríamos dejarlas, pero algunos de
+los métodos que usaremos a continuación pueden generar errores, por ejemplo
+cuando dos secuencias idénticas se supone que pertenecen a épocas diferentes.
+Eliminar redundancias podría acelerar los cálculos.
+
+```{r}
+crudas <- dist.dna(as.DNAbin(mtdna), model = 'raw')
+crudas <- as.matrix(crudas)
+identicas <- which(crudas == 0 & lower.tri(crudas), arr.ind = TRUE)
+# posiciones de la semimatriz inferior donde las distancias son 0:
+identicas
+repetidas <- unique(c(identicas[, 'row'], identicas[, 'col']))
+heatmap(crudas[repetidas, repetidas], cexRow = 0.7, cexCol = 0.7)
+```
+
+Así pues, las secuencias de Neandertales KX198085, KX198086 y MG025540 (todas
+ellas con una edad estimada de unos 40000 años) son idénticas entre ellas; y
+las secuencias, también Neandertales FM865407, KX198082, KX198088 y KX198083
+son idénticas entre ellas. Bueno, en realidad, la comparación ignora las
+posiciones en las que una secuencia contiene ambigüedades (Ns).
+Dejaremos sólo una de cada grupo: MG025540 y FM865407,
+que son las que menos ambigüedades tienen en la secuencia. Como no conocemos
+una función que elimine secuencias de un objeto `phyDat`, necesitamos especificar
+aquellas con las que nos queremos quedar. Podríamos usar la función `subset()`
+o bien la función `[`, tal como la aplicaríamos a una matriz.
+También existe una función `unique()`, pero si la usamos
+perdemos control sobre qué representantes conservamos de cada grupo de secuencias
+*idénticas*.
+
+```{r}
+# La exclamación ("!") invierte el valor lógico de lo que la sigue:
+mtdna37 <- mtdna[! grepl('(KX198085|KX198086|KX198082|KX198088|KX198083)',
+                         names(mtdna)), ]
+mtdna37
+```
+
+:::{.callout-note icon=false}
+¿Serías capaz de crear otro conjunto de datos, `mtdna28`, que sólo contenga
+secuencias del género *Homo*?
+:::
+
+Por otra parte, la secuencia del gorila no nos hace falta: es demasiado
+divergente y puede haber evolucionado a un ritmo diferente.
+
+```{r}
+mtdna36 <- mtdna37[! startsWith(names(mtdna37), 'G.gorilla'),]
+```
+
+## Escoger el modelo de evolución molecular
 Las secuencias mitocondriales proporcionan suficiente información para determinar
 con confianza la topología del árbol que relaciona los grupos principales. Sólo
 algunas regiones de árbol, como la relación exacta entre los miembros de un mismo
@@ -211,7 +319,7 @@ puede usarse como un simple marco de datos.
 ```{r}
 #| cache: true
 #| results: asis
-modelos <- modelTest(mtdna, tree = mt_nj, control = pml.control(trace = 0))
+modelos <- modelTest(mtdna36, control = pml.control(trace = 0))
 head(modelos)
 ```
 
@@ -220,15 +328,16 @@ puedes pedirle que los use:
 
 ```{r}
 #| eval: false
-modelos <- modelTest(mtdna, control = pml.control(trace = 0),
-                     multicore = TRUE, mc.cores = 2)
+modelos <- modelTest(mtdna36, control = pml.control(trace = 0),
+                     multicore = TRUE, mc.cores = 4)
 ```
 
 Lo que hace `modelTest()` es calcular la verosimilitud de cada modelo sobre un
 mismo árbol. Al hacerlo, debe optimizar los parámetros de cada modelo, pero no
-optimiza el árbol. Sería una pérdida de tiempo no guardar los parámetros optimizados,
-que son un excelente punto de partida para la búsqueda del árbol más verosímil.
-Podemos extraer cualquiera de los modelos comparados con la función `as.pml()`:
+optimiza el árbol. Sería una pérdida de tiempo no guardar los parámetros
+optimizados, que son un excelente punto de partida para la búsqueda del árbol
+más verosímil. Podemos extraer cualquiera de los modelos comparados con la
+función `as.pml()`:
 
 ```{r}
 fit <- as.pml(modelos, 'GTR+G(4)+I')
@@ -244,14 +353,18 @@ el que el modelo más adecuado no es necesariamente el más verosímil es que la
 verosimilitud siempre será mayor para un modelo más complejo (con más parámetros),
 porque tiene más grados de libertad para ajustarse a los datos. Los criterios de
 selección penalizan los modelos con más parámetros para hacer la comparación más
-justa. El peligro de usar un modelo con demasiados parámetros es el de *sobreajustar*
-el modelo, es decir, tomar el ruído natural de los datos como algo que el modelo
-también debe explicar.
+justa. El peligro de usar un modelo con demasiados parámetros es el de
+*sobreajustar* el modelo, es decir, tomar el ruído natural de los datos como
+algo que el modelo también debe explicar.
 
 ```{r}
 fit <- as.pml(modelos, 'BIC')
 fit
 ```
+
+:::{.callout-note icon=false}
+¿Cuál es el mejor modelo para secuencias sólo del género *Homo*?
+:::
 
 ## Máxima verosimilitud
 Una vez hemos seleccionado el modelo, podemos optimizar la topología del árbol,
@@ -267,11 +380,12 @@ de donde toma automáticamente el alineamiento y el modelo con un valor de BIC
 
 
 ```{r}
+#| cache: true
 mt_ml <- pml_bb(modelos,
                 control = pml.control(trace = 0))
 ```
 
-El objeto `mt_ml`, de clase `pml`, contiene el árbol (`mt_ml$tree`), además de los
+El objeto `mt_ml`, de clase `pml`, *contiene* el árbol (`mt_ml$tree`), además de los
 parámetros optimizados del modelo. Antes de ver el árbol, echémosle un vistazo al
 modelo ajustado, para ver cuánto se aparta del que habíamos ajustado con `modelTest()`.
 
@@ -282,7 +396,7 @@ mt_ml
 Por defecto, `pml_bb()` usa un método de reordenación del árbol denominado
 "stochastic", genera un árbol no enraizado y 1000 pseudo-réplicas de *bootstrap*.
 Al pedirle la representación gráfica, añade automáticamente los valores de
-soporte de *bootstrap* y alinea las hojas como si estuviera enraizado:
+soporte de *bootstrap* y lo enraiza en el punto medio:
 
 ```{r}
 #| fig-width: 12
@@ -290,75 +404,130 @@ soporte de *bootstrap* y alinea las hojas como si estuviera enraizado:
 plot(mt_ml, align.tip.label = TRUE, main = 'Árbol más verosímil')
 ```
 
-```{r}
-mt_ml_tree <- midpoint(mt_ml$tree)
-plot(mt_ml_tree, show.tip.label = FALSE)
-nodelabels(frame = 'none')
-```
-
-Para ver mejor los detalles, podemos separar los homininos del resto:
-
-```{r}
-# Observa que el objeto Phylo es mt_ml$tree, no mt_ml.
-homo <- extract.clade(mt_ml_tree, node = 44)
-plot(homo)
-```
-
+:::{.callout-note}
+- El árbol no está enraizado. Como las secuencias no son todas de la misma época,
+  utiliza `rtt()` para situar la raíz en el punto más compatible con la hipótesis
+  de reloj molecular.
+- ¿Podrías obtener el árbol más verosímil para el subconjunto de secuencias del
+  género *Homo*?
+:::
 
 ## Con datación de puntas (*tip dating*)
-Sabiendo que algunas secuencias dejaron de evolucionar hace tiempo (mira el apéndice),
-podemos intentar calibrar las tasas de sustitución con esta información. Para ello
-necesitamos un vector de fechas con nombres, donde cada fecha lleva el nombre de
-la secuencia a la que corresponde. Podemos dar el valor 0 a todas las secuencias
-contemporáneas y valores negativos, en años, a las secuencias arcaicas.
+El método de máxima verosimilitud genera árboles no enraizados por
+defecto, como consecuencia de la reversibilidad temporal. En esos árboles
+las longitudes de ramas són el número esperado de sustituciones por sitio,
+sin ninguna referencia explícita al tiempo. Pero cuando no todas las
+secuencias son *isocrónicas*, podemos usar la información de sus edades
+para constreñir la búsqueda del árbol más verosímil. Al usar las edades
+de las secuencias, estamos asumiendo un reloj molecular: una relación
+constante entre el tiempo y el número esperado de sustituciones acumuladas.
+Entonces, la posición de la raíz afecta la verosimilitud y el resultado
+es un árbol enraizado.
 
 ```{r}
-fechas <- c(0, 0, 0, 0, 0, 0, 0, 0, 0,
-              -400000,
-              -39000, -50000, -110000, -110000,
-              -39820, -40096, -38515, -38310, -39000, -40000, -41210,
-              -42430, -42540, -43230, -43780, -44290, -44770, -49000,
-              -50000, -82752, -65000, -122287, -110450,
-              0, 0, 0, 0, 0, 0, 0, 0, 0)
-setNames(fechas, names(mtdna))
+#| cache: true
+#| fig-width: 12
+#| fig-height: 12
+
+# Habíamos creado el vector "fechas", pero incluye al gorila.
+fechas36 <- fechas[names(mtdna36)]
+mt_ml_clock <- pml_bb(modelos,
+                      method = 'tipdated',
+                      tip.dates = fechas36, rearrangement = 'NNI',
+                      control = pml.control(trace = 0))
+
+mt_ml_clock
+plot(mt_ml_clock, align.tip.label = TRUE)
+axisPhylo()
 ```
 
-```{r}
-fit_td <- pml_bb(mtdna, model = 'GTR+G(4)+I', method = 'tipdated',
-                 tree = enraizado,
-                 tip.dates = fechas, rearrangement = 'NNI',
-                 control = pml.control(trace = 0))
-```
+:::{.callout-note icon=false}
+- ¿Cuál es la tasa de mutación global estimada?
+- ¿En qué unidades està expresada?
+- ¿Cuánto tiempo dice el árbol que divergimos de los chimpancés? (Puedes usar
+  la función `cophenetic()`, puesto que en el árbol datado las longitudes de
+  las ramas están en años).
+:::
+
+## Estimación de edades
+Las edades de las secuencias aportan información sobre el reloj molecular en
+la medida en que se echen de menos las mutaciones que dejaron de acumularse
+en las secuencias arcaicas. Esta información puede ser muy útil en filogenias de virus de
+ARN muestreados a lo largo de los años. Pero en una filogenia de millones de
+años, la poca información de las puntas no es suficiente para datar con exactitud
+las divergencias antiguas. Hay otras estrategias. Podríamos fijar una tasa de
+mutación conocida y estimar sólo los otros parámetros. Alternativamente,
+podemos dar la fecha de algún nodo interno para ayudar a calibrar el reloj.
+Por ejemplo, supondremos que el ancestro común más reciente entre humanos y
+chimpancés vivió hace 6.5 millones de años.
+
+Esta información se la proporcionamos a la función `estimate.dates()` mediante
+un vector de fechas o edades de las secuencias que incluya no sólo las hojas
+del árbol sino también los nodos internos, o al menos aquellos de los que conocemos
+la edad. El vector debe tener tantos componentes como nodos internos y hojas tiene
+el árbol, con valores `NA` en las edades desconocidas. Para saber en qué orden
+están numerados los nodos, podemos ejecutar lo siguiente:
 
 ```{r}
-plot(fit_td)
+#| fig-width: 20
+#| fig-height: 12
+mt_ml_rtt <- rtt(mt_ml$tree, fechas36)
+plot(mt_ml_rtt, align.tip.label = TRUE)
+nodelabels()
 ```
+
+Como suele suceder, la raíz (en los árboles enraizados) es el nodo que sigue a
+las hojas, es decir el 37, porque los 36 primeros números son las puntas.
+
+```{r}
+#| fig-width: 12
+#| fig-height: 12
+fechasNodos <- c(fechas36, -6500000, rep(NA, 34))
+fechasEstimadas <- estimate.dates(mt_ml_rtt, fechasNodos)
+tasaEstimada <- estimate.mu(mt_ml_rtt, fechasNodos)
+# Creamos una copia del árbol...
+mt_ml_años <- mt_ml_rtt
+# ...y actualizamos las longitudes de sus ramas como la resta
+# entre las fechas de los nodos que conectan:
+mt_ml_años$edge.length <- fechasEstimadas[mt_ml_años$edge[,2]] -
+                          fechasEstimadas[mt_ml_años$edge[,1]]
+plot(mt_ml_años)
+axisPhylo()
+tasaEstimada
+```
+
+Al forzar que la raíz esté a unos 6.5 millones de años, la
+tasa de mutación estimada disminuye. Es habitual que las tasas
+parezcan diferentes a diferentes profundidades del árbol, o entre
+linajes diferentes.
 
 # Apéndice
 
- |   Especie         |  Nº de acceso   |    Edad (años) |   Referencia          |  Nombre              |
- | ----------------- | --------------- | -------------- | --------------------- | -------------------- |
- | H.heidelbergensis |     NC_023100   |     400.000    | Meyer et al. 2014     | -                    |
- | H.s.denisova      |     NC_013993   |  30.000-48.000 | Krause et al. 2010    | Denisova 3 (falange) |
- | H.s.denisova      |     FR695060    |     >50.000?   | Reich et al. 2010     | Denisova 4 (molar)   |
- | H.s.denisova      |     KX663333    |     >100.000   | Slon et al. 2017      | Denisova 2 (dent)    |
- | H.s.denisova      |     KT780370    |     110.000?   | Sawyer et al. 2015    | Denisova 8 (molar)   |
- | H.s.neandertal    |     KX198085    |  32.697-46.942 | Posth et al. 2017     | GoyetQ374a-1         |
- | H.s.neandertal    |     KX198086    |  33.134-47.057 | Posth et al. 2017     | GoyetQ305-7          |
- | H.s.neandertal    |     MG025538    |  37.880-39.150 | Hajdinjak et al. 2018 | Spy-94a              |
- | H.s.neandertal    |     NC_011137   |      38.310    | Green et al. 2008     | Vindija 33.16        |
- | H.s.neandertal    |     FM865409    |      39.000    | Briggs et al. 2009    | Sidron 1253          |
- | H.s.neandertal    |     FM865407    |      40.000    | Briggs et al. 2009    | Feldhofer 1          |
- | H.s.neandertal    |     KX198088    |  40.620-41.800 | Rougier et al. 2016   | GoyetQ57-2           |
- | H.s.neandertal    |     KX198083    |  41.960-42.900 | Rougier et al. 2016   | GoyetQ57-3           |
- | H.s.neandertal    |     MG025540    |  42.080-43.000 | Hajdinjak et al. 2018 | GoyetQ56-1           |
- | H.s.neandertal    |     MG025536    |  42.720-43.740 | Hajdinjak et al. 2018 | Les Cottés Z4-1514   |
- | H.s.neandertal    |     MG025537    |  42.960-44.600 | Hajdinjak et al. 2018 | Mezmaiskaya2         |
- | H.s.neandertal    |     KX198087    |  43.430-45.150 | Rougier et al. 2016   | GoyetQ305-4          |
- | H.s.neandertal    |     KX198082    |  43.910-45.630 | Rougier et al. 2016   | GoyetQ57-1           |
- | H.s.neandertal    |     FM865408    |      49.000    | Briggs et al. 2009    | Feldhofer 2          |
- | H.s.neandertal    |     KU131206    |      >50.000   | Brown et al. 2016     | DC1227               |
- | H.s.neandertal    |     KF982693    | 56.213-109.290 | Posth et al. 2017     | Okladnikov2          |
- | H.s.neandertal    |     FM865411    |  60.000-70.000 | Briggs et al. 2009    | Mezmaiskaya1         |
- | H.s.neandertal    |     KY751400    | 62.013-182.560 | Posth et al. 2017     | HST                  |
- | H.s.neandertal    |     MK033602    | 90.900-130.000 | Douka et al. 2019     | Denisova15           |
+ |   Especie         |  Nº de acceso   |    Edad (años) |   Referencia   |  Nombre              |
+ | ----------------- | --------------- | -------------- | -------------- | -------------------- |
+ | H.heidelbergensis |     NC_023100   |     400.000    | @Meyer2013     | -                    |
+ | H.s.denisova      |     NC_013993   |  30.000-48.000 | @Krause2010    | Denisova 3 (falange) |
+ | H.s.denisova      |     FR695060    |     >50.000?   | @Reich2010     | Denisova 4 (molar)   |
+ | H.s.denisova      |     KX663333    |     >100.000   | @Slon2017      | Denisova 2 (dent)    |
+ | H.s.denisova      |     KT780370    |     110.000?   | @Sawyer2015    | Denisova 8 (molar)   |
+ | H.s.neandertal    |     KX198085    |  32.697-46.942 | @Posth2017     | GoyetQ374a-1         |
+ | H.s.neandertal    |     KX198086    |  33.134-47.057 | @Posth2017     | GoyetQ305-7          |
+ | H.s.neandertal    |     MG025538    |  37.880-39.150 | @Hajdinjak2018 | Spy-94a              |
+ | H.s.neandertal    |     NC_011137   |      38.310    | @Green2008     | Vindija 33.16        |
+ | H.s.neandertal    |     FM865409    |      39.000    | @Briggs2009    | Sidron 1253          |
+ | H.s.neandertal    |     FM865407    |      40.000    | @Briggs2009    | Feldhofer 1          |
+ | H.s.neandertal    |     KX198088    |  40.620-41.800 | @Rougier2016   | GoyetQ57-2           |
+ | H.s.neandertal    |     KX198083    |  41.960-42.900 | @Rougier2016   | GoyetQ57-3           |
+ | H.s.neandertal    |     MG025540    |  42.080-43.000 | @Hajdinjak2018 | GoyetQ56-1           |
+ | H.s.neandertal    |     MG025536    |  42.720-43.740 | @Hajdinjak2018 | Les Cottés Z4-1514   |
+ | H.s.neandertal    |     MG025537    |  42.960-44.600 | @Hajdinjak2018 | Mezmaiskaya2         |
+ | H.s.neandertal    |     KX198087    |  43.430-45.150 | @Rougier2016   | GoyetQ305-4          |
+ | H.s.neandertal    |     KX198082    |  43.910-45.630 | @Rougier2016   | GoyetQ57-1           |
+ | H.s.neandertal    |     FM865408    |      49.000    | @Briggs2009    | Feldhofer 2          |
+ | H.s.neandertal    |     KU131206    |      >50.000   | @Brown2016     | DC1227               |
+ | H.s.neandertal    |     KF982693    | 56.213-109.290 | @Posth2017     | Okladnikov2          |
+ | H.s.neandertal    |     FM865411    |  60.000-70.000 | @Briggs2009    | Mezmaiskaya1         |
+ | H.s.neandertal    |     KY751400    | 62.013-182.560 | @Posth2017     | HST                  |
+ | H.s.neandertal    |     MK033602    | 90.900-130.000 | @Douka2019     | Denisova15           |
+
+# Referencias
