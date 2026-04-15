@@ -1,0 +1,251 @@
+---
+title: "10. Ensamblaje de genomas"
+format:
+  revealjs:
+    embed-resources: true
+bibliography: ../doc/references.bib
+---
+
+## Objetivos
+- ¿Para qué sirve ensamblar el genoma?
+- ¿Qué datos hacen falta?
+- ¿Cuál es la estrategia básica?
+- ¿Cómo se evalúa la calidad del ensamblaje?
+
+# Introducción
+
+## Contexto
+- Poryectos de secuenciación importantes:
+  - [Earth Biogenome Project](https://www.earthbiogenome.org/)
+  - [Darwin Tree of Life](https://www.darwintreeoflife.org/)
+- Tecnologías de secuenciación mejoradas:
+  - Lecturas ultra-largas de Oxford Nanopore (<100 Kb, Q21)
+  - Lecutras HiFi de PacBio (<25 Kb, Q33)
+  - [Roche SBX?](https://diagnostics.roche.com/global/en/products/product-category/lab-type/sequencing/ngs-next-generation-sequencing-platform.html)
+
+## PacBio HiFi
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/7yYPHatccgw?si=1atmBWOKlnxqLmkG&amp;controls=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+## Definiciones {.smaller}
+
+- **Ensamblaje**: Reconstrucción de la secuencia completa del genoma de *un
+  organismo* mediante la ordenación de las secuencias de fragmentos de ADN.
+- **Cóntigo**: Secuencia contínua que forma parte del ensamblaje.
+- **Supercóntigo** (*scaffold*): Secuencia formada por más de un cóntigo cuando
+  se conoce el orden en el que están ligados, aunque se desconozcan partes de las
+  secuencias entre ellos.
+- **Haplótigo**: Cóntigo que representa un solo haplotipo, cuando el ensamblaje
+  es *dual* o *faseado*.
+- **Ensamblaje dual** o faseado: Ensamblaje en el que se distinguen las secuencias
+  que provienen de cada haplotipo de un organismo diploide (o poliploide). Lo
+  contrario sería un **ensamblaje colapsado**.
+
+# Desafíos del ensamblaje
+
+## Elementos repetitivos
+
+```{r}
+#| echo: false
+library(MetBrewer)
+pal <- met.brewer('Egypt', 4)
+par(mar = c(1, 1, 1, 1))
+plot(c(0, 35), c(0, 13), type = 'n', axes = FALSE, xlab = '', ylab = '')
+arrows(14, 11, 14, 9, lwd = 10, col = 'lightgray')
+arrows(14, 5, 14, 3, lwd = 10, col = 'lightgray')
+segments(1, 12, 7, 12, lwd = 5, col = pal[2])
+segments(22, 12, 28, 12, lwd = 5, col = pal[2])
+arrows(7, 12, 14, 12, col = pal[1], lwd = 5, length = 0.15)
+arrows(14, 12, 22, 12, col = pal[1], lwd = 5, length = 0.15)
+segments(4, 1, 10, 1, lwd = 5, col = pal[2])
+segments(17, 1, 23, 1, lwd = 5, col = pal[2])
+arrows(10, 1, 17, 1, lwd = 5, col = pal[1], length = 0.15)
+segments(
+   c(1, 3, 5, 8, 14, 17, 22),
+   c(8, 7, 6, 8, 7, 6, 8),
+   c(5, 7, 7, 12, 19, 22, 25),
+   c(8, 7, 6, 8, 7, 6, 8),
+   col = pal[c(2, 2, 2, 1, 1, 1, 2)],
+   lwd = 5
+)
+segments(c(7, 20), c(6, 8), c(9, 22), c(6, 8), col = pal[1], lwd = 5)
+text(
+   c(29, 29, 29),
+   c(12, 7, 1),
+   c('Genoma', 'Lecturas', 'Ensamblaje'),
+   cex = 1, pos = 4
+)
+
+```
+
+## Heterocigosidad
+
+```{r}
+#| echo: false
+
+par(mar = c(1, 1, 1, 1))
+plot(c(1, 28), c(0, 13), type = 'n', xlab = '', ylab = '', axes = FALSE)
+segments(1, 12, 28, 12, col = pal[1], lwd = 5)
+segments(1, 11, 28, 11, col = pal[2], lwd = 5)
+arrows(14, 10, 14, 8, lwd = 10, col = 'lightgray')
+arrows(14, 4, 14, 3, lwd = 10, col = 'lightgray')
+u0 <- sort(runif(27, 1, 22))
+u1 <- u0 + 6
+v0 <- runif(27, 5, 7)
+segments(u0, v0, u1, v0,
+         col = pal[c(1, 2, 1, 2, 1, 2, 1)], lwd = 2)
+segments(7, 2, 20, 2, col = pal[1], lwd = 5)
+segments(1, 1, 28, 1, col = pal[2], lwd = 5)
+```
+
+## Poliploidia
+
+```{r}
+#| echo: false
+
+par(mar = c(1, 1, 1, 1))
+plot(c(0, 28), c(0, 13), type = 'n', axes = FALSE, xlab = '', ylab = '')
+arrows(14, 10, 14, 8, lwd = 10, col = 'lightgray')
+arrows(14, 4, 14, 3, lwd = 10, col = 'lightgray')
+segments(
+   c(1, 1, 1, 1),
+   c(11, 11.5, 12, 12.5),
+   c(28, 28, 28, 28),
+   c(11, 11.5, 12, 12.5),
+   col = pal, lwd = 5
+)
+u0 <- sort(runif(25, 1, 22))
+u1 <- u0 + 6
+v0 <- runif(25, 5, 7)
+segments(u0, v0, u1, v0, col = pal, lwd = 2)
+segments(
+   c(1, 7, 16, 22),
+   c(1, 1, 1, 1),
+   c(7, 16, 22, 28),
+   c(1, 1, 1, 1), col = pal, lwd = 5
+)
+```
+
+## Otros desafíos
+
+- Los errores de secuenciación en las lecturas pueden confundirse con la
+  heterocigosidad.
+- La heterocigosidad puede incluir variantes estructurales que introducen
+  ambigüedad en el ensamblaje.
+- El alto contenido en repeticiones exige el uso de lecturas largas.
+- Cuanto mayor es el genoma, mayor esfuerzo de secuenciación necesita.
+- Cuando el organismo es muy pequeño (y no clonal) el ADN de partida será
+  poliploide o demasiado escaso.
+
+# Procedimiento
+
+## Control de calidad
+
+- Sólo lecturas de alta calidad, con bajo contenido de errores.
+- Programas aptos para lecturas largas: fastp, NanoPlot, FiltLong,
+
+## Estimación del tamaño del genoma
+
+```{r}
+#| echo: false
+x <- c(rnorm(8000, 61, 8), rnorm(2000, 30.5, 8),
+       rexp(8000, 1), runif(500, 1, 1000))
+h <- c(rnorm(10000, 61, 8), rexp(8000, 1), runif(500, 1, 1000))
+plot(c(0, 140), c(0, 2000), type = 'n', axes = FALSE,
+     xlab = 'Frecuencia del k-mero', ylab = 'Número de k-meros')
+axis(1)
+axis(2)
+d <- density(x, bw = 'SJ')
+e <- density(h, bw = 'SJ')
+d$y <- d$y * 10000
+e$y <- e$y * 10000
+lines(d, col = 'darkred', lwd = 2)
+lines(e, col = 'darkgreen', lty = 2, lwd = 2)
+legend(80, 1500, c('Heterocigoto', 'Homocigoto'), lty = c(1, 2),
+       col = c('darkred', 'darkgreen'))
+```
+
+
+![](imatges/kmers.png)
+
+[@Liao2024]
+
+## Estimación del tamaño del genoma
+
+En un genoma de tamaño $G$ puede haber $G - k + 1$ palabras de longitud $k$.
+Si $G >> k$, puede haber casi $G$ palabras. Entre todas las lecturas de la
+secuenciación del genoma puede haber un gran número $n$ de palabras (o *k-meros*)
+diferentes de longitud $k$, cada uno de los cuales aparece con una frecuencia
+$x_i$. La frecuencia media $C$, es la cobertura media, el número de veces que
+en término medio se ha secuenciado cada nucleótido. Si entre todas las lecturas
+suman una longitud total $N = \sum_{i=1}^nx_i$, el tamaño del genoma debería ser
+$\hat{G} = \frac{N}{C}$.
+
+## Corrección de errores
+
+![](imatges/kmers.png)
+
+## Corrección de errores
+
+Las palabras que aparecen muy pocas veces deben contener errores y pueden
+corregirse por comparación a las palabras que más se les parezcan.
+
+## Grafo de fragmentos
+![](imatges/Myers2005_3.png)
+
+[@Myers2005].
+
+Conectamos cada lectura con aquellas con las que puede alinearse.
+
+## Grafo de fragmentos
+
+![](imatges/Myers2005_1.png)
+
+[@Myers2005]
+
+## Grafo de fragmentos
+
+![](imatges/Nurk2022.jpg){.lightbox width=500px}
+
+[@Nurk2022]
+
+## Procesamiento del grafo
+
+- Simplificación del grafo.
+- Eliminación (o no) de duplicados por heterocigosidad.
+- Convertir los contigs del [grafo](https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md) a FASTA.
+
+## Añadir información adicional
+
+- Datos adicionales
+  - Datos Hi-C.
+  - Mapaje óptico.
+  - *Trio binning*
+- Formación de supercóntigs (*scaffolds*)
+
+## Evaluación del ensamblaje
+
+- Estadísticos de contigüidad:
+  - N50: Longitud del cóntigo más pequeño entre los cóntigos más largos que acumulan
+    el 50% de la longitud total del ensamblaje.
+  - L50: número más pequeño posible de cóntigos que suman al menos el 50% de la
+    longitud del ensamblaje.
+- Contenido génico: BUSCO
+
+##
+
+![](imatges/BUSCO.png)
+
+# Principales programas
+
+## [Hifiasm](https://github.com/chhylp123/hifiasm)
+- Optimizado para lecturas de alta calidad (HiFi) de PacBio.
+
+## [Flye](https://github.com/mikolmogorov/Flye)
+
+## Recursos y referencias
+
+- [rcac-bioinformatics](https://rcac-bioinformatics.github.io/genome-assembly/assembly-evaluation.html)
+- [Genomes on a Tree](https://goat.genomehubs.org/)
+
+
