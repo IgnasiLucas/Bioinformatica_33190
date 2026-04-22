@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Práctica 10. Ensamblaje de genomas</title>
+<title>Práctia 11. Anotación</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -2227,7 +2227,7 @@ vertical-align: -.125em;
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Práctica 10. Ensamblaje de genomas</h1>
+<h1 class="title">Práctia 11. Anotación</h1>
 </div>
 
 
@@ -2244,38 +2244,39 @@ vertical-align: -.125em;
 </header>
 
 
-<section id="objetivo" class="level1">
-<h1>Objetivo</h1>
-<p>Ensamblar el genoma de un eucariota diploide con lecturas de PacBio de alta fidelidad.</p>
-</section>
-<section id="preparación" class="level1">
-<h1>Preparación</h1>
-<section id="hifiasm" class="level2">
-<h2 class="anchored" data-anchor-id="hifiasm">Hifiasm</h2>
-<p>El programa <code>hifiasm</code> no está instalado en los ordenadores virtuales, y por tanto es necesario hacerlo manualmente, siguiendo los pasos siguientes en el terminal de Bash. Lo recomendable es instalarlo en una carpeta <code>bin</code> dentro de la carpeta de usuaria.</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-d</span> ~/bin <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span> <span class="fu">mkdir</span> ~/bin<span class="kw">;</span> <span class="cf">fi</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~/bin</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/chhylp123/hifiasm</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> hifiasm</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<p>Una vez compilado, el ejecutable <code>~/bin/hifiasm/hifiasm</code> estará disponible, pero no en el <code>PATH</code> (donde Bash pueda encontrarlo). Para que <code>hifiasm</code> esté en el <code>PATH</code>, podemos añadir la carpeta <code>~/bin/hifiasm</code> al <code>PATH</code>. En el terminal de Bash esto se consigue con la orden <code>export PATH=$PATH:~/bin/hifiasm</code>. Pero esta orden sólo afecta el terminal en el que se ha ejecutado. Para modificar el PATH permanentemente hay que incluir esta orden en el script <code>~/.bashrc</code>. Puedes hacerlo automáticamente con la orden siguiente, pero asegúrte de ejecutarla sólo una vez:</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&#39;export PATH=$PATH:~/bin/hifiasm&#39;</span> <span class="op">&gt;&gt;</span> ~/.bashrc</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<p>A partir de entonces, cada vez que inicies el terminal, <code>hifiasm</code> estará en el <code>PATH</code>. Pero el terminal desde el cual has ejecutado la orden anterior se abrió antes de modificar <code>.bashrc</code>. Para que surta efecto sin tener que cerrar y abrir el terminal, puedes usar la orden <code>. ~/.bashrc</code>.</p>
-<p>Hace falta instalar también otro programa, pero empecemos primero la práctica y más adelante</p>
-</section>
+<section id="introducción" class="level1">
+<h1>Introducción</h1>
+<p>En esta práctica vamos a trabajar con los <strong>resultados</strong> de la anotación estructural realizada sobre el ensamblaje de la práctica anterior. Desafortunadamente, los ordenadores virtuales no están preparados para realizar la anotación. Pero a continuación se muestran las órdenes que en un terminal de Bash producirían los resultados. Estas órdenes se supone que son ejecutadas desde una carpeta <code>results/2026-04-21</code>.</p>
 </section>
 <section id="datos" class="level1">
 <h1>Datos</h1>
-<p>Vamos a usar lecturas HiFi generadas por <span class="citation" data-cites="Rabanal2022">Rabanal et al. (<a href="#ref-Rabanal2022" role="doc-biblioref">2022</a>)</span> de un único individuo de la planta <em>Arabidopsis thaliana</em>, ecotipo Columbia (Col-0), con la tecnología SMRT de PacBio (proyecto <a href="https://www.ebi.ac.uk/ena/browser/view/PRJEB50694">PRJEB50694</a>). Los datos seleccionados son solo una parte de los originales y se encuentran en el archivo <code>At4.10.fa.gz</code> (46 Mb), disponible en el aula virtual. También está en el <a href="https://disco.uv.es">espacio de disco compartido de la Universidad de Valencia</a>, dentro del grupo de bioinformática. Este espacio es directamente accesible desde los ordenadores virtuales.</p>
-<p>En adelante supondré que el archivo está guardado en la carpeta <code>data</code> y que su <em>path</em> relativo es <code>../../data/At4.10.fa.gz</code>.</p>
+<p>Las secuencias que vamos a anotar son el ensamblaje obtenido en la práctica anterior, que voy a suponer que se encuentran en una carpeta <code>results/2026-04-16</code>.</p>
+<p>Las evidencias que usaremos para encontrar los genes són secuencias de proteínas que esperamos encontrar codificadas en los cóntigos. Normalmente usaríamos las proteínas conocidas de alguna especie próxima. Usaremos las 6023 proteínas que sabemos que codifica el cromosoma 4 de <em>Arabidopsis thalina</em>. Las podéis descargar de <a href="https://www.uniprot.org/uniprotkb?query=%28proteome%3AUP000006548%29+AND+%28proteomecomponent%3A%22Chromosome+4%22%29">Uniprot</a></p>
 </section>
-<section id="revisión-de-los-datos" class="level1">
-<h1>Revisión de los datos</h1>
-<p>Los datos están en formato FASTA porque contienen sólo lecturas de alta calidad, y <code>hifiasm</code> no utiliza la información de las calidades de cada base. El archivo está comprimido. Antes de empezar el ensamblaje deberíamos tener una idea de la cantidad de datos que tenemos. Si lo necesitas, utiliza una inteligencia artificial para responder las preguntas siguientes y anota en un bloque de código las órdenes utilizadas. Puedes hacerlo con instrucciones de Bash o de R, pero R necesitará cargar en memoria el archivo entero, lo que no sería muy práctico si se tratara de un archivo 10 o 50 veces mayor.</p>
+<section id="programas" class="level1">
+<h1>Programas</h1>
+<p>Los programas que <em>no</em> utilizaremos (porque no están instalados y son difíciles de instalar son <a href="https://github.com/Dfam-consortium/RepeatModeler">RepeatModeler</a> <span class="citation" data-cites="Flynn2020">(<a href="#ref-Flynn2020" role="doc-biblioref">Flynn et al. 2020</a>)</span>, <a href="https://www.repeatmasker.org/">RepeatMasker</a>, y <a href="https://github.com/Gaius-Augustus/GALBA">GALBA</a> <span class="citation" data-cites="Bruna2023">(<a href="#ref-Bruna2023" role="doc-biblioref">Bruna et al. 2023</a>)</span>. Cada uno de ellos, a su vez, utiliza otros.</p>
+<section id="repeatmodeler" class="level3">
+<h3 class="anchored" data-anchor-id="repeatmodeler"><code>RepeatModeler</code></h3>
+<p>Utiliza como input sólo el ensamblaje, para identificar los elementos repetitivos que pueda haber. Genera, entre otras cosas, un archivo FASTA con las secuencias consenso de las familias de elementos transponibles identificadas. Este archivo FASTA se puede usar después para enmascarar el genoma.</p>
+</section>
+<section id="repetamasker" class="level3">
+<h3 class="anchored" data-anchor-id="repetamasker"><code>RepetaMasker</code></h3>
+<p>Su propósito es enmascarar del ensamblaje todas las instancias de elementos repetitivos que pueda identificar. Utiliza una librería de elementos repetitivos previamente conocidos. Existen bases de datos, como <a href="https://www.dfam.org">Dfam</a>, que pueden usarse cuando queremos enmascarar el ensamblaje de un organismo parecido a aquellos de los que ya conocemos muchos elementos repetitivos. También podemos usar el archivo FASTA generado por <code>RepeatModeler</code> <em>de novo</em>.</p>
+</section>
+<section id="galba" class="level3">
+<h3 class="anchored" data-anchor-id="galba">GALBA</h3>
+<p>Utiliza <code>miniprot</code> <span class="citation" data-cites="Li2023">(<a href="#ref-Li2023" role="doc-biblioref">Li 2023</a>)</span> para alinear las proteínas al ensamblaje i encontrar genes homólogos a los que las condifican. A partir de estos resultados, <em>entrena</em> a <a href="https://github.com/Gaius-Augustus/Augustus">Augustus</a> para definir mejor los bordes de los genes y posiblemente encontrar otros genes adicionales. No es el programa más preciso, pero es relativamente sencillo de usar.</p>
+</section>
+</section>
+<section id="resultados" class="level1">
+<h1>Resultados</h1>
+<section id="modificación-de-los-nombres-de-las-proteínas" class="level2">
+<h2 class="anchored" data-anchor-id="modificación-de-los-nombres-de-las-proteínas">Modificación de los nombres de las proteínas</h2>
+<p>Al descargar las proteínas del cromosoma 4 de <em>A. thaliana</em>, el archivo FASTA contiene cabeceras demasiado extensas. Para facilitar el trabajo de GALBA vamos a modificar las cabeceras o nombres de las secuencias. De líneas como esta:</p>
+<pre><code>&gt;sp|Q0WVX5|SSY4_ARATH Probable starch synthase 4, chloroplastic/amyloplastic OS=Arabidopsis thaliana OX=3702 GN=SS4 PE=1 SV=1</code></pre>
+<p>vamos a pasar a tener líneas como esta:</p>
+<pre><code>&gt;Q0WVX5</code></pre>
 <div class="callout callout-style-default callout-note no-icon callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -2286,37 +2287,44 @@ vertical-align: -.125em;
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<ul>
-<li>¿Cuántas secuencias contiene el archivo?</li>
-<li>¿Qué longitudes mínima, media y máxima tienen las secuencias?</li>
-<li>¿Cuál es el número total de bases?</li>
-<li>Si se estimara que el genoma a ensamblar fuera de sólo 19 millones de bases, ¿cuál sería la cobertura esperada?</li>
-</ul>
+<p>Sabiendo que una forma de hacerlo es la siguiente, incluye la orden en un bloque de Bash de tu documento de Quarto de tal manera que el archivo de entrada esté en tu carpeta <code>data</code> y el de salida en la misma carpeta de trabajo de la práctica actual, y además, que sólo se ejecute si el archivo de salida <code>proteinas.fasta</code> no existe.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">&#39;(/^&gt;/){split($1, A, /\|/); print &quot;&gt;&quot; A[2]}(/^[^&gt;]/){print $0}&#39;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
 </div>
 </div>
 </section>
-<section id="ensamblaje" class="level1">
-<h1>Ensamblaje</h1>
-<p>El programa <code>hifiasm</code> produce varios archivos de salida. Para tener la carpeta de trabajo ordenada, es recomendable crear un subcarpeta donde poder guardarlos. Si fuéramos a probar más de una estrategia de ensamblado, guardaríamos los resultados de cada intento en una carpeta diferente, que podríamos nombrar <code>asm1</code>, <code>asm2</code>, etc. Aunque sólo realicemos un ensamblaje, crearemos la carpeta <code>asm1</code> para guardar los resultados en ella.</p>
+<section id="análisis-de-los-resultados-de-repeatmodeler" class="level2">
+<h2 class="anchored" data-anchor-id="análisis-de-los-resultados-de-repeatmodeler">Análisis de los resultados de <code>RepeatModeler</code></h2>
+<p><code>RepeatModeler</code> fue ejecutado de la manera siguiente:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Con la ejecución condicional nos ahorramos algún mensaje de error:</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-d</span> asm1 <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span> <span class="fu">mkdir</span> asm1<span class="kw">;</span> <span class="cf">fi</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Paso previo para convertir el ensamblaje en una base de datos de BLAST:</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">BuildDatabase</span> <span class="at">-name</span> At4 ../2026-04-16/asm1/At4.fa</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="ex">RepeatModeler</span> <span class="at">-database</span> At4 <span class="at">-threads</span> 6 <span class="op">&gt;&amp;</span> run.log</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>El ensamblaje de estas lecturas puede durar unos minutos. No queremos tener que ejecutarlo cada vez que compilamos el documento de Quarto. Tenemos dos opciones: o bien usamos la directriz <code>#| cache: true</code> al principio del bloque de código o bien controlamos directamente la ejecución condicional con Bash. Si usamos el método que ofrece Quarto, aparecerá una nueva carpeta que guarda resultados previos y que estaría bien incluir en el repositorio de Git. Yo prefiero usar Bash:</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$PATH</span><span class="st">:</span><span class="va">$HOME</span><span class="st">/bin/hifiasm&quot;</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-e</span> asm1/At4.bp.p_ctg.gfa <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>   <span class="ex">hifiasm</span> <span class="at">-o</span> asm1/At4 <span class="at">-t</span> 2 <span class="at">-f</span> 0 ../../data/At4.10.fa.gz <span class="dv">2</span><span class="op">&gt;</span> asm1/hifiasm.log</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<p>Las opciones significan lo siguiente:</p>
-<ul>
-<li><code>-o asm1/At4</code>: usa el prefijo <code>asm1/At4</code> para los archivos de salida.</li>
-<li><code>-t 2</code>: usa dos procesadores. Por defecto usaría uno.</li>
-<li><code>-f 0</code>: inhabilita el uso de un filtro de Bloom <span class="citation" data-cites="Melsted2011">(<a href="#ref-Melsted2011" role="doc-biblioref">Melsted and Pritchard 2011</a>)</span> durante la corrección de errores, que ocuparía 16 Gb de memoria.</li>
-<li><code>../../data/At4.10.fa.gz</code>: archivo con los datos de partida.</li>
-<li><code>2&gt; asm1/hifiasm.log</code>: guarda los numerosos mensajes que <code>hifiasm</code> envía al <em>error estándar</em> en un archivo <code>asm1/hifiasm.log</code>. Esto evita que esos mensajes se acumulen en el informe HTML.</li>
-</ul>
+<p>Puedes descargar y descomprimir los resultados de <code>RepeatModeler</code> desde el aula virtual a la carpeta de trabajo actual (como si fueran resultados tuyos). Encontrarás la estructura de archivos siguiente:</p>
+<pre><code>.
+├── At4-families.fa               
+├── At4-families.stk   
+├── At4.nhr                     
+├── At4.nin                           
+├── At4.njs                           
+├── At4.nnd                              
+├── At4.nni               
+├── At4.nog              
+├── At4.nsq              
+├── At4-rmod.log
+├── At4.translation 
+├── RM_358880.MonApr202033152026
+│   ├── consensi.fa
+│   ├── families.stk
+│   ├── genome.2bit
+│   ├── rmod.log
+│   ├── round-1
+│   ├── round-2
+│   └── round-3
+└── run.log</code></pre>
 <div class="callout callout-style-default callout-note no-icon callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -2327,17 +2335,22 @@ vertical-align: -.125em;
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Consulta la ayuda de <code>hifiasm</code> (<code>hifiasm -h</code>) y contesta las preguntas siguientes:</p>
+<p>Explora los resultados de <code>RepeatModeler</code> y trata de contestar las preguntas siguientes.</p>
 <ol type="1">
-<li>¿Los parámetros corresponden al ensamblaje de un genoma haploide o diploide?</li>
-<li>¿Qué nivel de eliminación de duplicaciones hemos aplicado? (El paso de eliminar duplicaciones sirve para que las zonas de alta heterocigosidad no sean ensambladas como contigs diferentes).</li>
-<li>Si tuvieramos lecturas ultra-largas, ¿con qué opción o argumento añadiríamos esa información?</li>
+<li>¿Cuántas familias de elementos transponibles se han encontrado?</li>
+<li>¿Cuánto duró la ejecución del programa?</li>
+<li>¿Cuál dirías que es el archivo de salida más importante?</li>
 </ol>
 </div>
 </div>
 </section>
-<section id="evaluación-del-resultado" class="level1">
-<h1>Evaluación del resultado</h1>
+<section id="suavizar-la-máscara" class="level2">
+<h2 class="anchored" data-anchor-id="suavizar-la-máscara">Suavizar la máscara</h2>
+<p><code>RepeatMasker</code> fue ejecutado así:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">RepeatMasker</span> <span class="at">-lib</span> At4-families.fa <span class="at">-dir</span> RM01 <span class="at">-gtf</span> ../../data/At4.fa</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Encontrarás la carpeta (comprimida) de resultados de <code>RepeatMasker</code> en el aula virtual. Descárgala y descomprimela en la carpeta de trabajo actual. La versión enmascarada tiene una máscara dura (<code>RepeatMasker</code> ha sustituído todos los elementos trasponibles y repeticiones por Ns), con lo que se ha perdido la información de la secuencia original en esas regiones. El programa GALBA recomienda partir de un ensamblaje con máscara suave, donde las regiones repetitivas están marcadas con letra minúscula. Para convertir la máscara dura en una máscara suave, utilizaremos <code>bedtools</code>.</p>
 <div class="callout callout-style-default callout-note no-icon callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -2348,34 +2361,23 @@ vertical-align: -.125em;
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Consulta la descripción de los archivos de salida que encontrarás en <a href="https://hifiasm.readthedocs.io/en/latest/interpreting-output.html">este enlace</a> y contesta las preguntas siguientes:</p>
 <ol type="1">
-<li>¿Dónde están las secuencias que componen el ensamblaje?</li>
-<li>En los archivos <code>.gfa</code>, ¿qué son las líneas que empiezan por ‘A’?</li>
-<li>¿Qué información tiene los archivos <code>.bed</code>?</li>
-<li>¿Cuál es la cobertura media estimada de las secuencias homocigotas?</li>
-<li>¿Y la de las heterocigotas?</li>
+<li>Instala el programa <code>bedtools</code> siguiendo las instrucciones oportunas para tu sistema en la <a href="https://bedtools.readthedocs.io/en/latest/content/installation.html">página oficial</a></li>
+<li>Utiliza el ensamblaje original como archivo FASTA de entrada y el archivo <code>GFF</code> que ha producido <code>RepetaMasker</code> como coordenadas de las regiones a enmascarar. Lee el manual de <code>bedtools maskfasta</code> <a href="https://open.bioqueue.org/home/knowledge/showKnowledge/sig/bedtools-maskfasta">en este enlace</a> y genera el ensamblaje con máscara suave llamado <code>At4.soft.fa</code>.</li>
 </ol>
 </div>
 </div>
-<p>Los ensamblajes primario y por haplotipos se presentan en formato <a href="https://github.com/GFA-spec/GFA-spec/tree/master">GFA</a>. Para extraer las secuencias en formato FASTA podemos usar el pequeño <em>script</em> siguiente, en lenguaje <a href="https://www.gnu.org/software/gawk/manual/gawk.html">AWK</a>, desde el terminal de Bash:</p>
+</section>
+<section id="galba-1" class="level2">
+<h2 class="anchored" data-anchor-id="galba-1">GALBA</h2>
+<p>Para ejecutar GALBA ha sido necesario crear algunas variables de entorno que indican donde puede GALBA encontrar un par de ejecutables más. Para facilitar la reproducibilidad, este tipo de definiciones deben aparecer al principio del bloque, donde son más visibles, para que sean fácilmente modificadas cuando las órdenes vayan a ejecutarse en otro ordenador.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">&#39;(/^S/){print &quot;&gt;&quot; $2 &quot;\n&quot; $3}&#39;</span> asm1/At4.bp.p_ctg.gfa <span class="op">&gt;</span> asm1/At4.fa</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<section id="calidad-del-ensamblaje" class="level2">
-<h2 class="anchored" data-anchor-id="calidad-del-ensamblaje">Calidad del ensamblaje</h2>
-<p>Para obtener las estadísticas del ensamblaje utilizaremos el programa <code>compleasm</code> <span class="citation" data-cites="Huang2023">(<a href="#ref-Huang2023" role="doc-biblioref">Huang and Li 2023</a>)</span>, que no está instalado en el ordenador virtual. Está programado en Python y depende del módulo <code>pandas</code> de Python. En WSL, este módulo o paquete probablemente pueda instalarse con <code>apt install python3-pandas</code>. Alternativamente, en los sistemas con <code>conda</code> podéis hacer <code>conda install pandas</code>. En el ordenador virtual, el módulo <code>pandas</code> ya está disponible.</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~/bin</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://github.com/huangnengCSU/compleasm/releases/download/v0.2.7/compleasm-0.2.7_x64-linux.tar.bz2</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> <span class="at">-jxvf</span> compleasm-0.2.7_x64-linux.tar.bz2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<p>En adelante supondré que <code>compleasm.py</code> está en <code>~/bin/compleasm_kit</code>. El programa necesita descargar la lista de genes típica del linaje al que pertenece el ensamblaje. En nuestro caso, el linaje es el de las Brassicales. La orden siguiente puede tomar más de 10 minutos.</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-e</span> asm1_eval/summary.txt <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>   <span class="ex">python3</span> ~/bin/compleasm_kit/compleasm.py run <span class="dt">\</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>      <span class="at">-t</span> 2 <span class="at">-l</span> brassicales <span class="at">-a</span> asm1/At4.fa <span class="at">-o</span> asm1_eval</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">TSEBRA_PATH</span><span class="op">=</span>/home/joiglu/bin/TSEBRA/bin/</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">MINIPROTHINT_PATH</span><span class="op">=</span>/home/joiglu/bin/miniprothint/</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="ex">galba.pl</span> <span class="at">--species</span><span class="op">=</span><span class="st">&quot;Arabidopsis thaliana&quot;</span> <span class="dt">\</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">--genome</span><span class="op">=</span>At4.soft.fa <span class="dt">\</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>         <span class="at">--prot_seq</span><span class="op">=</span>proteinas.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="callout callout-style-default callout-note no-icon callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -2387,13 +2389,10 @@ vertical-align: -.125em;
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Consulta la ayuda de <code>compleasm.py</code> y averigua qué significan los argumentos utilizados.</p>
+<p>Incluye en tu documento de Quarto un bloque de código (pero no ejecutable, con la opción <code>eval: false</code>) como el anterior, donde los <em>caminos</em> TSERBA y a MINIPROTHINT se correspondan con tu propia carpeta <code>bin</code>, aunque no los tengas instalados.</p>
 </div>
 </div>
-</section>
-<section id="visualización-del-grafo" class="level2">
-<h2 class="anchored" data-anchor-id="visualización-del-grafo">Visualización del grafo</h2>
-<p>Desafortunadamente, no existe todavía ningún paquete de R para visualizar ensamblajes como grafos de fragmentos a partir de archivos <code>.gfa</code>. Uno de los visualizadores más populares es <a href="https://rrwick.github.io/Bandage/">bandage</a>, una aplicación gráfica que puede instalarse fácilmente en cualquier sistema operativo, pero que no ofrece interfaz por línea de comandos.</p>
+<p>Encontrarás los resultados de GALBA en la carpeta comprimida <code>galba.zip</code>, en el aula virtual.</p>
 <div class="callout callout-style-default callout-note no-icon callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -2404,26 +2403,38 @@ vertical-align: -.125em;
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Instala <code>bandage</code>, carga el grafo del ensamblaje realizado y genera una figura. Puedes añadir la figura al informe HTML mediante la <a href="https://quarto.org/docs/authoring/figures.html">sitaxis siguiente</a>:</p>
-<pre><code>![](figura.png)</code></pre>
+<p>Échales un vistazo a los archivos de salida de GALBA y trata de sacar algo en claro.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Ejercicio 6
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Si quieres, puedes intentar instalar GALBA en tu ordenador, tomando nota de las dificultades con las que te encuentras.</p>
 </div>
 </div>
 </section>
 </section>
-<section id="references" class="level1 unnumbered">
+<section id="referencias" class="level1 unnumbered">
 
 
 </section>
 
-<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
-<div id="ref-Huang2023" class="csl-entry" role="listitem">
-Huang, Neng, and Heng Li. 2023. <span>“Compleasm: A Faster and More Accurate Reimplementation of BUSCO.”</span> <em>Bioinformatics</em> 39 (10): btad595. <a href="https://doi.org/10.1093/bioinformatics/btad595">https://doi.org/10.1093/bioinformatics/btad595</a>.
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">Referencias</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-Bruna2023" class="csl-entry" role="listitem">
+Bruna, T., H. Li, J. Guhlin, D. Honsel, S. Herbold, M. Stanke, N. Nenasheva, M. Ebel, L. Gabriel, and K. J. Hoff. 2023. <span>“Galba: Genome Annotation with Miniprot and <span>AUGUSTUS</span>.”</span> <em>BMC Bioinformatics</em> 24: 327. <a href="https://doi.org/10.1186/s12859-023-05449-z">https://doi.org/10.1186/s12859-023-05449-z</a>.
 </div>
-<div id="ref-Melsted2011" class="csl-entry" role="listitem">
-Melsted, P., and J. K. Pritchard. 2011. <span>“Efficient Counting of k-Mers in DNA Sequences Using a Bloom Filter.”</span> <em>BMC Bioinformatics</em> 12: 333. <a href="https://doi.org/10.1186/1471-2105-12-333">https://doi.org/10.1186/1471-2105-12-333</a>.
+<div id="ref-Flynn2020" class="csl-entry" role="listitem">
+Flynn, Jullien M., Robert Hubley, Clément Goubert, Jeb Rosen, Andrew G. Clark, Cédric Feschotte, and Arian F. Smit. 2020. <span>“RepeatModeler2 for Automated Genomic Discovery of Transposable Element Families.”</span> <em>Proceedings of the National Academy of Sciences</em> 117 (17): 9451–57. <a href="https://doi.org/10.1073/pnas.1921046117">https://doi.org/10.1073/pnas.1921046117</a>.
 </div>
-<div id="ref-Rabanal2022" class="csl-entry" role="listitem">
-Rabanal, Fernando A, Maike Gräff, Christa Lanz, Katrin Fritschi, Victor Llaca, Michelle Lang, Pablo Carbonell-Bejerano, Ian Henderson, and Detlef Weigel. 2022. <span>“Pushing the Limits of HiFi Assemblies Reveals Centromere Diversity Between Two Arabidopsis Thaliana Genomes.”</span> <em>Nucleic Acids Research</em> 50 (21): 12309–27. <a href="https://doi.org/10.1093/nar/gkac1115">https://doi.org/10.1093/nar/gkac1115</a>.
+<div id="ref-Li2023" class="csl-entry" role="listitem">
+Li, Heng. 2023. <span>“Protein-to-Genome Alignment with Miniprot.”</span> <em>Bioinformatics</em> 39 (1): btad014. <a href="https://doi.org/10.1093/bioinformatics/btad014">https://doi.org/10.1093/bioinformatics/btad014</a>.
 </div>
 </div></section></div></main>
 <!-- /main column -->

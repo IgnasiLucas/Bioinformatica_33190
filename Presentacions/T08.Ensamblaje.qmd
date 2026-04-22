@@ -1,5 +1,5 @@
 ---
-title: "10. Ensamblaje de genomas"
+title: "8. Ensamblaje de genomas"
 format:
   revealjs:
     embed-resources: true
@@ -25,7 +25,7 @@ bibliography: ../doc/references.bib
 
 ## PacBio HiFi
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/7yYPHatccgw?si=1atmBWOKlnxqLmkG&amp;controls=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+[How HiFi Works](https://www.youtube.com/watch?v=7yYPHatccgw)
 
 ## Definiciones {.smaller}
 
@@ -165,9 +165,6 @@ legend(80, 1500, c('Heterocigoto', 'Homocigoto'), lty = c(1, 2),
        col = c('darkred', 'darkgreen'))
 ```
 
-
-![](imatges/kmers.png)
-
 [@Liao2024]
 
 ## Estimación del tamaño del genoma
@@ -183,7 +180,23 @@ $\hat{G} = \frac{N}{C}$.
 
 ## Corrección de errores
 
-![](imatges/kmers.png)
+```{r}
+#| echo: false
+plot(c(0, 140), c(0, 2000), type = 'n', axes = FALSE,
+     xlab = 'Frecuencia del k-mero', ylab = 'Número de k-meros')
+axis(1)
+axis(2)
+d <- density(x, bw = 'SJ')
+e <- density(h, bw = 'SJ')
+d$y <- d$y * 10000
+e$y <- e$y * 10000
+lines(d, col = 'darkred', lwd = 2)
+lines(e, col = 'darkgreen', lty = 2, lwd = 2)
+legend(80, 1500, c('Heterocigoto', 'Homocigoto'), lty = c(1, 2),
+       col = c('darkred', 'darkgreen'))
+```
+
+[@Liao2024]
 
 ## Corrección de errores
 

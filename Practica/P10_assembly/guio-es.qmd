@@ -107,7 +107,8 @@ método que ofrece Quarto, aparecerá una nueva carpeta que guarda resultados pr
 y que estaría bien incluir en el repositorio de Git. Yo prefiero usar Bash:
 
 ```{bash}
-if [ ! asm1/At4.bp.p_ctg.gfa ]; then
+export PATH="$PATH:$HOME/bin/hifiasm"
+if [ ! -e asm1/At4.bp.p_ctg.gfa ]; then
    hifiasm -o asm1/At4 -t 2 -f 0 ../../data/At4.10.fa.gz 2> asm1/hifiasm.log
 fi
 ```
