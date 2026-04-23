@@ -1,0 +1,194 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{booktabs}
+\usepackage[top=3cm,bottom=2cm,left=2.5cm,right=3cm]{geometry}
+
+\title{Examen sorpresa}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section*{Preguntas de tipo test. 60\%}
+Cada pregunta de esta sección mal contestada descontará $\frac{1}{4}$ de lo que
+suma una pregunta bien contestada, para que la esperanza de la nota al contestar
+al azar sea 0.
+
+\begin{enumerate}
+\item ¿Con qué orden en el terminal de Bash podemos obtener instrucciones de uso de
+      otras órdenes o programas?
+   \begin{enumerate}
+   \item \textsf{ls}
+   \item \textsf{help}
+   \item \textsf{man}
+   \item \textsf{info}
+   \end{enumerate}
+
+\item ¿Cuál de los siguientes es un algoritmo de alineamiento \textbf{global}?
+   \begin{enumerate}
+   \item Needleman-Wunsch.
+   \item Smith-Waterman.
+   \item BLAST.
+   \item bwa.
+   \end{enumerate}
+
+\item ¿A qué probabilidad de error corresponde una calidad de 30 en escala Phred?
+   \begin{enumerate}
+   \item 0.3 
+   \item 0.03
+   \item 0.003
+   \item A ninguna de las anteriores.
+   \end{enumerate}
+
+\item ¿Qué tipo de información guardan los archivos de texto en formato SAM?
+   \begin{enumerate}
+   \item Anotación de un genoma en formato tabular.
+   \item Genotipos de varios individuos en una serie de loci polimórficos.
+   \item Alineamientos de lecturas cortas a un genoma de referencia.
+   \item Secuencias de lecturas cortas, con sus calidades.
+   \end{enumerate}
+
+\item Una tabla de datos se considera \emph{desordenada} si:
+   \begin{enumerate}
+   \item Tiene más columnas que filas.
+   \item No está codificada en UTF-8 o ASCII.
+   \item Separa las columnas con un carácter diferente del tabulador.
+   \item Contiene más de un valor por celda.
+   \end{enumerate}
+
+\item ¿Dónde buscarías la secuencia del cromosoma mitocondrial del conejo?
+   \begin{enumerate}
+   \item En ENA, por ejemplo.
+   \item En el NCBI, porque a lo mejor en ENA no está.
+   \item En Interpro.
+   \item En Uniprot.
+   \end{enumerate}
+
+\item ¿En qué sección de Uniprot el identificador de una secuencia no se modifica, no
+no se reasigna ni se elimina nunca de la base de datos?
+   \begin{enumerate}
+   \item Uniprot Knowledge Base (Swissprot + Trembl).
+   \item Uniparc.
+   \item Uniref.
+   \item Proteomas.
+   \end{enumerate}
+
+\item ¿En qué formato se descargan los datos a través de la API de Interpro?
+   \begin{enumerate}
+   \item FASTA.
+   \item YAML.
+   \item EMBL.
+   \item JSON.
+   \end{enumerate}
+
+\item ¿Qué significan las siglas `API'?
+   \begin{enumerate}
+   \item \emph{American Protein Institute}.
+   \item \emph{Application Programming Interface}.
+   \item \emph{Amateur Python Interpreter}.
+   \item \emph{Artificial Programming Intelligence}.
+   \end{enumerate}
+
+\item ¿En qué teoría se basa el paquete de R \textsf{ggplot2}?
+   \begin{enumerate}
+   \item La geometría geodésica.
+   \item El modelo relacional de datos.
+   \item La gramática de gráficos.
+   \item La teoría de grafos.
+   \end{enumerate}
+
+\item ¿De qué depende la puntuación $S$ (\emph{score}) de un resultado concreto de BLAST?
+   \begin{enumerate}
+   \item Sólo del alineamiento y del esquema de puntuación.
+   \item Depende también de los tamaños de la secuencia y de la base de datos.
+   \item a) y b) son ciertas, pero además depende de la composición de la base de datos.
+   \item Existe además de todo eso un componente aleatorio.
+   \end{enumerate}
+
+\item Sobre el funcionamiento del BLAST, ¿cuál de las siguientes afirmaciónes es \textbf{verdadera}?
+   \begin{enumerate}
+   \item Alinea mediante Smith-Waterman la \emph{query} a todas las secuencias de la base de datos.
+   \item Es un algoritmo exhaustivo, que garantiza la solución óptima absoluta.
+   \item Sus méritos son la rapidez y la rigurosidad estadística de evaluación del resultado.
+   \item Ninguna de las anteriores.
+   \end{enumerate}
+
+\item En una cadena de Markov, ¿qué indica la \textbf{matriz de transición}?
+   \begin{enumerate}
+   \item Distancias evolutivas entre las secuencias.
+   \item Probabilidades de los cambios de estado posibles en función del tiempo.
+   \item Tasas instantáneas de cambio entre los estados de la cadena.
+   \item Frecuencias de equilibrio de los estados de la cadena.
+   \end{enumerate}
+
+\item En la inferencia filogenética por máxima verosimilitud, ¿cómo describirías el resultado?
+   \begin{enumerate}
+   \item Un árbol que minimiza los pasos evolutivos necesarios para explicar los datos.
+   \item El árbol más probable a posteriori.
+   \item El árbol al que los datos dan mayor soporte, entre todos los posibles.
+   \item El árbol al que los datos dan mayor soporte, entre los examinados.
+   \end{enumerate}
+
+\item ¿Qué son los valores de \emph{bootstrap} en un árbol filogenético?
+   \begin{enumerate}
+   \item Son probabilidades posteriores de que cada rama represente un linaje real.
+   \item Para cada rama, la proporción de pseudoréplicas en las que aparce esa rama.
+   \item Las longitudes de  las ramas, en número esparado de sustituciones por sitio.
+   \item Una medidad de dispersion o incertidumbre sobre cada rama.
+   \end{enumerate}
+
+\item ¿Qué factor o factores afectan más la calidad de un ensamblaje?
+   \begin{enumerate}
+   \item El programa utilizado para ensamblar.
+   \item La longitud total del genoma y el número original de cromosomas.
+   \item La longitud y calidad de las lecturas.
+   \item La heterocigosidad.
+   \end{enumerate}
+
+\item ¿Cuál de los siguientes procesos crees que es computacionalmente más intenso?
+   \begin{enumerate}
+   \item El alineamiento de dos secuencias.
+   \item La búsqueda de homologías a una proteína mediante BLAST.
+   \item El ensamblaje de un genoma a partir de lecturas de alta calidad.
+   \item La anotación estructural del genoma ensamblado.
+   \end{enumerate}
+
+\item ¿Cuál de los programas siguientes sirve para identificar genes en un ensamblaje?
+   \begin{enumerate}
+   \item AUGUSTUS.
+   \item RepeatModeler.
+   \item Hifiasm.
+   \item BLAST.
+   \end{enumerate}
+
+\end{enumerate}
+
+\section*{Preguntas de respuesta abierta}
+Estas preguntas no descuentan. Así que no dejes nunca ninguna por contestar,
+aunque no sepas la respuesta.
+
+\begin{enumerate}
+\item En la informática, la ruta o \emph{path} de un archivo es la manera de señalar la
+localización exacta del archivo en el sistema de archivos. Però, ¿qué contiene y para
+qué sirve la variable \textsf{PATH} en el terminal de Bash?
+
+%\vspace*{5cm}
+
+\item La secuenciación con Illumina a veces produce dos archivos FASTQ por cada genoteca,
+con nombres que terminan en \textsf{\_R1.fq.gz} y \textsf{\_R2.fq.gz}. Explica por qué hay
+dos y en qué se diferencian.
+
+%\vspace*{5cm}
+
+\item Indica al menos dos razones por las que las hojas de cálculo no son recomendables
+en bioinformática.
+
+%\vspace*{5cm}
+
+\item ¿Qué ventajas crees que proporciona realizar un seguimiento de la carpeta de trabajo con
+\textsf{git}?
+
+\end{enumerate}
+\end{document}
