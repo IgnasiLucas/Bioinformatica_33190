@@ -1,0 +1,89 @@
+---
+title: "9. Anotación"
+format:
+   revealjs:
+      embed-resources: true
+bibliography: ../doc/references.bib
+---
+
+## Tipos de anotación
+
+### Anotación estructural
+Identificar posiciones de elementos fundionales: genes, tránscritos, exones, CDSs,
+genes no codificantes, elementos reguladores...
+
+### Anotación funcional
+Atribuir funciones, asignar términos de ontología génica, símbolos génicos...
+
+## Estructura génica
+
+![](imatges/Stanke2003b_1.png)
+
+[@Stanke2003b]
+
+## Estrategias
+
+1. Basadas en modelos génicos.
+2. Ensamblaje de lecturas de RNA-seq.
+3. Transferencia de anotaciones.
+
+# Modelos génicos
+
+## *Hidden Markov Models* (HMM) {.smaller}
+
+::::{.columns}
+:::{.column width="50%"}
+![](imatges/Stanke2003_1.png)
+
+[@Stanke2003]
+:::
+:::{.column width="50%"}
+- $IR$: región intergénica
+- $E^n_{\mathrm{init}}$: primer exón codificante de varios.
+- $E_{\mathrm{single}}$: único exón codificante.
+- $E_{\mathrm{term}}$: exón terminal codificante.
+- $E^n$: exón interno codificante.
+- $I^n_{\mathrm{short}}$: intrón corto.
+- $I^n_{\mathrm{fixed}}$: principio de intrón largo.
+- $I^n_{\mathrm{geo}}$: resto del intrón largo.
+- $DSS^n$: *donor splice site*.
+- $ASS^n$: *acceptor splice site*.
+- $n$: fase del último codón del exón (anterior).
+:::
+::::
+
+## Entrenamiento
+El HMM (matriz de transición, probabilidades de emisión) se ajustan a partir
+de genes conocidos o predichos con alta confianza a partir de:
+
+- Proteínas de una especie próxima, o bien
+- Alineamientos (con *splicing*) de lecturas de RNA-seq.
+
+## Procedimiento
+Se repiten los pasos siguientes hasta convergir:
+
+- Predicción *ab initio* de genes nuevos.
+- Refinamiento del modelo.
+
+## Principales programas
+
+- [AUGUSTUS](https://github.com/Gaius-Augustus/Augustus)[@Stanke2003]
+- [GeneMark](https://github.com/gatech-genemark/GeneMark-ETP)[@Bruna2024]
+- [BRAKER](https://github.com/Gaius-Augustus/BRAKER)
+- [STAR](https://github.com/alexdobin/STAR): para alinear lecturas RNA-seq al ensamblaje.
+
+## Limitaciones
+
+- No predicen UTRs ni ncRNAs. Sólo CDSs, normalmente.
+- Necesitamos entrenar el modelo para cada especie.
+
+# Ensamblaje de lecturas de RNA-seq
+
+##
+
+![](imatges/Zhernakova2013.1.png)
+
+[@Zhernakova2013]
+
+
+
