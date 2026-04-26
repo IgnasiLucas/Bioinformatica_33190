@@ -1,0 +1,228 @@
+---
+title: "P12. Análisis de expresión diferencial"
+format:
+   html:
+      embed-resources: true
+engine: knitr
+eval: false
+bibliography: ../../doc/references.bib
+---
+
+# Preparación
+Sólo necesitas instalar el paquete `DESeq2` de Bioconductor. Si lo haces en el
+ordenador virtual y tienes problemas de compatibilidad entre la versión de R y la
+de Bioconductor, sigue la estrategia siguiente:
+
+1. Crea una carpeta `R` en tu directorio de entrada al ordenador.
+2. Inicia una sesión de R y añade el directorio al `.libPaths`, así:
+   `.libPaths('./R')` (suponiendo que tu directorio de trabajo es el
+   mismo donde has creado la carpeta `R`).
+3. Actualiza la versión de `BiocManager` a la 3.22 de la siguiente manera
+   (atención, esto lleva un par de horas):
+   `BiocManager::install(version = '3.22', lib = './R')`.
+4. Instala el paquete `DESeq2`: `BiocManager::install('DESeq2', lib = './R')`.
+
+# Datos
+Utilizaremos las medidas de expresión génica del archivo `salmon.merged.gene_counts.tsv`
+que podéis descargar en [este enlace](https://informatics.fas.harvard.edu/resources/tutorials/data/salmon.merged.gene_counts.tsv) o en el aula virtual. Los datos proceden de 12 genotecas de RNA-seq de
+lecturas emparejadas, de muestras de *Drosophila melanogaster* de dos orígenes
+geográficos (Panamá y Maine) y dos tratamientos de temperatura (*low* y *high*)
+[@Zhao2015]. Hay 3 réplicas biológicas para cada combinación de región y temperatura.
+Si tenéis curiosidad sobre cómo se han obtenido los recuentos de lecturas por gen
+a partir de los archivos FASTQ, podéis consultarlo
+[en este enlace](https://informatics.fas.harvard.edu/resources/tutorials/differential-expression-analysis/).
+
+Además, necesitáis el archivo `dme_elev_samples.tsv`, una tabla que indica a qué
+región y tratamiento pertenece cada muestra. Lo podéis descargar de
+[este enlace](https://informatics.fas.harvard.edu/resources/tutorials/data/dme_elev_samples.tsv) o del aula virtual.
+
+Los dos archivos deben estar guardados en la carpeta de datos.
+
+# Exploración de los datos
+
+```{r}
+muestras <- read.table('../../data/dme_elev_samples.tsv', header = TRUE)
+genex <- read.table('../../data/salmon.merged.gene_counts.tsv',
+                    header = TRUE)
+```
+
+:::{.callout-note icon=false}
+## Ejercicio 1
+Recuerda dejar constancia en un bloque de código de cómo obtienes las
+respuestas.
+
+1. Usa la función `paste()` para añadir una columna a `muestras` que contenga
+   la población y la temperatura unidas por `_`.
+2. ¿Cuál es el número total de lecturas por muestra?
+3. ¿Los recuentos tienen distribuciones parecidas entre muestras?
+4. ¿Cuántos genes no se expresan en absoluto en ninguna de las muestras?
+:::
+
+# Crear el objeto de clase `DESeqDataSet`
+Para crear un objeto de clase `DESeqDataSet` necesitamos que las
+filas de la tabla `muestras` estén en el mismo orden que las
+columnas en `genex`. La función `DESeqDataSetFromMatrix()`
+necesita que los recuentos sean una matriz, no un marco de datos.
+Y en `muestras` debe haber **factores**.
+
+```{r}
+suppressMessages(library('DESeq2'))
+all(names(genex)[3:14] == muestras$sample)
+```
+
+```{r}
+# Pasamos la columna "sample" a nombres de fila:
+row.names(muestras) <- muestras$sample
+# Eliminamos la columna "sample":
+muestras$sample <- NULL
+# Y convertimos "population" y "temp" en factores:
+muestras$population <- factor(muestras$population,
+                              levels = c('maine', 'panama'))
+muestras$temp       <- factor(muestras$temp,
+                              levels = c('low', 'high'))
+muestras
+```
+
+Aunque no hacía falta definir los niveles de los factores, lo indico
+porque es un buen momento para definir manualmente su orden (por defecto
+se ordenan alfabéticamente). El orden de los niveles determina qué nivel
+actúa como referencia en los contrastes estadísticos (el primero). Esto
+resultaría importante, por ejemplo, al comparar tratamientos respecto de
+un control.
+
+Los datos de recuento deben ser números enteros y en forma de matriz
+
+```{r}
+row.names(genex) <- genex$gene_name
+genex$gene_name <- NULL
+genex$gene_id   <- NULL
+genex <- round(as.matrix(genex))
+```
+
+```{r}
+dds1 <- DESeqDataSetFromMatrix(
+   countData = genex,
+   colData = muestras,
+   design = ~ population + temp
+)
+dds1
+```
+
+:::{.callout-note}
+Los objetos `DESeqDataSet` pueden contener información sobre las coordenadas
+cromosómicas de los genes o tránscritos, si se construyen a partir de otro
+tipo de datos.
+:::
+
+# Pre-filtrado
+Una fracción importante de genes no se están expresando en ningúna
+muestra. Aunque el filtrado no es necesario, ayuda a reducir la memoria
+ocupada por `dds1`:
+
+```{r}
+keep <- rowSums(counts(dds1)) > 0
+dds1 <- dds1[keep, ]
+```
+
+# Expresión diferencial
+Observa que la función `DESeq()` produce un objeto también de clase
+`DESeqDataSet`, pero con resultados añadidos:
+
+```{r}
+dds1 <- DESeq(dds1)
+```
+
+```{r}
+res <- results(dds1)
+res
+```
+
+Por defecto, la función `results()` produce la tabla de resultados
+para el contraste entre el nivel último y el de referencia del último
+factor en la tabla que describe las muestras. En este caso, el factor
+es `temp`, el nivel de referencia es `low` y el otro nivel es `high`.
+Por tanto, los valores de `log2FoldChange` representan el logaritmo en
+base 2 de la relación entre niveles de expresión en muestras `high`
+respecto de muestras `low`.
+
+:::{.callout-note icon=false}
+## Ejercicio 3
+1. Mira la ayuda de `results()` y genera también la tabla de resultados
+   para el contraste entre las dos regiones de procedencia de las moscas.
+2. Usa `summary()` sobre los resultados para ver el número de genes
+   diferencialmente expresados entre cada par de condiciones.
+3. ¿Cuál es la tasa de falsos positivos (FDR)?
+:::
+
+# Gráficas
+
+```{r}
+plotMA(res)
+```
+
+Los genes con niveles de expresión más bajos producen resultados
+más ruidosos (la varianza es mayor). La función `lfcShrink()`
+contrae (*shrink*) las estimaciones de los efectos (*log fold change*)
+para reducir el ruido y hacer el resultado más realista:
+
+```{r}
+resShrink <- lfcShrink(dds1, coef = 'temp_high_vs_low',
+                       type = 'normal')
+plotMA(resShrink)
+```
+
+:::{.callout-note icon=false}
+## Ejercicio 4
+¿Sabrías hacer una gráfica volcán?
+:::
+
+# Extraer datos transformados
+Aunque los datos de entrada no deben estar normalizados y la función
+`DESeq()` ya tiene en cuenta las diferencias de tamaño de genoteca
+entre muestras y la relación entre media y varianza, puede ser útil
+disponer de los datos normalizados para representarlos gráficamente.
+Para ello podemos usar las funciones `vst()` y `assay()`:
+
+```{r}
+dds2 <- vst(dds1)
+NormCounts <- assay(dds2)
+```
+
+```{r}
+res <- res[! is.na(res$pvalue), ]
+res <- res[order(res$log2FoldChange),]
+heatmap(NormCounts[c(head(row.names(res), 100),
+                     tail(row.names(res), 100)), ],
+        Rowv = NA, Colv = NA)
+
+```
+
+:::{.callout-note icon=false}
+## Ejercicio 5
+¿Podrías explicar qué hace el bloque de código anterior?
+:::
+
+:::{.callout-note icon=false}
+## Ejercicio 6
+En [este enlace]() analizan exactamente los mismos datos con otro
+paquete de R: `limma`. Una de sus conclusiones es se sobreexpresan
+más genes en temperatura baja que en temperatura alta. ¿Confirma
+tu análisis esta conclusión?
+
+Estos son los 10 genes más diferencialmente expresados según aquel
+análisis entre las condiciones de baja y alta temperatura:
+
+```
+                   logFC  AveExpr         t      P.Value    adj.P.Val        B
+Cpr92F          2.473527 6.201774  24.28881 1.306910e-13 1.739105e-09 21.29258
+Vajk3           1.675184 4.029281  21.90298 6.069753e-13 3.524528e-09 19.66813
+lncRNA:CR46017 -3.974938 1.044005 -21.50807 7.945880e-13 3.524528e-09 16.80878
+CG7214          2.198970 7.945664  20.75054 1.349821e-12 4.490516e-09 19.14847
+CG3739         -2.869172 6.514652 -20.49734 4.414988e-12 1.175005e-08 18.01975
+Acp1            2.231834 7.638125  17.79441 2.089853e-11 3.997808e-08 16.54909
+```
+
+¿Cómo se comparan estos resultados con los tuyos?
+:::
+
+# Referencias

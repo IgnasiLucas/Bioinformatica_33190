@@ -1,0 +1,188 @@
+---
+title: "10. Análisis de la expresión génica"
+format:
+  revealjs:
+    embed-resources: true
+bibliography: ../doc/references.bib
+---
+
+## Objetivos
+
+1. Origen de los datos.
+2. Sesgos comunes.
+3. Estrategias de análisis.
+4. Algo de terminología.
+
+# Cuantificación de la expresión
+
+## RNA-seq
+
+1. Extracción del mRNA del tejido.
+2. Generación de cDNA.
+3. Fragmentación y selección de tamaños.
+4. Adición de adaptadores.
+5. Secuenciación.
+
+## Lecturas y nivel de expresión {.smaller}
+
+- $\tau_i$: Fracción de tránscritos que provienen de un gen o
+  isoforma.
+- $\nu_i$: Fracción de nucleótidos que provienen de un gen o
+  isoforma.
+- $l_i$: Longitud de los tránscritos que provienen de una isoforma.
+- $c_i$: Número de lecturas procedentes de una isoforma. $N=\sum_ic_i$.
+
+$$
+\lim_{N\to\infty}\left(\frac{c_i}{N}\right) = \nu_i
+$$
+
+## Lecturas y nivel de expresión
+Cuanto mayor es la expresión (y el tamaño) de una isoforma, mayor número
+de lecturas producirá. El problema es que no todas las lecturas pueden
+asignarse a una isoforma sin ambigüedad. Hace falta *estimar* el nivel
+de expresión, por ejemplo con [RSEM](https://github.com/deweylab/RSEM)
+[@Li2010].
+
+## Alineamiento al genoma anotado
+El programa debe facilitar los gaps que corresponden a intrones:
+
+- [HISAT2](https://daehwankimlab.github.io/hisat2/) [@Kim2019]
+- [STAR](https://github.com/alexdobin/STAR) [@Dobin2013]
+
+Después hay que usar
+[bedtools intersect](https://bedtools.readthedocs.io/en/latest/content/tools/intersect.html)
+o [featureCounts](https://subread.sourceforge.net/featureCounts.html)
+con los alineamientos (BAM) y la anotación (GTF) para **contar** cuantas lecturas
+mapean sobre cada tránscrito.
+
+## Alineamiento a los tránscritos
+
+- Necesitas secuencias FASTA de los tránscritos (o cDNAs): [Ensemble?](https://www.ensembl.org)
+- Cualquier alineador de lecturas cortas servirá: `bwa-mem2`, `bowtie2`, etc.
+- Después hay que **contar** cuantas lecturas mapean en cada tránscrito:
+  - [RSEM](https://github.com/deweylab/RSEM)
+
+## Pseudo-alineamiento
+Para mayor rapidez: buscan palabras coincidentes para estimar el tránscrito de
+origen de cada lectura:
+
+- [Salmon](https://github.com/COMBINE-lab/salmon)
+- [kallisto](https://github.com/pachterlab/kallisto)
+
+Producen directamente **recuentos** de cada tránscrito para cada muestra.
+
+# Análisis de expresión diferencial
+
+## El problema
+
+::::{.columns}
+:::{.column width="70%"}
+```{r}
+library(ggplot2)
+ge <- data.frame(
+   expresion = c(rnbinom(6, size = 5, mu = 7),
+                 c(rnbinom(3, size = 5, mu = 4),
+                   rnbinom(3, size = 5, mu = 10)),
+                 rnbinom(6, size = 5, mu = 15)),
+   gen = rep(c('gen 1', 'gen 2', 'gen 3'), each = 6),
+   tratamiento = rep(c('A', 'A', 'A', 'B', 'B', 'B'), 3)
+)
+ggplot(ge, aes(x = tratamiento, y = expresion)) +
+   geom_boxplot() + geom_point(position = 'jitter') +
+   facet_wrap(~gen)
+```
+:::
+
+:::{.column width="30%"}
+- Muchos genes: tests múltiples.
+- Pocas réplicas: tests poco poderosos.
+:::
+::::
+
+## El problema
+Número de lecturas de la muestra $j$ asignadas al gen $i$ puede
+describirse con una distribución **binomial negativa**:
+
+$$
+K_{ij} \sim \mathrm{NB}(\mu_{ij}, \sigma_{ij}^2)
+$$
+
+que tiene **dos** parámetros: demasiados para estimarlos con
+precisión en cada muestra y cada gen (pocas réplicas).
+
+## Estrategia
+
+Todos los métodos comparten información entre genes para estimar
+las $\sigma_{ij}^2$. Suponemos que genes con un nivel de expresión
+($\mu_{ij}$) parecido también tendrán varianzas parecidas.
+
+## Principales paquetes {.smaller}
+- **limma**: No usa la NB, sino que usa el logaritmo del recuento
+  normalizado (log-CPM) en un modelo lineal. Aplica *empirical
+  Bayes* (EB) para reducir la dispersión.
+- **edgeR**: Asume la distribución NB y también aplica EB. Asume:
+  $$
+  \sigma_{ij}^2 = \mu_{ij} + \phi_i\mu_{ij}^2
+  $$
+- **DESeq2**: Parecido a edgeR, con un modelo más sofisticado de la
+  varianza. El más recomendable para muestras de tamaño 6 o mayores
+  [@Li2022].
+- **EBSeq**: Incorpora incertidumbre en el recuento de lecturas debido
+  a distinguir la expresión de isoformas del mismo gen. El más recomendado
+  cuando hay pocas (3-5) réplicas por grupo [@Li2022].
+  
+## Normalización {.smaller}
+
+::::{.columns}
+:::{.column width="65%"}
+```{r}
+l <- rexp(17, 0.01)
+ge <- data.frame(
+   gen = rep(sprintf('G%02i', 1:17), 2),
+   muestra = rep(c('A', 'B'), each = 17),
+   expresión = c(
+      sapply(l,     function(x) rpois(1, x)),
+      sapply(l * 2, function(x) rpois(1, x))
+   )
+)
+ggplot(ge, aes(x = gen, y = expresión)) +
+  geom_bar(stat = 'identity') + 
+  facet_wrap(~muestra)
+```
+:::
+:::{.column width="35%"}
+El modelo ya tiene en cuenta que las muestras más intensamente
+secuenciadas, tienen recuentos más elevados. **No** hay que
+normalizar, sino calcular el *factor de normalización*.
+:::
+::::
+
+## TMM {.smaller}
+::::{.columns}
+:::{.column width="65%"}
+```{r}
+total <- c(A = sum(ge[ge$muestra == 'A', 'expresión']),
+           B = sum(ge[ge$muestra == 'B', 'expresión']))
+i <- which.max(ge$expresión)
+s <- ge[i, 'muestra']
+g <- ge[i, 'gen']
+f <- ge$muestra == s & ge$gen != g
+
+ge[f, 'expresión'] <- 0.5 * total[s] * ge[f, 'expresión'] / total[s]
+ge[i, 'expresión'] <- 0.5 * total[s]
+
+ggplot(ge, aes(x = gen, y = expresión)) +
+   geom_bar(stat = 'identity') +
+   facet_wrap(~muestra)
+```
+:::
+:::{.column width="35%"}
+TMM (*trimmed mean of M-values*) calcula un factor de corrección para
+cada muestra que corrige los desequilibrios extremos entre genes. En la
+figura, la muestra B tiene el doble de lecturas que la A. Pero el tamaño
+*efectivo* de la genoteca de B debe ser disminuido para que la mayor parte
+de genes no parezcan diferencialmente expresados.
+:::
+::::
+
+## Referencias
