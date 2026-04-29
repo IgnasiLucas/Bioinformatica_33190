@@ -159,7 +159,7 @@ Se repiten los pasos siguientes hasta convergir:
 
 ##
 
-![](imatges/RCAC2026.png)
+![Arun Seetharam](imatges/RCAC2026.png)
 
 # Resultados
 
